@@ -28,21 +28,26 @@ type EditorSimulationPanelProps = {
   state: PlcState;
   evaluation: EditorEvaluationResult;
   onToggleInput: (inputId: string) => void;
+  onRunScan: () => void;
 };
 
-export function EditorSimulationPanel({ state, evaluation, onToggleInput }: EditorSimulationPanelProps) {
+export function EditorSimulationPanel({ state, evaluation, onToggleInput, onRunScan }: EditorSimulationPanelProps) {
   const timers = Object.entries(evaluation.runtime.timers);
   const counters = Object.entries(evaluation.runtime.counters);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerText}>
           <Text style={styles.title}>Simulação do projeto editável</Text>
-          <Text style={styles.subtitle}>Acione entradas virtuais para testar a lógica que você montou no editor.</Text>
+          <Text style={styles.subtitle}>Acione entradas virtuais e execute scans para testar temporizadores, contadores e bobinas.</Text>
         </View>
         <Text style={styles.scanBadge}>SCAN {evaluation.scanNumber}</Text>
       </View>
+
+      <Pressable onPress={onRunScan} style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}>
+        <Text style={styles.scanButtonText}>Executar 1 scan / +{evaluation.runtime.scanStepMs}ms</Text>
+      </Pressable>
 
       <Text style={styles.sectionTitle}>Entradas</Text>
       <View style={styles.grid}>
@@ -135,6 +140,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
+  headerText: {
+    flex: 1,
+  },
   title: {
     color: colors.text,
     fontSize: 20,
@@ -150,6 +158,20 @@ const styles = StyleSheet.create({
   scanBadge: {
     color: colors.cyan,
     fontSize: 11,
+    fontWeight: '900',
+  },
+  scanButton: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    alignItems: 'center',
+    backgroundColor: colors.cyanSoft,
+    marginBottom: spacing.md,
+  },
+  scanButtonText: {
+    color: colors.cyan,
+    fontSize: 13,
     fontWeight: '900',
   },
   sectionTitle: {
