@@ -11,6 +11,8 @@ import { LessonCard } from './src/components/LessonCard';
 import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
+import { ProjectCard } from './src/components/ProjectCard';
+import { RungEditorPreview } from './src/components/RungEditorPreview';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
@@ -135,6 +137,10 @@ export default function App() {
                 <Text style={styles.proNoticeClose} onPress={() => setSelectedProComponent(null)}>Fechar aviso</Text>
               </View>
             ) : null}
+
+            <Text style={styles.sectionTitle}>Projetos do simulador</Text>
+            <ProjectCard project={project} badge="Grátis" />
+
             <LadderDiagram project={project} state={evaluation.state} energizedRungs={evaluation.energizedRungs} />
 
             <Text style={styles.sectionTitle}>Entradas virtuais</Text>
@@ -174,6 +180,7 @@ export default function App() {
             <OutputIndicator label="Q0 / K1" description="Contator principal" active={Boolean(evaluation.state.Q0)} />
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
+            <RungEditorPreview project={project} />
             <ComponentLibrary onSelectPro={setSelectedProComponent} />
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
