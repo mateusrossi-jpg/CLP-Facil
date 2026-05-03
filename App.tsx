@@ -3,6 +3,7 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'rea
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
+import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
@@ -11,6 +12,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { directStartWithSealProject } from './src/data/defaultProjects';
+import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
@@ -24,6 +26,7 @@ export default function App() {
   const initial = useMemo(() => createInitialState(project), [project]);
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [selectedProComponent, setSelectedProComponent] = useState<SimulatorComponent | null>(null);
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
 
@@ -76,9 +79,10 @@ export default function App() {
               onPress={openSimulator}
             />
             <AppCard
-              title="Desafios"
-              description="Exercícios práticos com validação automática. Planejado para a próxima etapa."
-              badge="Futuro"
+              title="Pro"
+              description="Componentes avançados como TON, TOF, CTU, reversão, estrela-triângulo e projetos ilimitados."
+              badge="Pago"
+              onPress={openSimulator}
             />
             <Text style={styles.footer}>Projeto educacional em desenvolvimento. A primeira versão mantém lições e simulador como módulos igualmente importantes.</Text>
           </>
@@ -120,9 +124,17 @@ export default function App() {
           <>
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
-              <Text style={styles.simulatorModeTitle}>Projeto livre inicial</Text>
-              <Text style={styles.simulatorModeText}>Este é o primeiro simulador funcional. A próxima etapa será permitir adicionar/remover contatos e criar novos projetos.</Text>
+              <Text style={styles.simulatorModeTitle}>Simulador + componentes Pro</Text>
+              <Text style={styles.simulatorModeText}>A base gratuita permite estudar e testar comandos básicos. Componentes avançados como TON, TOF e CTU aparecem como Pro para monetização futura.</Text>
             </View>
+            {selectedProComponent ? (
+              <View style={styles.proNotice}>
+                <Text style={styles.proNoticeTitle}>{selectedProComponent.name} faz parte do CLP Fácil Pro</Text>
+                <Text style={styles.proNoticeText}>{selectedProComponent.description}</Text>
+                <Text style={styles.proNoticeText}>Na versão final, este componente poderá ser liberado por compra Pro, junto com exportação, projetos ilimitados e blocos avançados.</Text>
+                <Text style={styles.proNoticeClose} onPress={() => setSelectedProComponent(null)}>Fechar aviso</Text>
+              </View>
+            ) : null}
             <LadderDiagram project={project} state={evaluation.state} energizedRungs={evaluation.energizedRungs} />
 
             <Text style={styles.sectionTitle}>Entradas virtuais</Text>
@@ -162,6 +174,7 @@ export default function App() {
             <OutputIndicator label="Q0 / K1" description="Contator principal" active={Boolean(evaluation.state.Q0)} />
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
+            <ComponentLibrary onSelectPro={setSelectedProComponent} />
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
@@ -229,6 +242,32 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
+  },
+  proNotice: {
+    backgroundColor: '#2B230F',
+    borderColor: colors.amber,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  proNoticeTitle: {
+    color: colors.amber,
+    fontSize: 17,
+    fontWeight: '900',
+    marginBottom: spacing.sm,
+  },
+  proNoticeText: {
+    color: colors.text,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: spacing.sm,
+  },
+  proNoticeClose: {
+    color: colors.cyan,
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: spacing.sm,
   },
   sectionTitle: {
     color: colors.text,
