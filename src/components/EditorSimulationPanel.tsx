@@ -5,7 +5,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 const inputs = ['I0', 'I1', 'I2', 'I3'];
-const outputs = ['Q0', 'Q1', 'M0', 'M1'];
+const outputs = ['Q0', 'Q1', 'M0', 'M1', 'T0', 'T1', 'C0', 'C1'];
 
 const severityLabel: Record<EditorDiagnosticSeverity, string> = {
   info: 'INFO',
@@ -19,6 +19,11 @@ function diagnosticStyle(severity: EditorDiagnosticSeverity) {
   return styles.diagnosticInfo;
 }
 
+function formatMs(value: number) {
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
+  return `${value}ms`;
+}
+
 type EditorSimulationPanelProps = {
   state: PlcState;
   evaluation: EditorEvaluationResult;
@@ -26,6 +31,9 @@ type EditorSimulationPanelProps = {
 };
 
 export function EditorSimulationPanel({ state, evaluation, onToggleInput }: EditorSimulationPanelProps) {
+  const timers = Object.entries(evaluation.runtime.timers);
+  const counters = Object.entries(evaluation.runtime.counters);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -49,7 +57,7 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput }: Edit
         })}
       </View>
 
-      <Text style={styles.sectionTitle}>Saídas e memórias</Text>
+      <Text style={styles.sectionTitle}>Saídas, memórias e blocos</Text>
       <View style={styles.grid}>
         {outputs.map((output) => {
           const active = Boolean(evaluation.state[output]);
@@ -61,6 +69,30 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput }: Edit
           );
         })}
       </View>
+
+      {timers.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>Temporizadores</Text>
+          {timers.map(([timerId, timer]) => (
+            <View key={timerId} style={styles.runtimeRow}>
+              <Text style={styles.runtimeLabel}>{timerId}</Text>
+              <Text style={styles.runtimeValue}>ET {formatMs(timer.elapsedMs)} • Q {timer.q ? '1' : '0'}</Text>
+            </View>
+          ))}
+        </>
+      ) : null}
+
+      {counters.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>Contadores</Text>
+          {counters.map(([counterId, counter]) => (
+            <View key={counterId} style={styles.runtimeRow}>
+              <Text style={styles.runtimeLabel}>{counterId}</Text>
+              <Text style={styles.runtimeValue}>CV {counter.currentValue} • Q {counter.q ? '1' : '0'}</Text>
+            </View>
+          ))}
+        </>
+      ) : null}
 
       <Text style={styles.sectionTitle}>Linhas energizadas</Text>
       {Object.entries(evaluation.rungResults).map(([rungId, energized]) => (
@@ -166,6 +198,27 @@ const styles = StyleSheet.create({
   },
   outputText: {
     color: colors.green,
+  },
+  runtimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.background,
+  },
+  runtimeLabel: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    flex: 1,
+  },
+  runtimeValue: {
+    color: colors.green,
+    fontSize: 12,
+    fontWeight: '900',
   },
   rungRow: {
     flexDirection: 'row',
