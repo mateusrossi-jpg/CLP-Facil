@@ -20,8 +20,9 @@ import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
-import { createEditorBlock, createInitialEditorProject, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
+import { createEditorBlock, createInitialEditorProject, EditorCoilMode, EditorContactMode, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
 import { createInitialEditorState, evaluateEditorProject, setEditorInput } from './src/engine/editorEvaluator';
+import { canInsertComponentInZone, explainInsertionRule } from './src/engine/editorRules';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
 import { colors } from './src/theme/colors';
@@ -35,6 +36,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
+  const [editorMessage, setEditorMessage] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
   const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
@@ -81,16 +83,19 @@ export default function App() {
   function selectEditorZone(zone: EditorInsertionZone) {
     if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedZone: zone, selectedBlockId: null }));
+    setEditorMessage(null);
   }
 
   function selectEditorBlock(blockId: string) {
     if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
+    setEditorMessage(null);
   }
 
   function selectEditorRung(rungId: string) {
     if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedRungId: rungId, selectedBlockId: null }));
+    setEditorMessage(null);
   }
 
   function addNewRung() {
@@ -115,6 +120,7 @@ export default function App() {
         ],
       };
     });
+    setEditorMessage(null);
   }
 
   function removeSelectedRung() {
@@ -130,11 +136,22 @@ export default function App() {
         rungs: filtered,
       };
     });
+    setEditorMessage(null);
   }
 
   function addComponentToEditor(component: SimulatorComponent) {
     setSelectedComponent(component);
-    if (editingLocked || component.isPro) return;
+    if (editingLocked) return;
+
+    if (!canInsertComponentInZone(component, editorProject.selectedZone)) {
+      setEditorMessage(explainInsertionRule(component, editorProject.selectedZone));
+      return;
+    }
+
+    if (component.isPro) {
+      setEditorMessage('Este componente é Pro para uso em projetos próprios. Ele pode ser estudado no modo educacional.');
+      return;
+    }
 
     setEditorProject((current) => {
       const block = createEditorBlock(component, current.selectedZone);
@@ -156,6 +173,7 @@ export default function App() {
         }),
       };
     });
+    setEditorMessage(`${component.name} inserido em ${editorProject.selectedZone}.`);
   }
 
   function updateSelectedBlockVariable(variable: string) {
@@ -178,6 +196,39 @@ export default function App() {
     });
   }
 
+  function updateSelectedBlockContactMode(contactMode: EditorContactMode) {
+    if (editingLocked) return;
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          seriesBlocks: rung.seriesBlocks.map((block) =>
+            block.id === current.selectedBlockId ? { ...block, contactMode } : block,
+          ),
+          parallelBlocks: rung.parallelBlocks.map((block) =>
+            block.id === current.selectedBlockId ? { ...block, contactMode } : block,
+          ),
+        })),
+      };
+    });
+  }
+
+  function updateSelectedBlockCoilMode(coilMode: EditorCoilMode) {
+    if (editingLocked) return;
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          coilBlock: rung.coilBlock?.id === current.selectedBlockId ? { ...rung.coilBlock, coilMode } : rung.coilBlock,
+        })),
+      };
+    });
+  }
+
   function removeSelectedEditorBlock() {
     if (editingLocked) return;
     setEditorProject((current) => {
@@ -193,6 +244,7 @@ export default function App() {
         })),
       };
     });
+    setEditorMessage(null);
   }
 
   const selectedEditorBlock = editorProject.rungs
@@ -319,6 +371,7 @@ export default function App() {
 
             <EditorModeToggle mode={editorMode} onChangeMode={setEditorMode} />
             {editingLocked ? <Text style={styles.lockedNotice}>Edição travada. Volte para Editar para adicionar, remover ou alterar blocos.</Text> : null}
+            {editorMessage ? <Text style={styles.editorMessage}>{editorMessage}</Text> : null}
 
             <RungNavigator
               rungs={editorProject.rungs}
@@ -339,6 +392,8 @@ export default function App() {
               <SelectedBlockEditor
                 block={selectedEditorBlock}
                 onChangeVariable={updateSelectedBlockVariable}
+                onChangeContactMode={updateSelectedBlockContactMode}
+                onChangeCoilMode={updateSelectedBlockCoilMode}
                 onRemove={removeSelectedEditorBlock}
               />
             ) : null}
@@ -426,6 +481,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: spacing.md,
+  },
+  editorMessage: {
+    color: colors.amber,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: spacing.sm,
   },
   sectionTitle: {
     color: colors.text,
