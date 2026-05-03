@@ -1,11 +1,17 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { EditorEvaluationResult } from '../engine/editorEvaluator';
+import { EditorDiagnosticSeverity, EditorEvaluationResult } from '../engine/editorEvaluator';
 import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 const inputs = ['I0', 'I1', 'I2', 'I3'];
 const outputs = ['Q0', 'Q1', 'M0', 'M1'];
+
+const severityLabel: Record<EditorDiagnosticSeverity, string> = {
+  info: 'INFO',
+  warning: 'AVISO',
+  error: 'ERRO',
+};
 
 type EditorSimulationPanelProps = {
   state: PlcState;
@@ -16,8 +22,13 @@ type EditorSimulationPanelProps = {
 export function EditorSimulationPanel({ state, evaluation, onToggleInput }: EditorSimulationPanelProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Simulação do projeto editável</Text>
-      <Text style={styles.subtitle}>Acione entradas virtuais para testar a lógica que você montou no editor.</Text>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Simulação do projeto editável</Text>
+          <Text style={styles.subtitle}>Acione entradas virtuais para testar a lógica que você montou no editor.</Text>
+        </View>
+        <Text style={styles.scanBadge}>SCAN {evaluation.scanNumber}</Text>
+      </View>
 
       <Text style={styles.sectionTitle}>Entradas</Text>
       <View style={styles.grid}>
@@ -53,6 +64,20 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput }: Edit
         </View>
       ))}
 
+      <Text style={styles.sectionTitle}>Diagnóstico</Text>
+      {evaluation.diagnostics.length === 0 ? (
+        <View style={styles.diagnosticOk}>
+          <Text style={styles.diagnosticOkText}>Nenhum problema estrutural encontrado.</Text>
+        </View>
+      ) : (
+        evaluation.diagnostics.map((diagnostic) => (
+          <View key={diagnostic.id} style={[styles.diagnosticRow, styles[`diagnostic_${diagnostic.severity}`]]}>
+            <Text style={styles.diagnosticBadge}>{severityLabel[diagnostic.severity]}</Text>
+            <Text style={styles.diagnosticMessage}>{diagnostic.message}</Text>
+          </View>
+        ))
+      )}
+
       <Text style={styles.explanation}>{evaluation.explanation}</Text>
     </View>
   );
@@ -67,6 +92,11 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginTop: spacing.lg,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
   title: {
     color: colors.text,
     fontSize: 20,
@@ -78,6 +108,11 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
+  },
+  scanBadge: {
+    color: colors.cyan,
+    fontSize: 11,
+    fontWeight: '900',
   },
   sectionTitle: {
     color: colors.cyan,
@@ -144,6 +179,47 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '900',
+  },
+  diagnosticOk: {
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    backgroundColor: '#143822',
+  },
+  diagnosticOkText: {
+    color: colors.green,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  diagnosticRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  diagnostic_info: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  diagnostic_warning: {
+    borderColor: colors.amber,
+    backgroundColor: '#2B230F',
+  },
+  diagnostic_error: {
+    borderColor: colors.red,
+    backgroundColor: '#3A151A',
+  },
+  diagnosticBadge: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+    marginBottom: spacing.xs,
+  },
+  diagnosticMessage: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
   },
   explanation: {
     color: colors.amber,
