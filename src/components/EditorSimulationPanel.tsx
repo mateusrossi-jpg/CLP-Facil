@@ -1,0 +1,157 @@
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { EditorEvaluationResult } from '../engine/editorEvaluator';
+import { PlcState } from '../engine/projectTypes';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
+
+const inputs = ['I0', 'I1', 'I2', 'I3'];
+const outputs = ['Q0', 'Q1', 'M0', 'M1'];
+
+type EditorSimulationPanelProps = {
+  state: PlcState;
+  evaluation: EditorEvaluationResult;
+  onToggleInput: (inputId: string) => void;
+};
+
+export function EditorSimulationPanel({ state, evaluation, onToggleInput }: EditorSimulationPanelProps) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Simulação do projeto editável</Text>
+      <Text style={styles.subtitle}>Acione entradas virtuais para testar a lógica que você montou no editor.</Text>
+
+      <Text style={styles.sectionTitle}>Entradas</Text>
+      <View style={styles.grid}>
+        {inputs.map((input) => {
+          const active = Boolean(state[input]);
+          return (
+            <Pressable key={input} onPress={() => onToggleInput(input)} style={({ pressed }) => [styles.ioCard, active && styles.inputActive, pressed && styles.pressed]}>
+              <Text style={styles.ioLabel}>{input}</Text>
+              <Text style={[styles.ioState, active && styles.activeText]}>{active ? '1' : '0'}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sectionTitle}>Saídas e memórias</Text>
+      <View style={styles.grid}>
+        {outputs.map((output) => {
+          const active = Boolean(evaluation.state[output]);
+          return (
+            <View key={output} style={[styles.ioCard, active && styles.outputActive]}>
+              <Text style={styles.ioLabel}>{output}</Text>
+              <Text style={[styles.ioState, active && styles.outputText]}>{active ? '1' : '0'}</Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sectionTitle}>Linhas energizadas</Text>
+      {Object.entries(evaluation.rungResults).map(([rungId, energized]) => (
+        <View key={rungId} style={styles.rungRow}>
+          <Text style={styles.rungLabel}>{rungId}</Text>
+          <Text style={[styles.rungState, energized && styles.outputText]}>{energized ? 'ENERGIZADA' : 'ABERTA'}</Text>
+        </View>
+      ))}
+
+      <Text style={styles.explanation}>{evaluation.explanation}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: spacing.lg,
+    marginTop: spacing.lg,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    color: colors.cyan,
+    fontSize: 13,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  ioCard: {
+    minWidth: 70,
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  inputActive: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  outputActive: {
+    borderColor: colors.green,
+    backgroundColor: '#143822',
+  },
+  ioLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  ioState: {
+    color: colors.textMuted,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: spacing.xs,
+  },
+  activeText: {
+    color: colors.cyan,
+  },
+  outputText: {
+    color: colors.green,
+  },
+  rungRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  rungLabel: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  rungState: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  explanation: {
+    color: colors.amber,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: spacing.md,
+  },
+  pressed: {
+    opacity: 0.75,
+  },
+});
