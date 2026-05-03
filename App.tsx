@@ -233,6 +233,34 @@ export default function App() {
     });
   }
 
+  function updateSelectedBlockPresetMs(presetMs: number) {
+    if (editingLocked) return;
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          coilBlock: rung.coilBlock?.id === current.selectedBlockId ? { ...rung.coilBlock, presetMs } : rung.coilBlock,
+        })),
+      };
+    });
+  }
+
+  function updateSelectedBlockPreset(preset: number) {
+    if (editingLocked) return;
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          coilBlock: rung.coilBlock?.id === current.selectedBlockId ? { ...rung.coilBlock, preset } : rung.coilBlock,
+        })),
+      };
+    });
+  }
+
   function removeSelectedEditorBlock() {
     if (editingLocked) return;
     setEditorProject((current) => {
@@ -398,6 +426,8 @@ export default function App() {
                 onChangeVariable={updateSelectedBlockVariable}
                 onChangeContactMode={updateSelectedBlockContactMode}
                 onChangeCoilMode={updateSelectedBlockCoilMode}
+                onChangePresetMs={updateSelectedBlockPresetMs}
+                onChangePreset={updateSelectedBlockPreset}
                 onRemove={removeSelectedEditorBlock}
               />
             ) : null}
