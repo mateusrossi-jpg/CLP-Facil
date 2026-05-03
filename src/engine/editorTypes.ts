@@ -4,6 +4,8 @@ export type EditorInsertionZone = 'series' | 'parallel' | 'coil';
 export type EditorBlockRole = 'contact' | 'coil' | 'device' | 'timer' | 'counter' | 'actuator';
 export type EditorContactMode = 'NO' | 'NC';
 export type EditorCoilMode = 'NORMAL' | 'SET' | 'RESET' | 'PULSE';
+export type EditorTimerMode = 'TON' | 'TOF' | 'TP';
+export type EditorCounterMode = 'CTU' | 'CTD' | 'CTUD';
 
 export type EditorBlock = {
   id: string;
@@ -16,6 +18,10 @@ export type EditorBlock = {
   role: EditorBlockRole;
   contactMode?: EditorContactMode;
   coilMode?: EditorCoilMode;
+  timerMode?: EditorTimerMode;
+  counterMode?: EditorCounterMode;
+  presetMs?: number;
+  preset?: number;
   category: ComponentCategory;
 };
 
@@ -66,6 +72,19 @@ function inferCoilMode(component: SimulatorComponent): EditorCoilMode | undefine
   return undefined;
 }
 
+function inferTimerMode(component: SimulatorComponent): EditorTimerMode | undefined {
+  if (component.id.includes('timer-ton')) return 'TON';
+  if (component.id.includes('timer-tof')) return 'TOF';
+  if (component.id.includes('timer-tp')) return 'TP';
+  return undefined;
+}
+
+function inferCounterMode(component: SimulatorComponent): EditorCounterMode | undefined {
+  if (component.id.includes('counter-ctu')) return 'CTU';
+  if (component.id.includes('counter-ctd')) return 'CTD';
+  return undefined;
+}
+
 function inferRole(component: SimulatorComponent, zone: EditorInsertionZone): EditorBlockRole {
   if (component.category === 'timer') return 'timer';
   if (component.category === 'counter') return 'counter';
@@ -76,6 +95,9 @@ function inferRole(component: SimulatorComponent, zone: EditorInsertionZone): Ed
 }
 
 function defaultVariableFor(component: SimulatorComponent, zone: EditorInsertionZone): string {
+  if (component.category === 'timer') return 'T0';
+  if (component.category === 'counter') return 'C0';
+
   if (zone === 'coil') {
     if (component.id.includes('memory')) return 'M0';
     return 'Q0';
@@ -90,6 +112,8 @@ export function createEditorBlock(component: SimulatorComponent, zone: EditorIns
   const role = inferRole(component, zone);
   const contactMode = role === 'contact' ? inferContactMode(component) ?? 'NO' : undefined;
   const coilMode = role === 'coil' ? inferCoilMode(component) ?? 'NORMAL' : undefined;
+  const timerMode = role === 'timer' ? inferTimerMode(component) ?? 'TON' : undefined;
+  const counterMode = role === 'counter' ? inferCounterMode(component) ?? 'CTU' : undefined;
 
   return {
     id: `${component.id}-${Date.now()}`,
@@ -102,6 +126,10 @@ export function createEditorBlock(component: SimulatorComponent, zone: EditorIns
     role,
     contactMode,
     coilMode,
+    timerMode,
+    counterMode,
+    presetMs: role === 'timer' ? 3000 : undefined,
+    preset: role === 'counter' ? 5 : undefined,
     category: component.category,
   };
 }
