@@ -1,22 +1,26 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { EditorBlock } from '../engine/editorTypes';
+import { EditorBlock, EditorCoilMode, EditorContactMode } from '../engine/editorTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 const variableOptions = ['I0', 'I1', 'I2', 'I3', 'Q0', 'Q1', 'M0', 'M1'];
+const contactModes: EditorContactMode[] = ['NO', 'NC'];
+const coilModes: EditorCoilMode[] = ['NORMAL', 'SET', 'RESET', 'PULSE'];
 
 type SelectedBlockEditorProps = {
   block: EditorBlock | null;
   onChangeVariable: (variable: string) => void;
+  onChangeContactMode: (mode: EditorContactMode) => void;
+  onChangeCoilMode: (mode: EditorCoilMode) => void;
   onRemove: () => void;
 };
 
-export function SelectedBlockEditor({ block, onChangeVariable, onRemove }: SelectedBlockEditorProps) {
+export function SelectedBlockEditor({ block, onChangeVariable, onChangeContactMode, onChangeCoilMode, onRemove }: SelectedBlockEditorProps) {
   if (!block) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Configuração do bloco</Text>
-        <Text style={styles.text}>Selecione um bloco inserido no editor para alterar variável, revisar parâmetros ou remover.</Text>
+        <Text style={styles.text}>Selecione um bloco inserido no editor para alterar variável, tipo de contato, modo de bobina ou remover.</Text>
       </View>
     );
   }
@@ -47,6 +51,44 @@ export function SelectedBlockEditor({ block, onChangeVariable, onRemove }: Selec
           </Pressable>
         ))}
       </View>
+
+      {block.role === 'contact' ? (
+        <>
+          <Text style={styles.sectionTitle}>Tipo de contato</Text>
+          <View style={styles.optionsGrid}>
+            {contactModes.map((mode) => (
+              <Pressable
+                key={mode}
+                onPress={() => onChangeContactMode(mode)}
+                style={({ pressed }) => [styles.option, block.contactMode === mode && styles.optionSelected, pressed && styles.pressed]}
+              >
+                <Text style={[styles.optionText, block.contactMode === mode && styles.optionTextSelected]}>{mode === 'NO' ? 'NA' : 'NF'}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      {block.role === 'coil' ? (
+        <>
+          <Text style={styles.sectionTitle}>Modo da bobina</Text>
+          <View style={styles.optionsGrid}>
+            {coilModes.map((mode) => {
+              const proMode = mode !== 'NORMAL';
+              return (
+                <Pressable
+                  key={mode}
+                  onPress={() => onChangeCoilMode(mode)}
+                  style={({ pressed }) => [styles.option, block.coilMode === mode && styles.optionSelected, proMode && styles.proOption, pressed && styles.pressed]}
+                >
+                  <Text style={[styles.optionText, block.coilMode === mode && styles.optionTextSelected]}>{mode}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.proText}>SET, RESET e PULSE são recursos Pro para uso em projetos próprios, mas podem aparecer no modo educativo.</Text>
+        </>
+      ) : null}
 
       {block.isPro ? (
         <Text style={styles.proText}>Este bloco fica visível para estudo, mas o uso em projetos próprios será liberado no CLP Fácil Pro.</Text>
@@ -122,6 +164,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     alignItems: 'center',
     backgroundColor: colors.background,
+  },
+  proOption: {
+    borderColor: colors.amber,
   },
   optionSelected: {
     borderColor: colors.green,
