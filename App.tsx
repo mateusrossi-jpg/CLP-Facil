@@ -5,6 +5,7 @@ import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { EditableRungBuilder } from './src/components/EditableRungBuilder';
+import { EditorSimulationPanel } from './src/components/EditorSimulationPanel';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
@@ -18,6 +19,7 @@ import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
 import { createEditorBlock, createInitialEditorProject, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
+import { createInitialEditorState, evaluateEditorProject, setEditorInput } from './src/engine/editorEvaluator';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
 import { colors } from './src/theme/colors';
@@ -32,8 +34,10 @@ export default function App() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
+  const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
+  const editorEvaluation = evaluateEditorProject(editorProject, editorState);
 
   function openLesson(lesson: Lesson) {
     setSelectedLesson(lesson);
@@ -51,11 +55,18 @@ export default function App() {
 
   function resetSimulation() {
     setPlcState(createInitialState(project));
+    setEditorState(createInitialEditorState());
   }
 
   function toggleSafetyInput(inputId: 'I2' | 'I3') {
     const current = Boolean(evaluation.state[inputId]);
     applyInput(inputId, !current);
+  }
+
+  function toggleEditorInput(inputId: string) {
+    const current = Boolean(editorEvaluation.state[inputId]);
+    const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current);
+    setEditorState(result.state);
   }
 
   function selectEditorZone(zone: EditorInsertionZone) {
@@ -228,7 +239,7 @@ export default function App() {
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
               <Text style={styles.simulatorModeTitle}>Editor visual por blocos</Text>
-              <Text style={styles.simulatorModeText}>Selecione Série, Paralelo ou Bobina, toque em um componente FREE para inserir, selecione o bloco e ajuste a variável. Componentes PRO aparecem bloqueados para projetos próprios.</Text>
+              <Text style={styles.simulatorModeText}>Monte uma linha simples: adicione contatos em Série/Paralelo, escolha uma bobina em Bobina, ajuste variáveis e teste as entradas virtuais.</Text>
             </View>
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
@@ -237,7 +248,7 @@ export default function App() {
 
             <LadderDiagram project={project} state={evaluation.state} energizedRungs={evaluation.energizedRungs} />
 
-            <Text style={styles.sectionTitle}>Entradas virtuais</Text>
+            <Text style={styles.sectionTitle}>Entradas virtuais do exemplo livre</Text>
             <View style={styles.inputGrid}>
               <InputButton
                 label="I0 Liga"
@@ -270,7 +281,7 @@ export default function App() {
               />
             </View>
 
-            <Text style={styles.sectionTitle}>Saídas e atuadores</Text>
+            <Text style={styles.sectionTitle}>Saídas e atuadores do exemplo</Text>
             <OutputIndicator label="Q0 / K1" description="Contator principal" active={Boolean(evaluation.state.Q0)} />
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
@@ -284,6 +295,11 @@ export default function App() {
               block={selectedEditorBlock}
               onChangeVariable={updateSelectedBlockVariable}
               onRemove={removeSelectedEditorBlock}
+            />
+            <EditorSimulationPanel
+              state={editorEvaluation.state}
+              evaluation={editorEvaluation}
+              onToggleInput={toggleEditorInput}
             />
             <ComponentLibrary
               selectedComponentId={selectedComponent?.id}
