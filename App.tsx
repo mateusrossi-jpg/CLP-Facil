@@ -3,6 +3,7 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'rea
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
+import { ComponentEditPanel } from './src/components/ComponentEditPanel';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
@@ -28,7 +29,7 @@ export default function App() {
   const initial = useMemo(() => createInitialState(project), [project]);
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [selectedProComponent, setSelectedProComponent] = useState<SimulatorComponent | null>(null);
+  const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
 
@@ -82,11 +83,11 @@ export default function App() {
             />
             <AppCard
               title="Pro"
-              description="Componentes avançados como TON, TOF, CTU, reversão, estrela-triângulo e projetos ilimitados."
+              description="Componentes avançados como TON, TOF, CTU, SET/RESET, reversão, estrela-triângulo e projetos próprios."
               badge="Pago"
               onPress={openSimulator}
             />
-            <Text style={styles.footer}>Projeto educacional em desenvolvimento. A primeira versão mantém lições e simulador como módulos igualmente importantes.</Text>
+            <Text style={styles.footer}>Conteúdo educacional livre; simulador de projetos próprios e componentes avançados como caminho Pro.</Text>
           </>
         ) : null}
 
@@ -100,7 +101,7 @@ export default function App() {
                   <View style={styles.moduleHeader}>
                     <Text style={styles.moduleTitle}>{module.title}</Text>
                     <Text style={[styles.moduleStatus, module.status === 'planned' && styles.moduleStatusPlanned]}>
-                      {module.status === 'available' ? 'Disponível' : 'Futuro'}
+                      {module.status === 'available' ? 'Livre' : 'Futuro'}
                     </Text>
                   </View>
                   <Text style={styles.moduleDescription}>{module.description}</Text>
@@ -116,7 +117,7 @@ export default function App() {
 
         {mode === 'lesson' && selectedLesson ? (
           <>
-            <AppHeader title="Modo Aprender" subtitle="Lição guiada com ponte direta para prática no simulador." />
+            <AppHeader title="Modo Aprender" subtitle="Lição livre com ponte direta para prática no simulador." />
             <LessonDetail lesson={selectedLesson} onOpenSimulator={selectedLesson.simulatorProjectId ? openSimulator : undefined} />
             <AppCard title="Voltar para lições" description="Escolher outra lição." onPress={() => setMode('learn')} />
           </>
@@ -126,20 +127,13 @@ export default function App() {
           <>
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
-              <Text style={styles.simulatorModeTitle}>Simulador + componentes Pro</Text>
-              <Text style={styles.simulatorModeText}>A base gratuita permite estudar e testar comandos básicos. Componentes avançados como TON, TOF e CTU aparecem como Pro para monetização futura.</Text>
+              <Text style={styles.simulatorModeTitle}>Editor visual por blocos</Text>
+              <Text style={styles.simulatorModeText}>Fluxo planejado: selecionar rung, escolher componente no painel, inserir na linha e tocar no bloco para editar parâmetros como variável, tempo, preset, SET ou RESET.</Text>
             </View>
-            {selectedProComponent ? (
-              <View style={styles.proNotice}>
-                <Text style={styles.proNoticeTitle}>{selectedProComponent.name} faz parte do CLP Fácil Pro</Text>
-                <Text style={styles.proNoticeText}>{selectedProComponent.description}</Text>
-                <Text style={styles.proNoticeText}>Na versão final, este componente poderá ser liberado por compra Pro, junto com exportação, projetos ilimitados e blocos avançados.</Text>
-                <Text style={styles.proNoticeClose} onPress={() => setSelectedProComponent(null)}>Fechar aviso</Text>
-              </View>
-            ) : null}
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
-            <ProjectCard project={project} badge="Grátis" />
+            <ProjectCard project={project} badge="Exemplo livre" />
+            <AppCard title="Criar projeto próprio" description="Criar, salvar e editar projetos próprios será parte do CLP Fácil Pro." badge="PRO" />
 
             <LadderDiagram project={project} state={evaluation.state} energizedRungs={evaluation.energizedRungs} />
 
@@ -181,7 +175,11 @@ export default function App() {
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
             <RungEditorPreview project={project} />
-            <ComponentLibrary onSelectPro={setSelectedProComponent} />
+            <ComponentEditPanel component={selectedComponent} proLocked={Boolean(selectedComponent?.isPro)} />
+            <ComponentLibrary
+              selectedComponentId={selectedComponent?.id}
+              onSelectComponent={setSelectedComponent}
+            />
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
@@ -249,32 +247,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
-  },
-  proNotice: {
-    backgroundColor: '#2B230F',
-    borderColor: colors.amber,
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  proNoticeTitle: {
-    color: colors.amber,
-    fontSize: 17,
-    fontWeight: '900',
-    marginBottom: spacing.sm,
-  },
-  proNoticeText: {
-    color: colors.text,
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: spacing.sm,
-  },
-  proNoticeClose: {
-    color: colors.cyan,
-    fontSize: 13,
-    fontWeight: '900',
-    marginTop: spacing.sm,
   },
   sectionTitle: {
     color: colors.text,
