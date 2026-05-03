@@ -15,6 +15,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { ProjectCard } from './src/components/ProjectCard';
+import { RungNavigator } from './src/components/RungNavigator';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
@@ -37,9 +38,10 @@ export default function App() {
   const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
   const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
+  const [editorScanNumber, setEditorScanNumber] = useState(0);
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
-  const editorEvaluation = evaluateEditorProject(editorProject, editorState);
+  const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber);
   const editingLocked = editorMode === 'simulate';
 
   function openLesson(lesson: Lesson) {
@@ -59,6 +61,7 @@ export default function App() {
   function resetSimulation() {
     setPlcState(createInitialState(project));
     setEditorState(createInitialEditorState());
+    setEditorScanNumber(0);
   }
 
   function toggleSafetyInput(inputId: 'I2' | 'I3') {
@@ -68,8 +71,10 @@ export default function App() {
 
   function toggleEditorInput(inputId: string) {
     if (editorMode !== 'simulate') return;
+    const nextScan = editorScanNumber + 1;
     const current = Boolean(editorEvaluation.state[inputId]);
-    const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current);
+    const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current, nextScan);
+    setEditorScanNumber(nextScan);
     setEditorState(result.state);
   }
 
@@ -81,6 +86,11 @@ export default function App() {
   function selectEditorBlock(blockId: string) {
     if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
+  }
+
+  function selectEditorRung(rungId: string) {
+    if (editingLocked) return;
+    setEditorProject((current) => ({ ...current, selectedRungId: rungId, selectedBlockId: null }));
   }
 
   function addNewRung() {
@@ -103,6 +113,21 @@ export default function App() {
             coilBlock: null,
           },
         ],
+      };
+    });
+  }
+
+  function removeSelectedRung() {
+    if (editingLocked) return;
+    setEditorProject((current) => {
+      if (current.rungs.length <= 1) return current;
+      const filtered = current.rungs.filter((rung) => rung.id !== current.selectedRungId);
+      const nextSelected = filtered[filtered.length - 1]?.id ?? filtered[0]?.id ?? 'rung-1';
+      return {
+        ...current,
+        selectedRungId: nextSelected,
+        selectedBlockId: null,
+        rungs: filtered,
       };
     });
   }
@@ -295,6 +320,14 @@ export default function App() {
             <EditorModeToggle mode={editorMode} onChangeMode={setEditorMode} />
             {editingLocked ? <Text style={styles.lockedNotice}>Edição travada. Volte para Editar para adicionar, remover ou alterar blocos.</Text> : null}
 
+            <RungNavigator
+              rungs={editorProject.rungs}
+              selectedRungId={editorProject.selectedRungId}
+              locked={editingLocked}
+              onSelectRung={selectEditorRung}
+              onAddRung={addNewRung}
+              onRemoveRung={removeSelectedRung}
+            />
             <EditableRungBuilder
               editor={editorProject}
               onSelectZone={selectEditorZone}
@@ -319,7 +352,6 @@ export default function App() {
                 onSelectComponent={addComponentToEditor}
               />
             ) : null}
-            {!editingLocked ? <AppCard title="Adicionar nova linha" description="Cria mais uma linha/rung no editor visual." onPress={addNewRung} /> : null}
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
