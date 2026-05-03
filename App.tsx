@@ -7,6 +7,7 @@ import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { EditableLadderCanvas } from './src/components/EditableLadderCanvas';
 import { EditorModeToggle, EditorRunMode } from './src/components/EditorModeToggle';
 import { EditorSimulationPanel } from './src/components/EditorSimulationPanel';
+import { EducationalExamplePicker } from './src/components/EducationalExamplePicker';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
@@ -18,6 +19,7 @@ import { ProjectCard } from './src/components/ProjectCard';
 import { RungNavigator } from './src/components/RungNavigator';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
+import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
 import { createEditorBlock, createInitialEditorProject, EditorCoilMode, EditorContactMode, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
@@ -55,6 +57,16 @@ export default function App() {
 
   function openSimulator() {
     setMode('simulate');
+  }
+
+  function loadEducationalExample(example: EditorExampleProject) {
+    if (editingLocked) return;
+    setEditorProject(example.project);
+    setEditorState(createInitialEditorState());
+    setEditorRuntime(createInitialRuntimeState());
+    setEditorScanNumber(0);
+    setSelectedComponent(null);
+    setEditorMessage(`${example.title} carregado. Alterne para Simular e acione I0 para testar.`);
   }
 
   function applyInput(inputId: string, value: boolean) {
@@ -405,6 +417,11 @@ export default function App() {
             {editingLocked ? <Text style={styles.lockedNotice}>Edição travada. Volte para Editar para adicionar, remover ou alterar blocos.</Text> : null}
             {editorMessage ? <Text style={styles.editorMessage}>{editorMessage}</Text> : null}
 
+            <EducationalExamplePicker
+              examples={educationalEditorExamples}
+              locked={editingLocked}
+              onLoadExample={loadEducationalExample}
+            />
             <RungNavigator
               rungs={editorProject.rungs}
               selectedRungId={editorProject.selectedRungId}
