@@ -13,6 +13,12 @@ const severityLabel: Record<EditorDiagnosticSeverity, string> = {
   error: 'ERRO',
 };
 
+function diagnosticStyle(severity: EditorDiagnosticSeverity) {
+  if (severity === 'error') return styles.diagnosticError;
+  if (severity === 'warning') return styles.diagnosticWarning;
+  return styles.diagnosticInfo;
+}
+
 type EditorSimulationPanelProps = {
   state: PlcState;
   evaluation: EditorEvaluationResult;
@@ -71,7 +77,7 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput }: Edit
         </View>
       ) : (
         evaluation.diagnostics.map((diagnostic) => (
-          <View key={diagnostic.id} style={[styles.diagnosticRow, styles[`diagnostic_${diagnostic.severity}`]]}>
+          <View key={diagnostic.id} style={[styles.diagnosticRow, diagnosticStyle(diagnostic.severity)]}>
             <Text style={styles.diagnosticBadge}>{severityLabel[diagnostic.severity]}</Text>
             <Text style={styles.diagnosticMessage}>{diagnostic.message}</Text>
           </View>
@@ -198,15 +204,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
-  diagnostic_info: {
+  diagnosticInfo: {
     borderColor: colors.cyan,
     backgroundColor: colors.cyanSoft,
   },
-  diagnostic_warning: {
+  diagnosticWarning: {
     borderColor: colors.amber,
     backgroundColor: '#2B230F',
   },
-  diagnostic_error: {
+  diagnosticError: {
     borderColor: colors.red,
     backgroundColor: '#3A151A',
   },
