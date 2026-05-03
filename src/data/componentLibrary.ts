@@ -1,5 +1,12 @@
 export type ComponentCategory = 'input' | 'logic' | 'output' | 'timer' | 'counter' | 'motor';
 
+export type ComponentEditField = {
+  id: string;
+  label: string;
+  type: 'text' | 'select' | 'number';
+  options?: string[];
+};
+
 export type SimulatorComponent = {
   id: string;
   name: string;
@@ -7,6 +14,14 @@ export type SimulatorComponent = {
   description: string;
   isPro: boolean;
   status: 'available' | 'visual-only' | 'planned';
+  editFields: ComponentEditField[];
+};
+
+const variableField: ComponentEditField = {
+  id: 'variable',
+  label: 'Variável associada',
+  type: 'select',
+  options: ['I0', 'I1', 'I2', 'I3', 'Q0', 'Q1', 'M0', 'M1'],
 };
 
 export const simulatorComponents: SimulatorComponent[] = [
@@ -17,6 +32,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Botão normalmente aberto para comandos de liga e permissões.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'alias', label: 'Nome do botão', type: 'text' }],
   },
   {
     id: 'button-nc',
@@ -25,6 +41,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Botão normalmente fechado para comandos de desliga e proteções.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'alias', label: 'Nome do botão', type: 'text' }],
   },
   {
     id: 'selector-switch',
@@ -33,6 +50,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Entrada retentiva simples para simular liga/desliga manual.',
     isPro: false,
     status: 'visual-only',
+    editFields: [variableField, { id: 'alias', label: 'Nome da chave', type: 'text' }],
   },
   {
     id: 'emergency-nc',
@@ -41,6 +59,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Contato NF para cortar a lógica do comando no simulador educativo.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'alias', label: 'Nome da emergência', type: 'text' }],
   },
   {
     id: 'contact-no',
@@ -49,6 +68,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Contato normalmente aberto associado a uma entrada, saída ou memória.',
     isPro: false,
     status: 'available',
+    editFields: [variableField],
   },
   {
     id: 'contact-nc',
@@ -57,6 +77,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Contato normalmente fechado associado a uma entrada, saída ou memória.',
     isPro: false,
     status: 'available',
+    editFields: [variableField],
   },
   {
     id: 'coil-q',
@@ -65,6 +86,25 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Bobina de saída para acionar contatores, lâmpadas ou atuadores.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'coilMode', label: 'Modo da bobina', type: 'select', options: ['Normal'] }],
+  },
+  {
+    id: 'coil-set',
+    name: 'Bobina SET',
+    category: 'output',
+    description: 'Liga/trava uma saída ou memória até que uma bobina RESET seja acionada.',
+    isPro: true,
+    status: 'visual-only',
+    editFields: [variableField, { id: 'coilMode', label: 'Modo da bobina', type: 'select', options: ['SET'] }],
+  },
+  {
+    id: 'coil-reset',
+    name: 'Bobina RESET',
+    category: 'output',
+    description: 'Desliga/reseta uma saída ou memória previamente acionada por SET.',
+    isPro: true,
+    status: 'visual-only',
+    editFields: [variableField, { id: 'coilMode', label: 'Modo da bobina', type: 'select', options: ['RESET'] }],
   },
   {
     id: 'memory-m',
@@ -73,6 +113,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Memória auxiliar para criar lógicas internas.',
     isPro: false,
     status: 'visual-only',
+    editFields: [variableField, { id: 'alias', label: 'Nome da memória', type: 'text' }],
   },
   {
     id: 'pilot-light',
@@ -81,6 +122,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Indicador visual de saída ligada ou estado do circuito.',
     isPro: false,
     status: 'visual-only',
+    editFields: [variableField, { id: 'alias', label: 'Nome da lâmpada', type: 'text' }],
   },
   {
     id: 'contactor',
@@ -89,6 +131,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Representa acionamento de cargas e motores no simulador.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'alias', label: 'Nome do contator', type: 'text' }],
   },
   {
     id: 'motor-simple',
@@ -97,6 +140,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Atuador visual ligado por uma saída ou contator.',
     isPro: false,
     status: 'available',
+    editFields: [variableField, { id: 'alias', label: 'Nome do motor', type: 'text' }],
   },
   {
     id: 'timer-ton',
@@ -105,6 +149,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Temporizador com atraso na energização.',
     isPro: true,
     status: 'visual-only',
+    editFields: [variableField, { id: 'presetMs', label: 'Tempo em milissegundos', type: 'number' }],
   },
   {
     id: 'timer-tof',
@@ -113,6 +158,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Temporizador com atraso no desligamento.',
     isPro: true,
     status: 'visual-only',
+    editFields: [variableField, { id: 'presetMs', label: 'Tempo em milissegundos', type: 'number' }],
   },
   {
     id: 'timer-tp',
@@ -121,6 +167,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Temporizador de pulso para acionamentos temporários.',
     isPro: true,
     status: 'planned',
+    editFields: [variableField, { id: 'presetMs', label: 'Tempo em milissegundos', type: 'number' }],
   },
   {
     id: 'counter-ctu',
@@ -129,6 +176,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Contador crescente para pulsos, peças e eventos.',
     isPro: true,
     status: 'visual-only',
+    editFields: [variableField, { id: 'preset', label: 'Valor de preset', type: 'number' }],
   },
   {
     id: 'counter-ctd',
@@ -137,6 +185,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Contador decrescente para aplicações didáticas.',
     isPro: true,
     status: 'planned',
+    editFields: [variableField, { id: 'preset', label: 'Valor de preset', type: 'number' }],
   },
   {
     id: 'star-delta',
@@ -145,6 +194,7 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Bloco didático para partida estrela-triângulo completa.',
     isPro: true,
     status: 'planned',
+    editFields: [{ id: 'startTimeMs', label: 'Tempo de transição', type: 'number' }],
   },
   {
     id: 'motor-reversing',
@@ -153,5 +203,6 @@ export const simulatorComponents: SimulatorComponent[] = [
     description: 'Bloco avançado com intertravamento entre avanço e reverso.',
     isPro: true,
     status: 'planned',
+    editFields: [{ id: 'interlock', label: 'Intertravamento', type: 'select', options: ['Lógico', 'Lógico + didático'] }],
   },
 ];
