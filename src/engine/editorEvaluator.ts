@@ -151,7 +151,7 @@ function validateProject(project: EditorProjectState): EditorDiagnostic[] {
   return diagnostics;
 }
 
-export function evaluateEditorProject(project: EditorProjectState, currentState: PlcState, previousScan = 0): EditorEvaluationResult {
+export function evaluateEditorProject(project: EditorProjectState, currentState: PlcState, scanNumber = 0): EditorEvaluationResult {
   let nextState: PlcState = { ...currentState };
   const rungResults: Record<string, boolean> = {};
 
@@ -170,16 +170,16 @@ export function evaluateEditorProject(project: EditorProjectState, currentState:
     state: nextState,
     rungResults,
     diagnostics,
-    scanNumber: previousScan + 1,
+    scanNumber,
     explanation: buildEditorExplanation(project, nextState, rungResults, diagnostics),
   };
 }
 
-export function setEditorInput(project: EditorProjectState, state: PlcState, inputId: string, value: boolean): EditorEvaluationResult {
+export function setEditorInput(project: EditorProjectState, state: PlcState, inputId: string, value: boolean, scanNumber = 0): EditorEvaluationResult {
   return evaluateEditorProject(project, {
     ...state,
     [inputId]: value,
-  });
+  }, scanNumber);
 }
 
 function buildEditorExplanation(
