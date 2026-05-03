@@ -3,7 +3,6 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'rea
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
-import { ComponentEditPanel } from './src/components/ComponentEditPanel';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { EditableRungBuilder } from './src/components/EditableRungBuilder';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
@@ -14,6 +13,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { ProjectCard } from './src/components/ProjectCard';
+import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
@@ -66,6 +66,29 @@ export default function App() {
     setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
   }
 
+  function addNewRung() {
+    setEditorProject((current) => {
+      const nextIndex = current.rungs.length + 1;
+      const rungId = `rung-${nextIndex}`;
+      return {
+        ...current,
+        selectedRungId: rungId,
+        selectedBlockId: null,
+        selectedZone: 'series',
+        rungs: [
+          ...current.rungs,
+          {
+            id: rungId,
+            label: `Linha ${nextIndex} — Novo comando`,
+            seriesBlocks: [],
+            parallelBlocks: [],
+            coilBlock: null,
+          },
+        ],
+      };
+    });
+  }
+
   function addComponentToEditor(component: SimulatorComponent) {
     setSelectedComponent(component);
 
@@ -95,6 +118,25 @@ export default function App() {
     });
   }
 
+  function updateSelectedBlockVariable(variable: string) {
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          seriesBlocks: rung.seriesBlocks.map((block) =>
+            block.id === current.selectedBlockId ? { ...block, variable } : block,
+          ),
+          parallelBlocks: rung.parallelBlocks.map((block) =>
+            block.id === current.selectedBlockId ? { ...block, variable } : block,
+          ),
+          coilBlock: rung.coilBlock?.id === current.selectedBlockId ? { ...rung.coilBlock, variable } : rung.coilBlock,
+        })),
+      };
+    });
+  }
+
   function removeSelectedEditorBlock() {
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
@@ -113,7 +155,7 @@ export default function App() {
 
   const selectedEditorBlock = editorProject.rungs
     .flatMap((rung) => [...rung.seriesBlocks, ...rung.parallelBlocks, ...(rung.coilBlock ? [rung.coilBlock] : [])])
-    .find((block) => block.id === editorProject.selectedBlockId);
+    .find((block) => block.id === editorProject.selectedBlockId) ?? null;
   const availableLessons = lessons.filter((lesson) => lesson.status === 'available');
 
   return (
@@ -186,7 +228,7 @@ export default function App() {
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
               <Text style={styles.simulatorModeTitle}>Editor visual por blocos</Text>
-              <Text style={styles.simulatorModeText}>Selecione Série, Paralelo ou Bobina, toque em um componente FREE para inserir, selecione o bloco e remova quando quiser. Componentes PRO aparecem bloqueados para projetos próprios.</Text>
+              <Text style={styles.simulatorModeText}>Selecione Série, Paralelo ou Bobina, toque em um componente FREE para inserir, selecione o bloco e ajuste a variável. Componentes PRO aparecem bloqueados para projetos próprios.</Text>
             </View>
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
@@ -238,15 +280,16 @@ export default function App() {
               onSelectBlock={selectEditorBlock}
               onRemoveSelected={removeSelectedEditorBlock}
             />
-            <ComponentEditPanel
-              component={selectedComponent}
-              proLocked={Boolean(selectedComponent?.isPro)}
+            <SelectedBlockEditor
+              block={selectedEditorBlock}
+              onChangeVariable={updateSelectedBlockVariable}
+              onRemove={removeSelectedEditorBlock}
             />
-            {selectedEditorBlock ? <Text style={styles.editorHint}>Bloco selecionado no editor: {selectedEditorBlock.name} em {selectedEditorBlock.variable}</Text> : null}
             <ComponentLibrary
               selectedComponentId={selectedComponent?.id}
               onSelectComponent={addComponentToEditor}
             />
+            <AppCard title="Adicionar nova linha" description="Cria mais uma linha/rung no editor visual." onPress={addNewRung} />
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
@@ -327,12 +370,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginHorizontal: -spacing.xs,
     marginBottom: spacing.lg,
-  },
-  editorHint: {
-    color: colors.green,
-    fontSize: 13,
-    fontWeight: '800',
-    marginTop: spacing.md,
   },
   footer: {
     color: colors.textMuted,
