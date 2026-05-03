@@ -86,6 +86,15 @@ export default function App() {
     applyInput(inputId, !current);
   }
 
+  function runEditorScan() {
+    if (editorMode !== 'simulate') return;
+    const nextScan = editorScanNumber + 1;
+    const result = evaluateEditorProject(editorProject, editorEvaluation.state, nextScan, editorEvaluation.runtime);
+    setEditorScanNumber(nextScan);
+    setEditorState(result.state);
+    setEditorRuntime(result.runtime);
+  }
+
   function toggleEditorInput(inputId: string) {
     if (editorMode !== 'simulate') return;
     const nextScan = editorScanNumber + 1;
@@ -452,6 +461,7 @@ export default function App() {
               state={editorEvaluation.state}
               evaluation={editorEvaluation}
               onToggleInput={toggleEditorInput}
+              onRunScan={runEditorScan}
             />
             {!editingLocked ? (
               <ComponentLibrary
