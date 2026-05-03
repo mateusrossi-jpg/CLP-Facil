@@ -13,36 +13,45 @@ const categoryLabels: Record<ComponentCategory, string> = {
 };
 
 type ComponentLibraryProps = {
-  onSelectPro?: (component: SimulatorComponent) => void;
+  selectedComponentId?: string;
+  onSelectComponent?: (component: SimulatorComponent) => void;
 };
 
-export function ComponentLibrary({ onSelectPro }: ComponentLibraryProps) {
+export function ComponentLibrary({ selectedComponentId, onSelectComponent }: ComponentLibraryProps) {
   const categories = Object.keys(categoryLabels) as ComponentCategory[];
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Biblioteca de componentes</Text>
-      <Text style={styles.subtitle}>Componentes básicos gratuitos e blocos avançados Pro para evoluir o simulador.</Text>
+      <Text style={styles.subtitle}>Toque em um componente para inserir/editar. Componentes Pro ficam bloqueados para projetos próprios na versão gratuita.</Text>
       {categories.map((category) => {
         const components = simulatorComponents.filter((component) => component.category === category);
         return (
           <View key={category} style={styles.categoryBlock}>
             <Text style={styles.categoryTitle}>{categoryLabels[category]}</Text>
             <View style={styles.grid}>
-              {components.map((component) => (
-                <Pressable
-                  key={component.id}
-                  onPress={() => component.isPro && onSelectPro?.(component)}
-                  style={({ pressed }) => [styles.componentCard, component.isPro && styles.proCard, pressed && styles.pressed]}
-                >
-                  <View style={styles.componentHeader}>
-                    <Text style={styles.componentName}>{component.name}</Text>
-                    <Text style={[styles.badge, component.isPro ? styles.proBadge : styles.freeBadge]}>{component.isPro ? 'PRO' : 'FREE'}</Text>
-                  </View>
-                  <Text style={styles.componentDescription}>{component.description}</Text>
-                  <Text style={styles.status}>{component.status === 'available' ? 'Disponível' : component.status === 'visual-only' ? 'Visual agora' : 'Planejado'}</Text>
-                </Pressable>
-              ))}
+              {components.map((component) => {
+                const selected = component.id === selectedComponentId;
+                return (
+                  <Pressable
+                    key={component.id}
+                    onPress={() => onSelectComponent?.(component)}
+                    style={({ pressed }) => [
+                      styles.componentCard,
+                      component.isPro && styles.proCard,
+                      selected && styles.selectedCard,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <View style={styles.componentHeader}>
+                      <Text style={styles.componentName}>{component.name}</Text>
+                      <Text style={[styles.badge, component.isPro ? styles.proBadge : styles.freeBadge]}>{component.isPro ? 'PRO' : 'FREE'}</Text>
+                    </View>
+                    <Text style={styles.componentDescription}>{component.description}</Text>
+                    <Text style={styles.status}>{component.status === 'available' ? 'Disponível' : component.status === 'visual-only' ? 'Visual agora' : 'Planejado'}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         );
@@ -94,6 +103,10 @@ const styles = StyleSheet.create({
   },
   proCard: {
     borderColor: colors.amber,
+  },
+  selectedCard: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
   },
   pressed: {
     opacity: 0.75,
