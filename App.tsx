@@ -4,7 +4,7 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
-import { EditableRungBuilder } from './src/components/EditableRungBuilder';
+import { EditableLadderCanvas } from './src/components/EditableLadderCanvas';
 import { EditorModeToggle, EditorRunMode } from './src/components/EditorModeToggle';
 import { EditorSimulationPanel } from './src/components/EditorSimulationPanel';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
@@ -328,11 +328,12 @@ export default function App() {
               onAddRung={addNewRung}
               onRemoveRung={removeSelectedRung}
             />
-            <EditableRungBuilder
+            <EditableLadderCanvas
               editor={editorProject}
+              locked={editingLocked}
+              rungResults={editorEvaluation.rungResults}
               onSelectZone={selectEditorZone}
               onSelectBlock={selectEditorBlock}
-              onRemoveSelected={removeSelectedEditorBlock}
             />
             {!editingLocked ? (
               <SelectedBlockEditor
