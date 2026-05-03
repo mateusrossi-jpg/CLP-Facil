@@ -1,0 +1,1 @@
+{"expo":{"name":"CLP Fácil","slug":"clp-facil","version":"0.1.0","orientation":"portrait","userInterfaceStyle":"dark","assetBundlePatterns":["**/*"],"ios":{"supportsTablet":true},"android":{"package":"com.mateusrossi.clpfacil","adaptiveIcon":{"backgroundColor":"#071114"}},"web":{"bundler":"metro"}}}
