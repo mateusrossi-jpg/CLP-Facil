@@ -3,12 +3,14 @@ import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from 'rea
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
+import { BottomNavigation, BottomNavKey } from './src/components/BottomNavigation';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { EditableLadderCanvas } from './src/components/EditableLadderCanvas';
 import { EditorModeToggle, EditorRunMode } from './src/components/EditorModeToggle';
 import { EditorSimulationPanel } from './src/components/EditorSimulationPanel';
 import { EducationalExamplePicker } from './src/components/EducationalExamplePicker';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
+import { HomeHero } from './src/components/HomeHero';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
 import { LessonCard } from './src/components/LessonCard';
@@ -49,6 +51,35 @@ export default function App() {
   const evaluation = evaluateProject(project, plcState);
   const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber, editorRuntime);
   const editingLocked = editorMode === 'simulate';
+  const activeNav: BottomNavKey = mode === 'learn' || mode === 'lesson' ? 'learn' : mode === 'simulate' ? 'simulate' : 'home';
+
+  function handleBottomNav(key: BottomNavKey) {
+    if (key === 'home') {
+      setMode('home');
+      return;
+    }
+
+    if (key === 'learn') {
+      setMode('learn');
+      return;
+    }
+
+    if (key === 'simulate') {
+      setMode('simulate');
+      return;
+    }
+
+    if (key === 'projects') {
+      setMode('simulate');
+      setEditorMessage('Projetos próprios, salvar e duplicar projetos serão liberados no fluxo Pro.');
+      return;
+    }
+
+    if (key === 'pro') {
+      setMode('simulate');
+      setEditorMessage('Área Pro: TON, TOF, CTU, SET/RESET, exportação e projetos próprios.');
+    }
+  }
 
   function openLesson(lesson: Lesson) {
     setSelectedLesson(lesson);
@@ -312,29 +343,54 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.container}>
         {mode === 'home' ? (
           <>
-            <AppHeader
-              title="Simulador Ladder Educativo"
-              subtitle="Aprenda comandos elétricos e lógica CLP no celular, com lições guiadas e um modo simulador para testar circuitos."
-            />
+            <HomeHero />
             <AppCard
-              title="Aprender"
-              description="Lições guiadas com contato NA, contato NF, selo, intertravamento, motores, temporizadores e contadores."
-              badge={`${availableLessons.length} lições`}
+              title="Aprenda"
+              description="Lições guiadas e exemplos passo a passo sobre comandos elétricos e lógica Ladder."
+              badge="Livre"
+              tone="cyan"
+              icon={<Text style={styles.homeIcon}>▤</Text>}
               onPress={() => setMode('learn')}
             />
             <AppCard
               title="Simular"
-              description="Monte e teste lógicas Ladder por blocos. O primeiro projeto é uma partida direta com selo."
-              badge="Simulador"
+              description="Monte, edite e simule seus projetos Ladder com canvas visual, scans e diagnóstico."
+              badge="Editor"
+              tone="green"
+              icon={<Text style={styles.homeIcon}>▷</Text>}
               onPress={openSimulator}
             />
             <AppCard
               title="Pro"
-              description="Componentes avançados como TON, TOF, CTU, SET/RESET, reversão, estrela-triângulo e projetos próprios."
-              badge="Pago"
-              onPress={openSimulator}
+              description="Recursos avançados: TON, TOF, CTU, SET/RESET, exportação e projetos próprios."
+              badge="PRO"
+              tone="amber"
+              icon={<Text style={[styles.homeIcon, styles.homeIconAmber]}>♕</Text>}
+              onPress={() => handleBottomNav('pro')}
             />
-            <Text style={styles.footer}>Conteúdo educacional livre; simulador de projetos próprios e componentes avançados como caminho Pro.</Text>
+            <View style={styles.featureStrip}>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>▦</Text>
+                <Text style={styles.featureTitle}>SCANS</Text>
+                <Text style={styles.featureText}>+100ms</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>◴</Text>
+                <Text style={styles.featureTitle}>TEMPORIZADORES</Text>
+                <Text style={styles.featureText}>TON / TOF</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>#</Text>
+                <Text style={styles.featureTitle}>CONTADORES</Text>
+                <Text style={styles.featureText}>CTU / CTD</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>┤├</Text>
+                <Text style={styles.featureTitle}>LADDER</Text>
+                <Text style={styles.featureText}>Visual</Text>
+              </View>
+            </View>
+            <Text style={styles.footer}>⚡ APRENDA. SIMULE. AUTOMATIZE. Do básico ao avançado, no seu celular.</Text>
           </>
         ) : null}
 
@@ -380,7 +436,7 @@ export default function App() {
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
             <ProjectCard project={project} badge="Exemplo livre" />
-            <AppCard title="Criar projeto próprio" description="Criar, salvar e editar projetos próprios será parte do CLP Fácil Pro." badge="PRO" />
+            <AppCard title="Criar projeto próprio" description="Criar, salvar e editar projetos próprios será parte do CLP Fácil Pro." badge="PRO" tone="amber" />
 
             <LadderDiagram project={project} state={evaluation.state} energizedRungs={evaluation.energizedRungs} />
 
@@ -470,9 +526,9 @@ export default function App() {
               />
             ) : null}
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
-            <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
         ) : null}
+        <BottomNavigation active={activeNav} onChange={handleBottomNav} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -488,6 +544,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
     backgroundColor: colors.background,
+  },
+  homeIcon: {
+    color: colors.cyan,
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  homeIconAmber: {
+    color: colors.amber,
+  },
+  featureStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceGlass,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  featureItem: {
+    flexBasis: '48%',
+    flexGrow: 1,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: spacing.md,
+    backgroundColor: colors.backgroundSoft,
+    alignItems: 'center',
+  },
+  featureIcon: {
+    color: colors.cyan,
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: spacing.xs,
+  },
+  featureTitle: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  featureText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+    textAlign: 'center',
   },
   moduleBlock: {
     marginBottom: spacing.xl,
@@ -563,9 +667,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   footer: {
-    color: colors.textMuted,
+    color: colors.cyan,
     fontSize: 12,
     lineHeight: 18,
     marginTop: spacing.lg,
+    fontWeight: '900',
   },
 });
