@@ -23,6 +23,7 @@ import { Lesson, learningModules, lessons } from './src/data/learningContent';
 import { createEditorBlock, createInitialEditorProject, EditorCoilMode, EditorContactMode, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
 import { createInitialEditorState, evaluateEditorProject, setEditorInput } from './src/engine/editorEvaluator';
 import { canInsertComponentInZone, explainInsertionRule } from './src/engine/editorRules';
+import { createInitialRuntimeState } from './src/engine/runtimeTypes';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
 import { colors } from './src/theme/colors';
@@ -40,10 +41,11 @@ export default function App() {
   const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
   const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
+  const [editorRuntime, setEditorRuntime] = useState(() => createInitialRuntimeState());
   const [editorScanNumber, setEditorScanNumber] = useState(0);
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
-  const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber);
+  const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber, editorRuntime);
   const editingLocked = editorMode === 'simulate';
 
   function openLesson(lesson: Lesson) {
@@ -63,6 +65,7 @@ export default function App() {
   function resetSimulation() {
     setPlcState(createInitialState(project));
     setEditorState(createInitialEditorState());
+    setEditorRuntime(createInitialRuntimeState());
     setEditorScanNumber(0);
   }
 
@@ -75,9 +78,10 @@ export default function App() {
     if (editorMode !== 'simulate') return;
     const nextScan = editorScanNumber + 1;
     const current = Boolean(editorEvaluation.state[inputId]);
-    const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current, nextScan);
+    const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current, nextScan, editorEvaluation.runtime);
     setEditorScanNumber(nextScan);
     setEditorState(result.state);
+    setEditorRuntime(result.runtime);
   }
 
   function selectEditorZone(zone: EditorInsertionZone) {
