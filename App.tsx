@@ -5,6 +5,7 @@ import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
 import { ComponentEditPanel } from './src/components/ComponentEditPanel';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
+import { EditableRungBuilder } from './src/components/EditableRungBuilder';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
@@ -13,10 +14,10 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { ProjectCard } from './src/components/ProjectCard';
-import { RungEditorPreview } from './src/components/RungEditorPreview';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { SimulatorComponent } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
+import { createEditorBlock, createInitialEditorProject, EditorProjectState, EditorInsertionZone } from './src/engine/editorTypes';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
 import { colors } from './src/theme/colors';
@@ -30,6 +31,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
+  const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
 
@@ -56,6 +58,62 @@ export default function App() {
     applyInput(inputId, !current);
   }
 
+  function selectEditorZone(zone: EditorInsertionZone) {
+    setEditorProject((current) => ({ ...current, selectedZone: zone, selectedBlockId: null }));
+  }
+
+  function selectEditorBlock(blockId: string) {
+    setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
+  }
+
+  function addComponentToEditor(component: SimulatorComponent) {
+    setSelectedComponent(component);
+
+    if (component.isPro) {
+      return;
+    }
+
+    setEditorProject((current) => {
+      const block = createEditorBlock(component, current.selectedZone);
+      return {
+        ...current,
+        selectedBlockId: block.id,
+        rungs: current.rungs.map((rung) => {
+          if (rung.id !== current.selectedRungId) return rung;
+
+          if (current.selectedZone === 'series') {
+            return { ...rung, seriesBlocks: [...rung.seriesBlocks, block] };
+          }
+
+          if (current.selectedZone === 'parallel') {
+            return { ...rung, parallelBlocks: [...rung.parallelBlocks, block] };
+          }
+
+          return { ...rung, coilBlock: block };
+        }),
+      };
+    });
+  }
+
+  function removeSelectedEditorBlock() {
+    setEditorProject((current) => {
+      if (!current.selectedBlockId) return current;
+      return {
+        ...current,
+        selectedBlockId: null,
+        rungs: current.rungs.map((rung) => ({
+          ...rung,
+          seriesBlocks: rung.seriesBlocks.filter((block) => block.id !== current.selectedBlockId),
+          parallelBlocks: rung.parallelBlocks.filter((block) => block.id !== current.selectedBlockId),
+          coilBlock: rung.coilBlock?.id === current.selectedBlockId ? null : rung.coilBlock,
+        })),
+      };
+    });
+  }
+
+  const selectedEditorBlock = editorProject.rungs
+    .flatMap((rung) => [...rung.seriesBlocks, ...rung.parallelBlocks, ...(rung.coilBlock ? [rung.coilBlock] : [])])
+    .find((block) => block.id === editorProject.selectedBlockId);
   const availableLessons = lessons.filter((lesson) => lesson.status === 'available');
 
   return (
@@ -128,7 +186,7 @@ export default function App() {
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
               <Text style={styles.simulatorModeTitle}>Editor visual por blocos</Text>
-              <Text style={styles.simulatorModeText}>Fluxo planejado: selecionar rung, escolher componente no painel, inserir na linha e tocar no bloco para editar parâmetros como variável, tempo, preset, SET ou RESET.</Text>
+              <Text style={styles.simulatorModeText}>Selecione Série, Paralelo ou Bobina, toque em um componente FREE para inserir, selecione o bloco e remova quando quiser. Componentes PRO aparecem bloqueados para projetos próprios.</Text>
             </View>
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
@@ -174,11 +232,20 @@ export default function App() {
             <OutputIndicator label="Q0 / K1" description="Contator principal" active={Boolean(evaluation.state.Q0)} />
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
-            <RungEditorPreview project={project} />
-            <ComponentEditPanel component={selectedComponent} proLocked={Boolean(selectedComponent?.isPro)} />
+            <EditableRungBuilder
+              editor={editorProject}
+              onSelectZone={selectEditorZone}
+              onSelectBlock={selectEditorBlock}
+              onRemoveSelected={removeSelectedEditorBlock}
+            />
+            <ComponentEditPanel
+              component={selectedComponent}
+              proLocked={Boolean(selectedComponent?.isPro)}
+            />
+            {selectedEditorBlock ? <Text style={styles.editorHint}>Bloco selecionado no editor: {selectedEditorBlock.name} em {selectedEditorBlock.variable}</Text> : null}
             <ComponentLibrary
               selectedComponentId={selectedComponent?.id}
-              onSelectComponent={setSelectedComponent}
+              onSelectComponent={addComponentToEditor}
             />
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
@@ -260,6 +327,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginHorizontal: -spacing.xs,
     marginBottom: spacing.lg,
+  },
+  editorHint: {
+    color: colors.green,
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: spacing.md,
   },
   footer: {
     color: colors.textMuted,
