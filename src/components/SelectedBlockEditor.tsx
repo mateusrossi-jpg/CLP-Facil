@@ -3,24 +3,36 @@ import { EditorBlock, EditorCoilMode, EditorContactMode } from '../engine/editor
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-const variableOptions = ['I0', 'I1', 'I2', 'I3', 'Q0', 'Q1', 'M0', 'M1'];
+const variableOptions = ['I0', 'I1', 'I2', 'I3', 'Q0', 'Q1', 'M0', 'M1', 'T0', 'T1', 'C0', 'C1'];
 const contactModes: EditorContactMode[] = ['NO', 'NC'];
 const coilModes: EditorCoilMode[] = ['NORMAL', 'SET', 'RESET', 'PULSE'];
+const timerPresetOptions = [500, 1000, 3000, 5000, 10000];
+const counterPresetOptions = [1, 3, 5, 10, 20];
 
 type SelectedBlockEditorProps = {
   block: EditorBlock | null;
   onChangeVariable: (variable: string) => void;
   onChangeContactMode: (mode: EditorContactMode) => void;
   onChangeCoilMode: (mode: EditorCoilMode) => void;
+  onChangePresetMs: (presetMs: number) => void;
+  onChangePreset: (preset: number) => void;
   onRemove: () => void;
 };
 
-export function SelectedBlockEditor({ block, onChangeVariable, onChangeContactMode, onChangeCoilMode, onRemove }: SelectedBlockEditorProps) {
+export function SelectedBlockEditor({
+  block,
+  onChangeVariable,
+  onChangeContactMode,
+  onChangeCoilMode,
+  onChangePresetMs,
+  onChangePreset,
+  onRemove,
+}: SelectedBlockEditorProps) {
   if (!block) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Configuração do bloco</Text>
-        <Text style={styles.text}>Selecione um bloco inserido no editor para alterar variável, tipo de contato, modo de bobina ou remover.</Text>
+        <Text style={styles.text}>Selecione um bloco inserido no editor para alterar variável, tipo de contato, modo de bobina, tempo, contagem ou remover.</Text>
       </View>
     );
   }
@@ -87,6 +99,40 @@ export function SelectedBlockEditor({ block, onChangeVariable, onChangeContactMo
             })}
           </View>
           <Text style={styles.proText}>SET, RESET e PULSE são recursos Pro para uso em projetos próprios, mas podem aparecer no modo educativo.</Text>
+        </>
+      ) : null}
+
+      {block.role === 'timer' ? (
+        <>
+          <Text style={styles.sectionTitle}>Tempo preset</Text>
+          <View style={styles.optionsGrid}>
+            {timerPresetOptions.map((preset) => (
+              <Pressable
+                key={preset}
+                onPress={() => onChangePresetMs(preset)}
+                style={({ pressed }) => [styles.option, block.presetMs === preset && styles.optionSelected, pressed && styles.pressed]}
+              >
+                <Text style={[styles.optionText, block.presetMs === preset && styles.optionTextSelected]}>{preset >= 1000 ? `${preset / 1000}s` : `${preset}ms`}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      {block.role === 'counter' ? (
+        <>
+          <Text style={styles.sectionTitle}>Preset de contagem</Text>
+          <View style={styles.optionsGrid}>
+            {counterPresetOptions.map((preset) => (
+              <Pressable
+                key={preset}
+                onPress={() => onChangePreset(preset)}
+                style={({ pressed }) => [styles.option, block.preset === preset && styles.optionSelected, pressed && styles.pressed]}
+              >
+                <Text style={[styles.optionText, block.preset === preset && styles.optionTextSelected]}>{preset}</Text>
+              </Pressable>
+            ))}
+          </View>
         </>
       ) : null}
 
