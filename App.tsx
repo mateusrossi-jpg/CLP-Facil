@@ -13,6 +13,7 @@ import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { HomeHero } from './src/components/HomeHero';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
+import { LearningModuleCard } from './src/components/LearningModuleCard';
 import { LessonCard } from './src/components/LessonCard';
 import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
@@ -52,6 +53,8 @@ export default function App() {
   const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber, editorRuntime);
   const editingLocked = editorMode === 'simulate';
   const activeNav: BottomNavKey = mode === 'learn' || mode === 'lesson' ? 'learn' : mode === 'simulate' ? 'simulate' : 'home';
+  const plannedLessons = lessons.filter((lesson) => lesson.status === 'planned');
+  const availableLessons = lessons.filter((lesson) => lesson.status === 'available');
 
   function handleBottomNav(key: BottomNavKey) {
     if (key === 'home') {
@@ -334,7 +337,6 @@ export default function App() {
   const selectedEditorBlock = editorProject.rungs
     .flatMap((rung) => [...rung.seriesBlocks, ...rung.parallelBlocks, ...(rung.coilBlock ? [rung.coilBlock] : [])])
     .find((block) => block.id === editorProject.selectedBlockId) ?? null;
-  const availableLessons = lessons.filter((lesson) => lesson.status === 'available');
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -396,25 +398,32 @@ export default function App() {
 
         {mode === 'learn' ? (
           <>
-            <AppHeader title="Modo Aprender" subtitle="Escolha uma lição, entenda a teoria e depois pratique no simulador quando a lição permitir." />
+            <AppHeader title="Modo Aprender" subtitle="Trilha livre para entender comandos elétricos, motores e lógica Ladder antes de montar seus projetos." />
+            <View style={styles.learnSummary}>
+              <View style={styles.learnStat}>
+                <Text style={styles.learnStatValue}>{availableLessons.length}</Text>
+                <Text style={styles.learnStatLabel}>livres</Text>
+              </View>
+              <View style={styles.learnStat}>
+                <Text style={styles.learnStatValue}>{plannedLessons.length}</Text>
+                <Text style={styles.learnStatLabel}>futuras</Text>
+              </View>
+              <View style={styles.learnStat}>
+                <Text style={styles.learnStatValue}>{learningModules.length}</Text>
+                <Text style={styles.learnStatLabel}>módulos</Text>
+              </View>
+            </View>
             {learningModules.map((module) => {
               const moduleLessons = lessons.filter((lesson) => lesson.moduleId === module.id);
               return (
                 <View key={module.id} style={styles.moduleBlock}>
-                  <View style={styles.moduleHeader}>
-                    <Text style={styles.moduleTitle}>{module.title}</Text>
-                    <Text style={[styles.moduleStatus, module.status === 'planned' && styles.moduleStatusPlanned]}>
-                      {module.status === 'available' ? 'Livre' : 'Futuro'}
-                    </Text>
-                  </View>
-                  <Text style={styles.moduleDescription}>{module.description}</Text>
-                  {moduleLessons.map((lesson) => (
-                    <LessonCard key={lesson.id} lesson={lesson} onPress={() => openLesson(lesson)} />
+                  <LearningModuleCard module={module} lessons={moduleLessons} />
+                  {moduleLessons.map((lesson, index) => (
+                    <LessonCard key={lesson.id} lesson={lesson} index={index} onPress={() => openLesson(lesson)} />
                   ))}
                 </View>
               );
             })}
-            <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
         ) : null}
 
@@ -593,34 +602,39 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
   },
-  moduleBlock: {
-    marginBottom: spacing.xl,
-  },
-  moduleHeader: {
+  learnSummary: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceGlass,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
-  moduleTitle: {
-    color: colors.text,
-    fontSize: 22,
+  learnStat: {
+    flex: 1,
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: spacing.md,
+    backgroundColor: colors.backgroundSoft,
+  },
+  learnStatValue: {
+    color: colors.cyan,
+    fontSize: 24,
     fontWeight: '900',
   },
-  moduleStatus: {
-    color: colors.green,
+  learnStatLabel: {
+    color: colors.textMuted,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
+    marginTop: 2,
   },
-  moduleStatusPlanned: {
-    color: colors.amber,
-  },
-  moduleDescription: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: spacing.md,
+  moduleBlock: {
+    marginBottom: spacing.xl,
   },
   simulatorModeBanner: {
     backgroundColor: colors.cyanSoft,
