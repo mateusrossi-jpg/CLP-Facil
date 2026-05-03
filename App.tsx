@@ -5,6 +5,7 @@ import { AppCard } from './src/components/AppCard';
 import { AppHeader } from './src/components/AppHeader';
 import { ComponentLibrary } from './src/components/ComponentLibrary';
 import { EditableRungBuilder } from './src/components/EditableRungBuilder';
+import { EditorModeToggle, EditorRunMode } from './src/components/EditorModeToggle';
 import { EditorSimulationPanel } from './src/components/EditorSimulationPanel';
 import { ExplanationPanel } from './src/components/ExplanationPanel';
 import { InputButton } from './src/components/InputButton';
@@ -33,11 +34,13 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
+  const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
   const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
   const [plcState, setPlcState] = useState<PlcState>(initial);
   const evaluation = evaluateProject(project, plcState);
   const editorEvaluation = evaluateEditorProject(editorProject, editorState);
+  const editingLocked = editorMode === 'simulate';
 
   function openLesson(lesson: Lesson) {
     setSelectedLesson(lesson);
@@ -64,20 +67,24 @@ export default function App() {
   }
 
   function toggleEditorInput(inputId: string) {
+    if (editorMode !== 'simulate') return;
     const current = Boolean(editorEvaluation.state[inputId]);
     const result = setEditorInput(editorProject, editorEvaluation.state, inputId, !current);
     setEditorState(result.state);
   }
 
   function selectEditorZone(zone: EditorInsertionZone) {
+    if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedZone: zone, selectedBlockId: null }));
   }
 
   function selectEditorBlock(blockId: string) {
+    if (editingLocked) return;
     setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
   }
 
   function addNewRung() {
+    if (editingLocked) return;
     setEditorProject((current) => {
       const nextIndex = current.rungs.length + 1;
       const rungId = `rung-${nextIndex}`;
@@ -102,10 +109,7 @@ export default function App() {
 
   function addComponentToEditor(component: SimulatorComponent) {
     setSelectedComponent(component);
-
-    if (component.isPro) {
-      return;
-    }
+    if (editingLocked || component.isPro) return;
 
     setEditorProject((current) => {
       const block = createEditorBlock(component, current.selectedZone);
@@ -130,6 +134,7 @@ export default function App() {
   }
 
   function updateSelectedBlockVariable(variable: string) {
+    if (editingLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -149,6 +154,7 @@ export default function App() {
   }
 
   function removeSelectedEditorBlock() {
+    if (editingLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -239,7 +245,7 @@ export default function App() {
             <AppHeader title="Modo Simular" subtitle={project.description} />
             <View style={styles.simulatorModeBanner}>
               <Text style={styles.simulatorModeTitle}>Editor visual por blocos</Text>
-              <Text style={styles.simulatorModeText}>Monte uma linha simples: adicione contatos em Série/Paralelo, escolha uma bobina em Bobina, ajuste variáveis e teste as entradas virtuais.</Text>
+              <Text style={styles.simulatorModeText}>Monte em Editar. Depois alterne para Simular para travar a edição e testar as entradas virtuais.</Text>
             </View>
 
             <Text style={styles.sectionTitle}>Projetos do simulador</Text>
@@ -285,27 +291,35 @@ export default function App() {
             <OutputIndicator label="Q0 / K1" description="Contator principal" active={Boolean(evaluation.state.Q0)} />
             <MotorIndicator active={Boolean(evaluation.state.MTR1)} />
             <ExplanationPanel text={evaluation.explanation} />
+
+            <EditorModeToggle mode={editorMode} onChangeMode={setEditorMode} />
+            {editingLocked ? <Text style={styles.lockedNotice}>Edição travada. Volte para Editar para adicionar, remover ou alterar blocos.</Text> : null}
+
             <EditableRungBuilder
               editor={editorProject}
               onSelectZone={selectEditorZone}
               onSelectBlock={selectEditorBlock}
               onRemoveSelected={removeSelectedEditorBlock}
             />
-            <SelectedBlockEditor
-              block={selectedEditorBlock}
-              onChangeVariable={updateSelectedBlockVariable}
-              onRemove={removeSelectedEditorBlock}
-            />
+            {!editingLocked ? (
+              <SelectedBlockEditor
+                block={selectedEditorBlock}
+                onChangeVariable={updateSelectedBlockVariable}
+                onRemove={removeSelectedEditorBlock}
+              />
+            ) : null}
             <EditorSimulationPanel
               state={editorEvaluation.state}
               evaluation={editorEvaluation}
               onToggleInput={toggleEditorInput}
             />
-            <ComponentLibrary
-              selectedComponentId={selectedComponent?.id}
-              onSelectComponent={addComponentToEditor}
-            />
-            <AppCard title="Adicionar nova linha" description="Cria mais uma linha/rung no editor visual." onPress={addNewRung} />
+            {!editingLocked ? (
+              <ComponentLibrary
+                selectedComponentId={selectedComponent?.id}
+                onSelectComponent={addComponentToEditor}
+              />
+            ) : null}
+            {!editingLocked ? <AppCard title="Adicionar nova linha" description="Cria mais uma linha/rung no editor visual." onPress={addNewRung} /> : null}
             <AppCard title="Resetar simulação" description="Voltar entradas e saídas para o estado inicial." onPress={resetSimulation} />
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
@@ -373,6 +387,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
+  },
+  lockedNotice: {
+    color: colors.amber,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: spacing.md,
   },
   sectionTitle: {
     color: colors.text,
