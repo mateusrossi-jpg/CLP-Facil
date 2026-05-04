@@ -19,6 +19,7 @@ import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
 import { PlcProfilePanel } from './src/components/PlcProfilePanel';
+import { CommunicationProtocolsPanel } from './src/components/CommunicationProtocolsPanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
@@ -1014,6 +1015,7 @@ export default function App() {
               selectedProfile={selectedPlcProfile}
               onSelectProfile={setSelectedPlcProfile}
             />
+            <CommunicationProtocolsPanel />
               <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
