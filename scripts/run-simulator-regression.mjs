@@ -6,6 +6,7 @@ const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
 const { runPlcProfileRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/plcProfileRegression.js');
 const { runProtocolRegressionSuite } = require('/tmp/easy-clp-sim-test/communication/protocolRegression.js');
+const { runExampleLibraryRegressionSuite } = require('/tmp/easy-clp-sim-test/data/exampleLibraryRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
@@ -13,6 +14,7 @@ const results = [
   ...runHardwareRegressionSuite(),
   ...runPlcProfileRegressionSuite(),
   ...runProtocolRegressionSuite(),
+  ...runExampleLibraryRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
