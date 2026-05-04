@@ -1,9 +1,13 @@
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { runEditorEvaluatorRegressionSuite } = require('/tmp/clp-facil-sim-test/engine/editorEvaluatorRegression.js');
+const { runEditorEvaluatorRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorEvaluatorRegression.js');
+const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/edgeRegression.js');
 
-const results = runEditorEvaluatorRegressionSuite();
+const results = [
+  ...runEditorEvaluatorRegressionSuite(),
+  ...runEdgeContactRegressionSuite(),
+];
 const failed = results.filter((result) => !result.passed);
 
 for (const result of results) {
