@@ -1,0 +1,36 @@
+name: Optimize app performance
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/optimize-app-evaluation-performance.mjs'
+      - '.github/workflows/optimize-app-performance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Optimize app evaluation performance
+        run: node scripts/optimize-app-evaluation-performance.mjs
+
+      - name: Commit app performance optimization
+        run: |
+          if git diff --quiet; then
+            echo "No performance changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "perf: optimize simulator evaluation and auto scan"
+          git push
