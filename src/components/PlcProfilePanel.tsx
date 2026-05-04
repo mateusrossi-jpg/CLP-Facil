@@ -10,8 +10,65 @@ type PlcProfilePanelProps = {
   onSelectProfile: (profile: PlcProfileId) => void;
 };
 
+function profileLegend(profileId: PlcProfileId): { title: string; items: { symbol: string; meaning: string }[] } {
+  if (profileId === 'rockwell_like') {
+    return {
+      title: 'Legenda Rockwell-like',
+      items: [
+        { symbol: 'XIC', meaning: 'Examine If Closed: conduz quando a tag está ON.' },
+        { symbol: 'XIO', meaning: 'Examine If Open: conduz quando a tag está OFF.' },
+        { symbol: 'OTE', meaning: 'Energiza a saída enquanto a linha é verdadeira.' },
+        { symbol: 'OTL / OTU', meaning: 'Trava e destrava uma saída/memória.' },
+        { symbol: 'ONS / OSF', meaning: 'Pulso de borda de subida ou descida.' },
+        { symbol: 'TON / CTU', meaning: 'Temporizador e contador crescente.' },
+      ],
+    };
+  }
+
+  if (profileId === 'iec_like') {
+    return {
+      title: 'Legenda IEC-like',
+      items: [
+        { symbol: 'Contato NA', meaning: 'Conduz quando a variável booleana está verdadeira.' },
+        { symbol: 'Contato NF', meaning: 'Conduz quando a variável booleana está falsa.' },
+        { symbol: 'Coil', meaning: 'Escreve a saída conforme o resultado da linha.' },
+        { symbol: 'S / R', meaning: 'Set e Reset para retenção de estado.' },
+        { symbol: 'P_TRIG / N_TRIG', meaning: 'Detector de borda positiva ou negativa.' },
+        { symbol: 'TON / CTU', meaning: 'Blocos clássicos de tempo e contagem.' },
+      ],
+    };
+  }
+
+  if (profileId === 'commands_like') {
+    return {
+      title: 'Legenda Comandos elétricos',
+      items: [
+        { symbol: 'Contato NA', meaning: 'Representa botoeira/sensor normalmente aberto.' },
+        { symbol: 'Contato NF', meaning: 'Representa stop, fim de curso ou proteção normalmente fechada.' },
+        { symbol: 'Bobina/Contator', meaning: 'Aciona K, relé, motor ou lâmpada.' },
+        { symbol: 'Retenção', meaning: 'Equivale ao selo ou memória de comando.' },
+        { symbol: 'Desarme', meaning: 'Quebra retenção ou condição de segurança.' },
+        { symbol: 'Relé tempo TON', meaning: 'Temporização para partir, atrasar ou sequenciar.' },
+      ],
+    };
+  }
+
+  return {
+    title: 'Legenda Easy-CLP',
+    items: [
+      { symbol: 'NA', meaning: 'Contato normalmente aberto.' },
+      { symbol: 'NF', meaning: 'Contato normalmente fechado.' },
+      { symbol: 'Bobina', meaning: 'Saída ou memória acionada pela linha.' },
+      { symbol: 'Set / Reset', meaning: 'Liga e desliga memória retentiva.' },
+      { symbol: 'Borda + / -', meaning: 'Pulso momentâneo no evento de mudança.' },
+      { symbol: 'TON / CTU', meaning: 'Tempo e contagem para sequências didáticas.' },
+    ],
+  };
+}
+
 export function PlcProfilePanel({ editorProject, selectedProfile, onSelectProfile }: PlcProfilePanelProps) {
   const profileView = createPlcProfileProjectView(editorProject, selectedProfile);
+  const legend = profileLegend(selectedProfile);
 
   return (
     <View style={styles.card}>
@@ -41,6 +98,18 @@ export function PlcProfilePanel({ editorProject, selectedProfile, onSelectProfil
         <Text style={styles.infoTitle}>{profileView.profile.name}</Text>
         <Text style={styles.infoText}>{profileView.profile.description}</Text>
         <Text style={styles.disclaimer}>{profileView.profile.disclaimer}</Text>
+      </View>
+
+      <View style={styles.legendBox}>
+        <Text style={styles.legendTitle}>{legend.title}</Text>
+        <View style={styles.legendGrid}>
+          {legend.items.map((item) => (
+            <View key={`${selectedProfile}-${item.symbol}`} style={styles.legendItem}>
+              <Text style={styles.legendSymbol}>{item.symbol}</Text>
+              <Text style={styles.legendMeaning}>{item.meaning}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.rungList}>
@@ -169,6 +238,46 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '800',
     marginTop: spacing.sm,
+  },
+  legendBox: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: colors.cyanSoft,
+    gap: spacing.sm,
+  },
+  legendTitle: {
+    color: colors.cyan,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  legendGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  legendItem: {
+    flexGrow: 1,
+    flexBasis: 150,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  legendSymbol: {
+    color: colors.green,
+    fontFamily: 'monospace',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  legendMeaning: {
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 3,
   },
   rungList: {
     gap: spacing.md,
