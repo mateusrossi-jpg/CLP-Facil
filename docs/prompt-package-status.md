@@ -20,6 +20,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Tokens centrais de contraste para código: fundo #020817 / #0B1220 e texto #F8FAFC.
 - Checklist de release expandido para mobile, profissional, ensino, exemplos, hardware e referência.
 - Proteção contra aba Ref vazia: `ReferenceHubPanel` aceita props opcionais e cria projeto didático fallback.
+- GitHub Actions atualizado para rodar `typecheck`, `test:simulator` e `test:quality` em push, pull request e workflow manual.
 
 ## Concluído na interface
 
@@ -34,14 +35,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Ainda pendente para fechamento visual/manual
 
-- Rodar localmente:
-
-```bash
-npm run typecheck
-npm run test:simulator
-npm run test:quality
-```
-
+- Confirmar o resultado do GitHub Actions após o próximo push ou execução manual.
 - Testar no celular real:
   - Tocar em Ref e confirmar que não fica vazia.
   - Ref > Mobile.
