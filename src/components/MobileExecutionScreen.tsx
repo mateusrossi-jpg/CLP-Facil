@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { createInitialEditorProject, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
+import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { createPlcProfileProjectView, PlcProfileId } from '../plcProfiles/plcProfiles';
 import { createProfessionalTagRows, ProfessionalTagRow } from '../simulation/professionalClpView';
 import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
@@ -29,29 +30,28 @@ type IoSection = {
   rows: ProfessionalTagRow[];
 };
 
-function fallbackEvaluation(project: EditorProjectState): EditorEvaluationResult {
-  return {
-    nextState: {},
-    rungResults: Object.fromEntries(project.rungs.map((rung) => [rung.id, false])),
-    timers: {},
-    counters: {},
-    edgeMemory: {},
-    errors: [],
-    warnings: [],
-  };
-}
-
-function normalizeStateValue(value: boolean | number): boolean {
-  if (typeof value === 'number') return value !== 0;
-  return value;
-}
-
 function makeFallbackState(project: EditorProjectState): PlcState {
   const state: PlcState = {};
   for (const variable of project.projectVariables ?? []) {
     state[(variable.address || variable.id).toUpperCase()] = variable.dataType === 'number' ? 0 : false;
   }
   return state;
+}
+
+function fallbackEvaluation(project: EditorProjectState, state: PlcState): EditorEvaluationResult {
+  return {
+    state,
+    rungResults: Object.fromEntries(project.rungs.map((rung) => [rung.id, false])),
+    diagnostics: [],
+    runtime: createInitialRuntimeState(),
+    scanNumber: 0,
+    explanation: 'Simulação mobile pronta para execução.',
+  };
+}
+
+function normalizeStateValue(value: boolean | number): boolean {
+  if (typeof value === 'number') return value !== 0;
+  return value;
 }
 
 function splitIoSections(rows: ProfessionalTagRow[]): IoSection[] {
@@ -88,7 +88,7 @@ export const MobileExecutionScreen = memo(function MobileExecutionScreen({
   const fallbackProject = useMemo(() => createInitialEditorProject(), []);
   const project = editorProject ?? fallbackProject;
   const state = plcState ?? makeFallbackState(project);
-  const result = evaluation ?? fallbackEvaluation(project);
+  const result = evaluation ?? fallbackEvaluation(project, state);
   const [activeIoTab, setActiveIoTab] = useState<IoTab>('inputs');
   const [programMode, setProgramMode] = useState<ProgramMode>('compact_rung');
   const [focusedRungId, setFocusedRungId] = useState<string | null>(null);
