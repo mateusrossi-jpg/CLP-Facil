@@ -22,7 +22,8 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Concluído na interface
 
-- Aba Referência com Dialetos, Tags, Rotinas, Protocolos, Segurança, Divulgação e Loja.
+- Aba Referência com Dialetos, Mobile, Tags, Rotinas, Protocolos, Segurança, Divulgação e Loja.
+- Aba Referência > Mobile com controle Compacto / Enquadrar / Amplo e orientação de Fluxo para rung grande.
 - Aba Referência > Tags com tabela profissional, Force editável e comentários por rung editáveis.
 - Aba Referência > Rotinas com organização profissional do projeto.
 - Painel de trilha educativa atualizado com progresso, conclusão de lição e abertura de exemplo.
@@ -44,6 +45,7 @@ npm run test:quality
   - Simular > Programa > Fluxo.
   - Saída/carga fixa do rung.
   - Arraste lateral real em rung grande.
+  - Aba Ref > Mobile.
   - Aba Ref > Tags.
   - Aba Ref > Rotinas.
   - Aba Hardware > 1 Placa / 2 Pinos / 3 Código.
@@ -52,7 +54,7 @@ npm run test:quality
 
 ## Próximo bloco recomendado
 
-A próxima etapa visual deve integrar os controles de zoom/enquadramento diretamente no `SmartphoneSimulationPanel.tsx`, usando o modelo `src/simulation/smartphoneViewScale.ts`. Como esse arquivo é grande, fazer alteração mínima e testar imediatamente.
+A próxima etapa visual deve integrar os controles de zoom/enquadramento diretamente no `SmartphoneSimulationPanel.tsx`, usando o modelo `src/simulation/smartphoneViewScale.ts` e o componente `src/components/SmartphoneViewScaleControl.tsx`. Como esse arquivo é grande, fazer alteração mínima e testar imediatamente.
 
 ## Critério de aceite
 
@@ -62,7 +64,8 @@ O pacote pode ser considerado fechado quando:
 2. `test:simulator` passa.
 3. `test:quality` passa.
 4. No celular, rungs grandes têm arraste lateral real e saída/carga sempre visível.
-5. Ref > Tags mostra tabela profissional, comentários e Force didático.
-6. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
-7. Hardware mantém seleção de placa/pino separada da simulação.
-8. Código exportado tem fundo escuro e texto claro.
+5. Ref > Mobile mostra Compacto / Enquadrar / Amplo.
+6. Ref > Tags mostra tabela profissional, comentários e Force didático.
+7. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
+8. Hardware mantém seleção de placa/pino separada da simulação.
+9. Código exportado tem fundo escuro e texto claro.
