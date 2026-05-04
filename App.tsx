@@ -18,6 +18,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
+import { PlcProfilePanel } from './src/components/PlcProfilePanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
@@ -33,6 +34,7 @@ import { createInitialRuntimeState } from './src/engine/runtimeTypes';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
 import { colors } from './src/theme/colors';
+import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
 
 type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'projects' | 'pro';
@@ -50,6 +52,7 @@ export default function App() {
   const [editorMessage, setEditorMessage] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
   const [editorProject, setEditorProject] = useState<EditorProjectState>(() => createInitialEditorProject());
+  const [selectedPlcProfile, setSelectedPlcProfile] = useState<PlcProfileId>('easy_clp');
   const [editorState, setEditorState] = useState<PlcState>(() => createInitialEditorState());
   const [editorRuntime, setEditorRuntime] = useState(() => createInitialRuntimeState());
   const [editorScanNumber, setEditorScanNumber] = useState(0);
@@ -1006,6 +1009,11 @@ export default function App() {
                 onAddVariable={addEditorVariable}
                 onRemoveVariable={removeEditorVariable}
               />
+            <PlcProfilePanel
+              editorProject={editorProject}
+              selectedProfile={selectedPlcProfile}
+              onSelectProfile={setSelectedPlcProfile}
+            />
               <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
