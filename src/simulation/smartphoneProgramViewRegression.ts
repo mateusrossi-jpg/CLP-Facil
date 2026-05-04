@@ -71,6 +71,18 @@ function runProfessionalTagTableRegression(): SmartphoneProgramRegressionResult 
   );
 }
 
+function runProfessionalForceOffRegression(): SmartphoneProgramRegressionResult {
+  const project = createInitialEditorProject();
+  const rows = createProfessionalTagRows(project, { 'Q0.0': true }, { 'Q0.0': 'force_off' });
+  const motor = rows.find((row) => row.tag === 'Q0.0');
+
+  return assertResult(
+    'force didatico OFF sobrepoe valor booleano com alerta',
+    Boolean(motor && motor.value === false && motor.forcedLabel === 'Force OFF' && motor.safetyWarning?.includes('Force didático')),
+    `motor=${motor?.value}, forced=${motor?.forcedLabel}`,
+  );
+}
+
 function runRungCommentsRegression(): SmartphoneProgramRegressionResult {
   const project = createInitialEditorProject();
   const automatic = createRungCommentRows(project)[0];
@@ -89,6 +101,7 @@ export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegr
     runFlowProgramSummaryRegression(),
     runRungOutputSummaryRegression(),
     runProfessionalTagTableRegression(),
+    runProfessionalForceOffRegression(),
     runRungCommentsRegression(),
     ...runCodeContrastRegressionSuite(),
   ];
