@@ -1,11 +1,5 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { ReferenceHubPanel } from './ReferenceHubPanel';
-import { SimulationModeRouter } from './SimulationModeRouter';
-import { PremiumEditorExportScreen } from './premium/PremiumEditorExportScreen';
-import { PremiumHomeScreen } from './premium/PremiumHomeScreen';
-import { PremiumLearningScreen } from './premium/PremiumLearningScreen';
-import { PremiumProjectsScreen } from './premium/PremiumProjectsScreen';
-import { PremiumTagsDiagnosticsScreen } from './premium/PremiumTagsDiagnosticsScreen';
+import { PremiumRouteContent } from './premium/PremiumRouteContent';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -59,12 +53,7 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
           );
         })}
       </View>
-      {active === 'home' ? <PremiumHomeScreen /> : null}
-      {active === 'learn' ? <PremiumLearningScreen /> : null}
-      {active === 'simulate' ? <SimulationModeRouter /> : null}
-      {active === 'projects' ? <PremiumProjectsScreen /> : null}
-      {active === 'pro' ? <PremiumEditorExportScreen /> : null}
-      {active === 'reference' ? <><ReferenceHubPanel /><PremiumTagsDiagnosticsScreen /></> : null}
+      <PremiumRouteContent active={active} />
     </View>
   );
 }
