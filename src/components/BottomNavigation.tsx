@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { ReferenceHubPanel } from './ReferenceHubPanel';
 import { SimulationModeRouter } from './SimulationModeRouter';
+import { PremiumHomeScreen } from './premium/PremiumHomeScreen';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -54,6 +55,7 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
           );
         })}
       </View>
+      {active === 'home' ? <PremiumHomeScreen /> : null}
       {active === 'simulate' ? <SimulationModeRouter /> : null}
       {active === 'reference' ? <ReferenceHubPanel /> : null}
     </View>
