@@ -1,6 +1,16 @@
 import { EditorContactMode, EditorCoilMode, EditorCounterMode, EditorTimerMode } from '../engine/editorTypes';
 
-export type HardwareTarget = 'esp32' | 'esp8266' | 'arduino_uno' | 'arduino_nano' | 'generic_arduino' | 'esphome';
+export type HardwareTarget =
+  | 'esp32'
+  | 'esp32_s3'
+  | 'esp32_c3'
+  | 'esp32_cam'
+  | 'esp8266'
+  | 'arduino_uno'
+  | 'arduino_nano'
+  | 'arduino_mega'
+  | 'generic_arduino'
+  | 'esphome';
 
 export type HardwareVariableScope = 'input' | 'output' | 'memory';
 export type HardwareDataType = 'boolean' | 'number' | 'timer' | 'counter';
