@@ -1,0 +1,36 @@
+name: Fix code preview contrast
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/fix-code-preview-contrast.mjs'
+      - '.github/workflows/fix-code-preview-contrast.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply code preview fix
+        run: node scripts/fix-code-preview-contrast.mjs
+
+      - name: Commit code preview fix
+        run: |
+          if git diff --quiet; then
+            echo "No code preview changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/HardwareExportPanel.tsx
+          git commit -m "fix: improve hardware code preview contrast"
+          git push
