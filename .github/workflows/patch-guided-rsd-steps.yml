@@ -1,0 +1,36 @@
+name: Patch guided RSD steps
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/patch-guided-rsd-steps.mjs'
+      - '.github/workflows/patch-guided-rsd-steps.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch guided reversing star-delta steps
+        run: node scripts/patch-guided-rsd-steps.mjs
+
+      - name: Commit guided RSD patch
+        run: |
+          if git diff --quiet; then
+            echo "No guided RSD changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/education/guidedPractice.ts
+          git commit -m "test: relax guided reversing star-delta completion checks"
+          git push
