@@ -20,6 +20,7 @@ import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
 import { PlcProfilePanel } from './src/components/PlcProfilePanel';
 import { CommunicationProtocolsPanel } from './src/components/CommunicationProtocolsPanel';
+import { ReferenceHubPanel } from './src/components/ReferenceHubPanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
@@ -38,7 +39,7 @@ import { colors } from './src/theme/colors';
 import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
 
-type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'projects' | 'pro';
+type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'reference' | 'projects' | 'pro';
 
 export default function App() {
   const { width } = useWindowDimensions();
@@ -73,8 +74,10 @@ export default function App() {
     ? 'learn'
     : mode === 'simulate'
       ? 'simulate'
-      : mode === 'projects'
-        ? 'projects'
+      : mode === 'reference'
+        ? 'reference'
+        : mode === 'projects'
+          ? 'projects'
         : mode === 'pro'
           ? 'pro'
           : 'home';
@@ -154,6 +157,11 @@ export default function App() {
       setPracticeLesson(null);
       setCompletedPracticeSteps({});
       setMode('simulate');
+      return;
+    }
+
+    if (key === 'reference') {
+      setMode('reference');
       return;
     }
 
@@ -1010,12 +1018,6 @@ export default function App() {
                 onAddVariable={addEditorVariable}
                 onRemoveVariable={removeEditorVariable}
               />
-            <PlcProfilePanel
-              editorProject={editorProject}
-              selectedProfile={selectedPlcProfile}
-              onSelectProfile={setSelectedPlcProfile}
-            />
-            <CommunicationProtocolsPanel />
               <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
