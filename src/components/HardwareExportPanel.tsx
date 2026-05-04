@@ -9,6 +9,7 @@ import { exportEspHomeYaml } from '../hardware/exportEspHomeYaml';
 import { BoardPin, getBoardPin, getGpioBoardCatalog, getSelectablePins } from '../hardware/gpioCatalog';
 import { HardwareExportConfig, HardwareOutputPolarity, HardwarePinMap, HardwareTarget } from '../hardware/hardwareTypes';
 import { GpioValidationIssue, validateGpioMap } from '../hardware/validateGpioMap';
+import { codeContrast } from '../theme/codeContrast';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -761,16 +762,16 @@ const styles = StyleSheet.create({
   codeBox: {
     minHeight: 300,
     maxHeight: 460,
-    borderColor: colors.cyan,
+    borderColor: codeContrast.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: '#020817',
+    backgroundColor: codeContrast.background,
   },
   codeContent: {
     padding: spacing.md,
   },
   codeText: {
-    color: '#F8FAFC',
+    color: codeContrast.text,
     fontFamily: 'monospace',
     fontSize: 12,
     lineHeight: 18,
