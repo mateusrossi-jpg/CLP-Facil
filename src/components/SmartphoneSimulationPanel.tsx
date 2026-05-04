@@ -5,11 +5,12 @@ import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { createPlcProfileProjectView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
 import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
+import { createSmartphoneIoSummary, SmartphoneIoGroupId, SmartphoneSignalSnapshot } from '../simulation/smartphoneIoView';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 type MobileTab = 'execution' | 'io' | 'program' | 'diagnostics';
-type IoGroup = 'inputs' | 'outputs' | 'memory' | 'functions';
+type IoGroup = SmartphoneIoGroupId;
 type ProgramView = 'list' | 'flow';
 
 type SignalItem = {
@@ -200,6 +201,13 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const activeInputs = activeSummary(signals, plcState, 'input');
   const activeOutputs = activeSummary(signals, plcState, 'output');
   const activeFunctions = activeSummary(signals, plcState, 'function');
+  const signalSnapshots = useMemo<SmartphoneSignalSnapshot[]>(() => signals.map((signal) => ({
+    address: signal.address,
+    name: signal.name,
+    type: signal.type,
+    value: signalValue(plcState, signal),
+  })), [plcState, signals]);
+  const ioSummary = useMemo(() => createSmartphoneIoSummary(signalSnapshots, ioGroup), [ioGroup, signalSnapshots]);
   const diagnostics = evaluation.diagnostics ?? [];
 
   const shownSignals = signals.filter((signal) => {
@@ -292,6 +300,26 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
                 </Pressable>
               );
             })}
+          </View>
+
+          <View style={styles.summaryBox}>
+            <Text style={styles.sectionTitle}>Resumo de {ioSummary.label}</Text>
+            <View style={styles.programMetaRow}>
+              <View style={styles.programMetaCard}>
+                <Text style={styles.programMetaLabel}>Total</Text>
+                <Text style={styles.programMetaValue}>{ioSummary.totalCount}</Text>
+              </View>
+              <View style={styles.programMetaCard}>
+                <Text style={styles.programMetaLabel}>Ativos</Text>
+                <Text style={styles.programMetaValue}>{ioSummary.activeCount}</Text>
+              </View>
+            </View>
+            <Text style={styles.educationText}>{ioSummary.guidance}</Text>
+            {ioSummary.activeAddresses.length > 0 ? (
+              <View style={styles.chipWrap}>
+                {ioSummary.activeAddresses.map((address) => <Text key={address} style={styles.activeChip}>{address}</Text>)}
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.signalList}>
