@@ -9,6 +9,7 @@ import { StoreListingPanel } from './StoreListingPanel';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
+import { EducationalForceMap, EducationalForceMode } from '../simulation/professionalClpView';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -45,7 +46,17 @@ function initialReferenceState(project: EditorProjectState): PlcState {
 
 export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectPlcProfile }: ReferenceHubPanelProps) {
   const [tab, setTab] = useState<ReferenceTab>('dialects');
+  const [educationalForces, setEducationalForces] = useState<EducationalForceMap>({});
   const referenceState = useMemo(() => initialReferenceState(editorProject), [editorProject]);
+
+  function setEducationalForce(tag: string, force: EducationalForceMode) {
+    setEducationalForces((current) => {
+      const next = { ...current };
+      if (force === 'normal') delete next[tag];
+      else next[tag] = force;
+      return next;
+    });
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -90,7 +101,12 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           onSelectProfile={onSelectPlcProfile}
         />
       ) : tab === 'tags' ? (
-        <ProfessionalClpPanel editorProject={editorProject} plcState={referenceState} />
+        <ProfessionalClpPanel
+          editorProject={editorProject}
+          plcState={referenceState}
+          forces={educationalForces}
+          onSetForce={setEducationalForce}
+        />
       ) : tab === 'protocols' ? (
         <CommunicationProtocolsPanel />
       ) : tab === 'safety' ? (
