@@ -54,9 +54,6 @@ export function createProfessionalRoutinePlan(project: EditorProjectState): Prof
     grouped.set(routineId, [...(grouped.get(routineId) ?? []), rung.id]);
   }
 
-  const main = grouped.get('MainRoutine') ?? [];
-  if (main.length === 0 && project.rungs[0]) grouped.set('MainRoutine', [project.rungs[0].id]);
-
   return (Object.keys(routineBase) as ProfessionalRoutineId[]).map((id) => ({
     ...routineBase[id],
     rungIds: grouped.get(id) ?? [],
