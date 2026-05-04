@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CommunicationProtocolsPanel } from './CommunicationProtocolsPanel';
 import { PlcProfilePanel } from './PlcProfilePanel';
 import { ProfessionalClpPanel } from './ProfessionalClpPanel';
+import { ProfessionalRoutinePanel } from './ProfessionalRoutinePanel';
 import { ReleaseReadinessPanel } from './ReleaseReadinessPanel';
 import { SafetyReadinessPanel } from './SafetyReadinessPanel';
 import { StoreListingPanel } from './StoreListingPanel';
@@ -13,7 +14,7 @@ import { EducationalForceMap, EducationalForceMode } from '../simulation/profess
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-type ReferenceTab = 'dialects' | 'tags' | 'protocols' | 'safety' | 'release' | 'store';
+type ReferenceTab = 'dialects' | 'tags' | 'routines' | 'protocols' | 'safety' | 'release' | 'store';
 
 type ReferenceHubPanelProps = {
   editorProject: EditorProjectState;
@@ -75,7 +76,7 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.heroHeader}>
           <View style={styles.heroText}>
             <Text style={styles.eyebrow}>Referência técnica</Text>
-            <Text style={styles.title}>Dialetos, tags, protocolos, segurança e lançamento</Text>
+            <Text style={styles.title}>Dialetos, tags, rotinas, protocolos, segurança e lançamento</Text>
             <Text style={styles.subtitle}>Área separada para consulta, comparação, checklist de bancada, loja e preparação para lançamento sem poluir a simulação.</Text>
           </View>
           <View style={styles.badge}>
@@ -89,6 +90,9 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           </Pressable>
           <Pressable onPress={() => setTab('tags')} style={[styles.tabButton, tab === 'tags' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'tags' && styles.tabTextActive]}>Tags</Text>
+          </Pressable>
+          <Pressable onPress={() => setTab('routines')} style={[styles.tabButton, tab === 'routines' && styles.tabButtonActive]}>
+            <Text style={[styles.tabText, tab === 'routines' && styles.tabTextActive]}>Rotinas</Text>
           </Pressable>
           <Pressable onPress={() => setTab('protocols')} style={[styles.tabButton, tab === 'protocols' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'protocols' && styles.tabTextActive]}>Protocolos</Text>
@@ -120,6 +124,8 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           onSetForce={setEducationalForce}
           onSetRungComment={setRungComment}
         />
+      ) : tab === 'routines' ? (
+        <ProfessionalRoutinePanel editorProject={editorProject} />
       ) : tab === 'protocols' ? (
         <CommunicationProtocolsPanel />
       ) : tab === 'safety' ? (
