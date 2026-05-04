@@ -1,9 +1,8 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import type { BottomNavKey } from './navigationTypes';
 import { PremiumRouteContent } from './premium/PremiumRouteContent';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
-
-export type BottomNavKey = 'home' | 'learn' | 'simulate' | 'reference' | 'projects' | 'pro';
 
 type BottomNavigationProps = {
   active: BottomNavKey;
