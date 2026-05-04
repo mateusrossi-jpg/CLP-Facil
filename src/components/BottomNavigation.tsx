@@ -21,9 +21,9 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'home', label: 'Início', shortLabel: 'Início' },
   { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
   { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
-  { key: 'reference', label: 'Referência', shortLabel: 'Ref' },
-  { key: 'projects', label: 'Hardware', shortLabel: 'HW' },
-  { key: 'pro', label: 'Pro', shortLabel: 'Pro' },
+  { key: 'projects', label: 'Projetos', shortLabel: 'Proj' },
+  { key: 'pro', label: 'Editor', shortLabel: 'Edit' },
+  { key: 'reference', label: 'Ref', shortLabel: 'Ref' },
 ];
 
 export function BottomNavigation({ active, onChange, compact }: BottomNavigationProps) {
