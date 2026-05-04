@@ -5,6 +5,7 @@ import { createProfessionalTagRows, createRungCommentRows } from './professional
 import { createProfessionalRoutinePlan, routineCompletionHint } from './professionalRoutineModel';
 import { createRungOutputSummary } from './rungOutputSummary';
 import { createSmartphoneProgramSummary } from './smartphoneProgramView';
+import { getSmartphoneViewScale, nextSmartphoneViewScale, shouldPreferFlowView, smartphoneViewGuidance } from './smartphoneViewScale';
 
 type SmartphoneProgramRegressionResult = {
   name: string;
@@ -59,6 +60,23 @@ function runRungOutputSummaryRegression(): SmartphoneProgramRegressionResult {
   );
 }
 
+function runSmartphoneViewScaleRegression(): SmartphoneProgramRegressionResult {
+  const compact = getSmartphoneViewScale('compact');
+  const fit = getSmartphoneViewScale('fit');
+  const wide = getSmartphoneViewScale('wide');
+  const hasScaleOrder = compact.blockWidth < fit.blockWidth && fit.blockWidth < wide.blockWidth;
+  const wrapsScale = nextSmartphoneViewScale('wide') === 'compact';
+  const keepsOutputVisible = [compact, fit, wide].every((option) => option.outputAlwaysVisible);
+  const recommendsFlow = shouldPreferFlowView(4, 0) && shouldPreferFlowView(2, 2) && !shouldPreferFlowView(2, 0);
+  const guidance = smartphoneViewGuidance(5, 0);
+
+  return assertResult(
+    'modelo mobile possui zoom enquadramento e recomendacao de fluxo',
+    fit.label === 'Enquadrar' && hasScaleOrder && wrapsScale && keepsOutputVisible && recommendsFlow && guidance.includes('Fluxo'),
+    `compact=${compact.blockWidth}, fit=${fit.blockWidth}, wide=${wide.blockWidth}, guidance=${guidance}`,
+  );
+}
+
 function runProfessionalTagTableRegression(): SmartphoneProgramRegressionResult {
   const project = createInitialEditorProject();
   const rows = createProfessionalTagRows(project, { 'I0.0': false, 'Q0.0': false }, { 'Q0.0': 'force_on' });
@@ -104,7 +122,8 @@ function runProfessionalRoutineRegression(): SmartphoneProgramRegressionResult {
   const hasMotor = ids.includes('MotorControl');
   const hasSafety = ids.includes('SafetyLogic');
   const hasSequencer = ids.includes('Sequencer');
-  const motorHint = routineCompletionHint(routines.find((routine) => routine.id === 'MotorControl')!);
+  const motorRoutine = routines.find((routine) => routine.id === 'MotorControl');
+  const motorHint = motorRoutine ? routineCompletionHint(motorRoutine) : '';
 
   return assertResult(
     'rotinas profissionais base estao disponiveis',
@@ -118,6 +137,7 @@ export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegr
     runRockwellProgramSummaryRegression(),
     runFlowProgramSummaryRegression(),
     runRungOutputSummaryRegression(),
+    runSmartphoneViewScaleRegression(),
     runProfessionalTagTableRegression(),
     runProfessionalForceOffRegression(),
     runRungCommentsRegression(),
