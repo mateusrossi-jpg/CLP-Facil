@@ -1,0 +1,41 @@
+name: Integrate communication protocols panel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/integrate-communication-protocols-panel.mjs'
+      - '.github/workflows/integrate-communication-protocols-panel.yml'
+      - 'src/components/CommunicationProtocolsPanel.tsx'
+      - 'src/communication/**'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure PLC profile panel integration
+        run: node scripts/integrate-plc-profile-panel.mjs
+
+      - name: Integrate communication protocols panel
+        run: node scripts/integrate-communication-protocols-panel.mjs
+
+      - name: Commit communication protocols panel integration
+        run: |
+          if git diff --quiet; then
+            echo "No communication protocol integration changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "feat: show communication protocols reference"
+          git push
