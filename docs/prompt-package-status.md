@@ -19,6 +19,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Exportação Arduino/ESP32/ESPHome com validação de GPIO e código com alto contraste.
 - Tokens centrais de contraste para código: fundo #020817 / #0B1220 e texto #F8FAFC.
 - Checklist de release expandido para mobile, profissional, ensino, exemplos, hardware e referência.
+- Proteção contra aba Ref vazia: `ReferenceHubPanel` aceita props opcionais e cria projeto didático fallback.
 
 ## Concluído na interface
 
@@ -29,6 +30,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Painel de trilha educativa atualizado com progresso, conclusão de lição e abertura de exemplo.
 - Painel de exportação usando contraste centralizado no bloco de código.
 - Painel de perfis com legenda didática por dialeto.
+- BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
 
 ## Ainda pendente para fechamento visual/manual
 
@@ -41,13 +43,14 @@ npm run test:quality
 ```
 
 - Testar no celular real:
+  - Tocar em Ref e confirmar que não fica vazia.
+  - Ref > Mobile.
+  - Ref > Tags.
+  - Ref > Rotinas.
   - Simular > Programa > Lista.
   - Simular > Programa > Fluxo.
   - Saída/carga fixa do rung.
   - Arraste lateral real em rung grande.
-  - Aba Ref > Mobile.
-  - Aba Ref > Tags.
-  - Aba Ref > Rotinas.
   - Aba Hardware > 1 Placa / 2 Pinos / 3 Código.
   - Contraste do código gerado.
   - Trilha guiada e progresso.
@@ -56,6 +59,8 @@ npm run test:quality
 
 A próxima etapa visual deve integrar os controles de zoom/enquadramento diretamente no `SmartphoneSimulationPanel.tsx`, usando o modelo `src/simulation/smartphoneViewScale.ts` e o componente `src/components/SmartphoneViewScaleControl.tsx`. Como esse arquivo é grande, fazer alteração mínima e testar imediatamente.
 
+Depois que o `App.tsx` puder ser editado com leitura completa, remover a renderização emergencial do `ReferenceHubPanel` dentro do `BottomNavigation` e deixar a referência renderizada somente no bloco principal da aba.
+
 ## Critério de aceite
 
 O pacote pode ser considerado fechado quando:
@@ -63,9 +68,10 @@ O pacote pode ser considerado fechado quando:
 1. O typecheck passa.
 2. `test:simulator` passa.
 3. `test:quality` passa.
-4. No celular, rungs grandes têm arraste lateral real e saída/carga sempre visível.
+4. A aba Ref não fica vazia.
 5. Ref > Mobile mostra Compacto / Enquadrar / Amplo.
 6. Ref > Tags mostra tabela profissional, comentários e Force didático.
 7. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
-8. Hardware mantém seleção de placa/pino separada da simulação.
-9. Código exportado tem fundo escuro e texto claro.
+8. No celular, rungs grandes têm arraste lateral real e saída/carga sempre visível.
+9. Hardware mantém seleção de placa/pino separada da simulação.
+10. Código exportado tem fundo escuro e texto claro.
