@@ -32,6 +32,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Painel de exportação usando contraste centralizado no bloco de código.
 - Painel de perfis com legenda didática por dialeto.
 - BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
+- BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo, garantindo acesso visível à execução mobile mesmo antes de substituir o bloco clássico no `App.tsx`.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
 - Nova `MobileExecutionScreen` criada para reproduzir o conceito final da execução mobile: topo com RUN/AUTO/SCAN, navegação horizontal de I/Os, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
 - Novo `MobileSimulationEntryCard` criado para perguntar ao usuário se deseja abrir a execução mobile ou continuar no modo clássico.
@@ -52,25 +53,29 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Ref > Mobile.
   - Ref > Tags.
   - Ref > Rotinas.
-  - Simular > Programa > Lista.
-  - Simular > Programa > Fluxo.
-  - Saída/carga fixa do rung.
-  - Arraste lateral real em rung grande.
-  - Tela de aviso da execução mobile.
-  - Tela `MobileExecutionScreen`.
+  - Tocar em Simular e confirmar que aparece o aviso da execução mobile.
+  - Abrir execução mobile e conferir I/Os horizontais.
+  - Conferir modos Lista, Fluxo e Rung compacto.
+  - Confirmar saída/carga fixa e rodapé de diagnóstico.
+  - Conferir se o modo clássico ainda aparece/continua acessível.
   - Aba Hardware > 1 Placa / 2 Pinos / 3 Código.
   - Contraste do código gerado.
   - Trilha guiada e progresso.
 
 ## Próximo bloco recomendado
 
-A próxima etapa visual deve integrar `src/components/SimulationModeRouter.tsx` no fluxo de `Simular`. O roteador já concentra:
+A próxima etapa ideal, quando o `App.tsx` puder ser editado com leitura completa, é substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
-- aviso de entrada para execução mobile;
-- tela mobile final de execução;
-- continuidade do modo clássico via `classicContent`.
+- `editorProject`;
+- `editorState`;
+- `editorEvaluation`;
+- `selectedPlcProfile`;
+- `editorMode === 'simulate'`;
+- `autoScan`;
+- `editorScanNumber`;
+- conteúdo clássico como `classicContent`.
 
-Depois que o `App.tsx` puder ser editado com leitura completa, remover a renderização emergencial do `ReferenceHubPanel` dentro do `BottomNavigation` e deixar a referência renderizada somente no bloco principal da aba.
+Depois disso, remover a renderização emergencial do `SimulationModeRouter` e do `ReferenceHubPanel` dentro do `BottomNavigation`, deixando essas telas renderizadas somente no bloco principal da aba.
 
 ## Critério de aceite
 
