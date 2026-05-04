@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { createProfessionalTagRows, createRungCommentRows, EducationalForceMap, EducationalForceMode } from '../simulation/professionalClpView';
@@ -12,6 +12,7 @@ type ProfessionalClpPanelProps = {
   forces?: EducationalForceMap;
   rungComments?: Record<string, string>;
   onSetForce?: (tag: string, force: EducationalForceMode) => void;
+  onSetRungComment?: (rungId: string, comment: string) => void;
 };
 
 const forceOptions: { mode: EducationalForceMode; label: string }[] = [
@@ -31,11 +32,13 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
   forces = {},
   rungComments = {},
   onSetForce,
+  onSetRungComment,
 }: ProfessionalClpPanelProps) {
   const tagRows = useMemo(() => createProfessionalTagRows(editorProject, plcState, forces), [editorProject, forces, plcState]);
   const commentRows = useMemo(() => createRungCommentRows(editorProject, rungComments), [editorProject, rungComments]);
   const forcedRows = tagRows.filter((row) => row.forced !== 'normal');
   const forceEditable = Boolean(onSetForce);
+  const commentsEditable = Boolean(onSetRungComment);
 
   return (
     <View style={styles.card}>
@@ -114,7 +117,18 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
                 </Text>
               </View>
               <Text style={styles.commentLabel} numberOfLines={1}>{row.rungLabel}</Text>
-              <Text style={styles.commentText}>{row.comment}</Text>
+              {commentsEditable ? (
+                <TextInput
+                  value={rungComments[row.rungId] ?? ''}
+                  onChangeText={(text) => onSetRungComment?.(row.rungId, text)}
+                  placeholder={row.comment}
+                  placeholderTextColor={colors.textDim}
+                  multiline
+                  style={styles.commentInput}
+                />
+              ) : (
+                <Text style={styles.commentText}>{row.comment}</Text>
+              )}
             </View>
           ))}
         </View>
@@ -332,5 +346,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '700',
+  },
+  commentInput: {
+    minHeight: 58,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    color: colors.text,
+    backgroundColor: colors.black,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    textAlignVertical: 'top',
   },
 });
