@@ -30,12 +30,8 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 ## Concluído na interface
 
 - BottomNavigation finalizado com rótulos premium: Início, Aprender, Simular, Projetos, Editor e Ref.
-- BottomNavigation renderiza `PremiumHomeScreen` quando Início está ativo.
-- BottomNavigation renderiza `PremiumLearningScreen` quando Aprender está ativo.
-- BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo.
-- BottomNavigation renderiza `PremiumProjectsScreen` quando Projetos está ativo.
-- BottomNavigation renderiza `PremiumEditorExportScreen` quando Editor está ativo.
-- BottomNavigation renderiza `ReferenceHubPanel` e `PremiumTagsDiagnosticsScreen` quando Ref está ativa.
+- BottomNavigation agora renderiza rotas premium por meio de `PremiumRouteContent`, centralizando o mapeamento visual das abas e reduzindo duplicidade.
+- `PremiumRouteContent` renderiza `PremiumHomeScreen`, `PremiumLearningScreen`, `SimulationModeRouter`, `PremiumProjectsScreen`, `PremiumEditorExportScreen`, `ReferenceHubPanel` e `PremiumTagsDiagnosticsScreen` conforme aba ativa.
 - Aba Referência com Dialetos, Mobile, Tags, Rotinas, Protocolos, Segurança, Divulgação e Loja.
 - Aba Referência > Mobile com controle Compacto / Enquadrar / Amplo e orientação de Fluxo para rung grande.
 - Aba Referência > Tags com tabela profissional, Force editável e comentários por rung editáveis.
@@ -116,7 +112,7 @@ Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco cl
 - `editorScanNumber`;
 - conteúdo clássico como `classicContent`.
 
-Depois disso, remover a renderização emergencial do `SimulationModeRouter` e do `ReferenceHubPanel` dentro do `BottomNavigation`, deixando essas telas renderizadas somente no bloco principal da aba.
+Depois disso, mover `PremiumRouteContent` para o bloco principal do `App.tsx` e deixar `BottomNavigation` somente como navegação.
 
 ## Critério de aceite
 
