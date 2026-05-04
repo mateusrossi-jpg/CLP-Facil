@@ -26,6 +26,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
 - `PremiumProgress` teve a largura percentual tipada para reduzir risco no TypeScript strict.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
+- `PremiumRouteContent` usa importação somente de tipo para `BottomNavKey`, evitando dependência runtime circular com `BottomNavigation`.
 
 ## Concluído na interface
 
