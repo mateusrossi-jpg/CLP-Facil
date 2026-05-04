@@ -24,6 +24,7 @@ import { CommunicationProtocolsPanel } from './src/components/CommunicationProto
 import { ReferenceHubPanel } from './src/components/ReferenceHubPanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
+import { SimulatorDialectPanel } from './src/components/SimulatorDialectPanel';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
 import { createLessonEditorProject } from './src/data/lessonEditorProjects';
@@ -1003,7 +1004,14 @@ export default function App() {
                 </View>
               </View>
 
-              <PlcWorkbench
+              
+            <SimulatorDialectPanel
+              editorProject={editorProject}
+              selectedProfile={selectedPlcProfile}
+              onSelectProfile={setSelectedPlcProfile}
+              compact={compactSimulator}
+            />
+            <PlcWorkbench
                 editor={editorProject}
                 state={editorEvaluation.state}
                 evaluation={editorEvaluation}
