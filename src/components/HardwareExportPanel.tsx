@@ -23,6 +23,7 @@ type IoVariable = {
 };
 
 type ExportFormat = 'arduino' | 'esphome';
+type HardwareStep = 'board' | 'pins' | 'code';
 
 function normalizeVariable(variable: string | undefined): string {
   return (variable ?? '').trim().toUpperCase();
@@ -111,6 +112,7 @@ function issueTextTone(issue: GpioValidationIssue) {
 export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps) {
   const [target, setTarget] = useState<HardwareTarget>('esp32');
   const [format, setFormat] = useState<ExportFormat>('arduino');
+  const [step, setStep] = useState<HardwareStep>('board');
   const [scanMs, setScanMs] = useState('50');
   const [nodeName, setNodeName] = useState('easy-clp-node');
   const [pinOverrides, setPinOverrides] = useState<Record<string, string>>({});
@@ -198,11 +200,23 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         </View>
       </View>
 
+      <View style={styles.hardwareStepRow}>
+        {(['board', 'pins', 'code'] as HardwareStep[]).map((item) => (
+          <Pressable key={item} onPress={() => setStep(item)} style={[styles.hardwareStepButton, step === item && styles.hardwareStepButtonActive]}>
+            <Text style={[styles.hardwareStepText, step === item && styles.hardwareStepTextActive]}>
+              {item === 'board' ? '1 Placa' : item === 'pins' ? '2 Pinos' : '3 Código'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       <View style={styles.warningBox}>
         <Text style={styles.warningTitle}>Uso seguro</Text>
         <Text style={styles.warningText}>Código didático. Para cargas reais, mantenha proteção física, isolamento, emergência, fusível/disjuntor, relé térmico e intertravamentos independentes.</Text>
       </View>
 
+      {step === 'board' ? (
+        <>
       <Text style={styles.sectionLabel}>Placa alvo</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.targetRow}>
         {hardwareBoardProfiles.map((board) => {
@@ -229,6 +243,15 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         </View>
       </View>
 
+
+          <Pressable onPress={() => setStep('pins')} style={styles.hardwarePrimaryButton}>
+            <Text style={styles.hardwarePrimaryButtonText}>Avançar para seleção de pinos</Text>
+          </Pressable>
+        </>
+      ) : null}
+
+      {step === 'pins' ? (
+        <>
       <Text style={styles.sectionLabel}>Mapeamento de I/O</Text>
       <View style={styles.mapList}>
         {ioVariables.length === 0 ? (
@@ -286,6 +309,15 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         </View>
       ) : null}
 
+
+          <Pressable onPress={() => setStep('code')} style={styles.hardwarePrimaryButton}>
+            <Text style={styles.hardwarePrimaryButtonText}>Gerar código</Text>
+          </Pressable>
+        </>
+      ) : null}
+
+      {step === 'code' ? (
+        <>
       <Text style={styles.sectionLabel}>Formato de saída</Text>
       <View style={styles.formatRow}>
         <Pressable onPress={() => setFormat('arduino')} style={[styles.formatButton, format === 'arduino' && styles.formatButtonSelected]}>
@@ -334,6 +366,8 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
       <ScrollView style={styles.codeBox} contentContainerStyle={styles.codeContent}>
         <Text selectable style={styles.codeText}>{generatedCode}</Text>
       </ScrollView>
+        </>
+      ) : null}
     </View>
   );
 }
@@ -704,5 +738,48 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 12,
     lineHeight: 18,
+  },
+  hardwareStepRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    backgroundColor: colors.backgroundSoft,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.xs,
+  },
+  hardwareStepButton: {
+    flex: 1,
+    minWidth: 86,
+    borderRadius: 10,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  hardwareStepButtonActive: {
+    backgroundColor: colors.surface,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+  },
+  hardwareStepText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  hardwareStepTextActive: {
+    color: colors.cyan,
+  },
+  hardwarePrimaryButton: {
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.greenSoft,
+    alignItems: 'center',
+  },
+  hardwarePrimaryButtonText: {
+    color: colors.green,
+    fontSize: 13,
+    fontWeight: '900',
   },
 });
