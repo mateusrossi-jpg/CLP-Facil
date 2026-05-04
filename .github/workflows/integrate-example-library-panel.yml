@@ -1,0 +1,38 @@
+name: Integrate example library panel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/integrate-example-library-panel.mjs'
+      - '.github/workflows/integrate-example-library-panel.yml'
+      - 'src/components/ExampleLibraryPanel.tsx'
+      - 'src/data/exampleLibraryRegression.ts'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate example library panel
+        run: node scripts/integrate-example-library-panel.mjs
+
+      - name: Commit example library integration
+        run: |
+          if git diff --quiet; then
+            echo "No example library changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "feat: show ready example library in learn tab"
+          git push
