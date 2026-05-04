@@ -2,6 +2,7 @@ import { createInitialEditorProject } from '../engine/editorTypes';
 import { createPlcProfileProjectView } from '../plcProfiles/plcProfiles';
 import { runCodeContrastRegressionSuite } from '../theme/codeContrastRegression';
 import { createProfessionalTagRows, createRungCommentRows } from './professionalClpView';
+import { createProfessionalRoutinePlan, routineCompletionHint } from './professionalRoutineModel';
 import { createRungOutputSummary } from './rungOutputSummary';
 import { createSmartphoneProgramSummary } from './smartphoneProgramView';
 
@@ -95,6 +96,23 @@ function runRungCommentsRegression(): SmartphoneProgramRegressionResult {
   );
 }
 
+function runProfessionalRoutineRegression(): SmartphoneProgramRegressionResult {
+  const project = createInitialEditorProject();
+  const routines = createProfessionalRoutinePlan(project);
+  const ids = routines.map((routine) => routine.id);
+  const hasMain = ids.includes('MainRoutine');
+  const hasMotor = ids.includes('MotorControl');
+  const hasSafety = ids.includes('SafetyLogic');
+  const hasSequencer = ids.includes('Sequencer');
+  const motorHint = routineCompletionHint(routines.find((routine) => routine.id === 'MotorControl')!);
+
+  return assertResult(
+    'rotinas profissionais base estao disponiveis',
+    hasMain && hasMotor && hasSafety && hasSequencer && motorHint.length > 0,
+    `ids=${ids.join(',')}`,
+  );
+}
+
 export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegressionResult[] {
   return [
     runRockwellProgramSummaryRegression(),
@@ -103,6 +121,7 @@ export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegr
     runProfessionalTagTableRegression(),
     runProfessionalForceOffRegression(),
     runRungCommentsRegression(),
+    runProfessionalRoutineRegression(),
     ...runCodeContrastRegressionSuite(),
   ];
 }
