@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -20,14 +20,33 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
 ];
 
 export function BottomNavigation({ active, onChange, compact }: BottomNavigationProps) {
+  const { width } = useWindowDimensions();
+  const effectiveCompact = Boolean(compact || width < 720);
+
   return (
-    <View style={[styles.container, compact && styles.containerCompact]}>
+    <View style={[styles.container, effectiveCompact && styles.containerCompact]}>
       {items.map((item) => {
         const selected = active === item.key;
         return (
-          <Pressable key={item.key} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, compact && styles.itemCompact, selected && styles.itemActive, pressed && styles.pressed]}>
-            {selected ? <View style={styles.activeIndicator} /> : null}
-            <Text style={[styles.label, compact && styles.labelCompact, selected && styles.activeText]}>{compact ? item.shortLabel : item.label}</Text>
+          <Pressable
+            key={item.key}
+            onPress={() => onChange(item.key)}
+            style={({ pressed }) => [
+              styles.item,
+              effectiveCompact && styles.itemCompact,
+              selected && styles.itemActive,
+              pressed && styles.pressed,
+            ]}
+          >
+            {selected ? <View style={[styles.activeIndicator, effectiveCompact && styles.activeIndicatorCompact]} /> : null}
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
+              style={[styles.label, effectiveCompact && styles.labelCompact, selected && styles.activeText]}
+            >
+              {effectiveCompact ? item.shortLabel : item.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -52,8 +71,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   containerCompact: {
-    borderRadius: 12,
-    padding: spacing.xs,
+    gap: 3,
+    borderRadius: 14,
+    padding: 4,
     marginTop: spacing.sm,
     shadowOpacity: 0,
     elevation: 0,
@@ -66,11 +86,13 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
+    minWidth: 0,
   },
   itemCompact: {
-    borderRadius: 8,
-    minHeight: 36,
-    paddingVertical: spacing.xs,
+    borderRadius: 10,
+    minHeight: 38,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
   },
   itemActive: {
     backgroundColor: colors.surfaceElevated,
@@ -84,13 +106,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gold,
     marginBottom: spacing.xs,
   },
+  activeIndicatorCompact: {
+    width: 18,
+    marginBottom: 3,
+  },
   label: {
     color: colors.textDim,
     fontSize: 12,
     fontWeight: '800',
+    textAlign: 'center',
   },
   labelCompact: {
     fontSize: 10,
+    letterSpacing: -0.2,
   },
   activeText: {
     color: colors.text,
