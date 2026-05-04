@@ -1,6 +1,8 @@
 export type ReleaseChecklistStageId =
   | 'core_stability'
   | 'mobile_visual'
+  | 'professional_plc_features'
+  | 'guided_learning'
   | 'examples_flow'
   | 'hardware_export'
   | 'reference_content'
@@ -51,11 +53,43 @@ export const releaseChecklistStages: ReleaseChecklistStage[] = [
     checklist: [
       { id: 'home', text: 'Conferir Home e início rápido.' },
       { id: 'simulate', text: 'Conferir Simular sem exportação de hardware dentro da bancada.' },
+      { id: 'mobile_rung_flow', text: 'Conferir Programa > Fluxo com arraste horizontal e saída/carga sempre visível.' },
       { id: 'run', text: 'Conferir Visualização RUN sem badge SCAN duplicado.' },
       { id: 'hardware', text: 'Conferir Hardware em fluxo 1 Placa / 2 Pinos / 3 Código.' },
-      { id: 'code_preview', text: 'Conferir contraste do código gerado.' },
+      { id: 'code_preview', text: 'Conferir contraste do código gerado com fundo #020817 ou #0B1220 e texto #F8FAFC.' },
     ],
-    evidence: ['Prints no iPhone', 'Ajuste manual de layout', 'Code preview contrast'],
+    evidence: ['Prints no iPhone', 'SmartphoneSimulationPanel', 'Code preview contrast'],
+  },
+  {
+    id: 'professional_plc_features',
+    title: 'Recursos de CLP profissional',
+    status: 'critical',
+    goal: 'Fazer o app parecer e ensinar como uma ferramenta CLP: tags, comentários, Force didático, diagnóstico e saída clara por rung.',
+    readyDefinition: 'O usuário consegue consultar tabela de tags, editar comentários, aplicar Force ON/OFF didático e ver alertas de segurança.',
+    checklist: [
+      { id: 'tag_table', text: 'Conferir tabela Tag, Tipo, Escopo, Valor, Descrição e Forçado.' },
+      { id: 'rung_comments', text: 'Conferir comentários automáticos e comentários editáveis por rung.' },
+      { id: 'force_normal', text: 'Conferir estado Normal em tags booleanas.' },
+      { id: 'force_on', text: 'Conferir Force ON com alerta de segurança.' },
+      { id: 'force_off', text: 'Conferir Force OFF com alerta de segurança.' },
+      { id: 'diagnostics', text: 'Conferir diagnóstico de scan, linhas ativas, entradas, saídas, timers e contadores.' },
+    ],
+    evidence: ['ProfessionalClpPanel', 'professionalClpView', 'Smartphone program regressions'],
+  },
+  {
+    id: 'guided_learning',
+    title: 'Ensino guiado',
+    status: 'critical',
+    goal: 'Transformar o app em uma trilha de aprendizagem prática, não apenas um simulador solto.',
+    readyDefinition: 'Cada lição mostra conceito, por que importa, prática no simulador e checagem de domínio com progresso.',
+    checklist: [
+      { id: 'lesson_concept', text: 'Conferir conceito em cada lição.' },
+      { id: 'why_matters', text: 'Conferir bloco por que importa.' },
+      { id: 'practice', text: 'Conferir prática guiada.' },
+      { id: 'mastery', text: 'Conferir checagem de domínio.' },
+      { id: 'progress', text: 'Conferir progresso geral e por módulo.' },
+    ],
+    evidence: ['LearningPathPanel', 'professionalLearningPath', 'QuickStart regressions'],
   },
   {
     id: 'examples_flow',
@@ -69,8 +103,9 @@ export const releaseChecklistStages: ReleaseChecklistStage[] = [
       { id: 'counter', text: 'Carregar e testar contador.' },
       { id: 'motor', text: 'Carregar e testar motor/intertravamento.' },
       { id: 'process', text: 'Carregar e testar processo didático.' },
+      { id: 'real_examples', text: 'Conferir semáforo, portão, reservatório, bomba alternada e esteira.' },
     ],
-    evidence: ['ExampleLibraryPanel', 'QuickStartPanel', 'Example library regressions'],
+    evidence: ['ExampleLibraryPanel', 'QuickStartPanel', 'professionalExampleCatalog', 'Example library regressions'],
   },
   {
     id: 'hardware_export',
@@ -84,6 +119,7 @@ export const releaseChecklistStages: ReleaseChecklistStage[] = [
       { id: 'validation', text: 'Validar erro em pino reservado, somente entrada e duplicado.' },
       { id: 'arduino', text: 'Gerar Arduino/ESP32 C++ para um exemplo.' },
       { id: 'esphome', text: 'Gerar ESPHome YAML para um exemplo.' },
+      { id: 'safe_code', text: 'Confirmar que código gerado inicia saídas em estado seguro quando configurado.' },
     ],
     evidence: ['Hardware regressions', 'GPIO catalog', 'BoardPinDiagram', 'HardwareExportPanel'],
   },
@@ -91,15 +127,17 @@ export const releaseChecklistStages: ReleaseChecklistStage[] = [
     id: 'reference_content',
     title: 'Referência técnica',
     status: 'important',
-    goal: 'Dar valor educacional com dialetos CLP, protocolos e segurança sem dizer que é compatibilidade oficial.',
-    readyDefinition: 'A aba Referência explica Rockwell-like, IEC-like, Modbus, MQTT, ESPHome e cuidados de segurança com linguagem clara.',
+    goal: 'Dar valor educacional com dialetos CLP, protocolos, tags profissionais e segurança sem dizer que é compatibilidade oficial.',
+    readyDefinition: 'A aba Referência explica Rockwell-like, IEC-like, Comandos, tags, Modbus, MQTT, ESPHome e cuidados de segurança com linguagem clara.',
     checklist: [
       { id: 'dialects', text: 'Conferir Dialetos CLP e disclaimers.' },
+      { id: 'symbols', text: 'Conferir legendas Rockwell/IEC/Comandos.' },
+      { id: 'tags', text: 'Conferir guia de tags, comentários e Force.' },
       { id: 'protocols', text: 'Conferir protocolos e maturidade.' },
       { id: 'safety', text: 'Conferir checklist de segurança.' },
       { id: 'no_official_claim', text: 'Evitar promessa de compatibilidade oficial com fabricantes.' },
     ],
-    evidence: ['PlcProfilePanel', 'CommunicationProtocolsPanel', 'SafetyReadinessPanel'],
+    evidence: ['PlcProfilePanel', 'ReferenceHubPanel', 'CommunicationProtocolsPanel', 'SafetyReadinessPanel'],
   },
   {
     id: 'monetization',
