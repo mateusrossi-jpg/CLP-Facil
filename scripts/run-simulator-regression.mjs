@@ -16,6 +16,7 @@ const { runReleaseRegressionSuite } = require('/tmp/easy-clp-sim-test/release/re
 const { runStoreListingRegressionSuite } = require('/tmp/easy-clp-sim-test/release/storeListingRegression.js');
 const { runChangeTestingScheduleRegressionSuite } = require('/tmp/easy-clp-sim-test/release/changeTestingScheduleRegression.js');
 const { runPerformanceRegressionSuite } = require('/tmp/easy-clp-sim-test/performance/performanceRegression.js');
+const { runCodeContrastRegressionSuite } = require('/tmp/easy-clp-sim-test/theme/codeContrastRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
@@ -33,6 +34,7 @@ const results = [
   ...runStoreListingRegressionSuite(),
   ...runChangeTestingScheduleRegressionSuite(),
   ...runPerformanceRegressionSuite(),
+  ...runCodeContrastRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
