@@ -1,0 +1,36 @@
+name: Optimize heavy components
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/optimize-heavy-components.mjs'
+      - '.github/workflows/optimize-heavy-components.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Optimize heavy components
+        run: node scripts/optimize-heavy-components.mjs
+
+      - name: Commit heavy component optimization
+        run: |
+          if git diff --quiet; then
+            echo "No heavy component changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components
+          git commit -m "perf: memoize heavy panels and simulator blocks"
+          git push
