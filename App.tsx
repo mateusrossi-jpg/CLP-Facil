@@ -26,6 +26,7 @@ import { ReferenceHubPanel } from './src/components/ReferenceHubPanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { SimulatorDialectPanel } from './src/components/SimulatorDialectPanel';
+import { SmartphoneSimulationPanel } from './src/components/SmartphoneSimulationPanel';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
 import { createLessonEditorProject } from './src/data/lessonEditorProjects';
@@ -1052,6 +1053,19 @@ export default function App() {
               onSelectProfile={setSelectedPlcProfile}
               compact={compactSimulator}
             />
+            {compactSimulator ? (
+              <SmartphoneSimulationPanel
+                editorProject={editorProject}
+                plcState={editorEvaluation.state}
+                evaluation={editorEvaluation}
+                selectedProfile={selectedPlcProfile}
+                onSelectProfile={setSelectedPlcProfile}
+                autoScan={autoScan}
+                onRunScan={runEditorScan}
+                onToggleAutoScan={() => setAutoScan((current) => !current)}
+                onSetValue={setEditorValue}
+              />
+            ) : null}
             <PlcWorkbench
                 editor={editorProject}
                 state={editorEvaluation.state}
