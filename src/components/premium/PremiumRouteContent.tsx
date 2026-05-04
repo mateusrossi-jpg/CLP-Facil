@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { BottomNavKey } from '../BottomNavigation';
+import type { BottomNavKey } from '../BottomNavigation';
 import { ReferenceHubPanel } from '../ReferenceHubPanel';
 import { SimulationModeRouter } from '../SimulationModeRouter';
 import { PremiumEditorExportScreen } from './PremiumEditorExportScreen';
