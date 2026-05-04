@@ -691,10 +691,11 @@ export function evaluateEditorProject(
   scanNumber = 0,
   currentRuntime: EditorRuntimeState = createInitialRuntimeState(),
 ): EditorEvaluationResult {
+  const shouldCommitScan = scanNumber > currentRuntime.scanNumber;
   let nextState: PlcState = { ...currentState };
   let nextRuntime: EditorRuntimeState = {
     ...currentRuntime,
-    scanNumber,
+    scanNumber: shouldCommitScan ? scanNumber : currentRuntime.scanNumber,
     previousRungPower: { ...currentRuntime.previousRungPower },
     previousContactValues: { ...currentRuntime.previousContactValues },
   };
@@ -702,12 +703,13 @@ export function evaluateEditorProject(
   const nextRungPower: Record<string, boolean> = {};
 
   for (const rung of project.rungs) {
-    const energized = isWritableFunctionalBlock(rung.coilBlock) ? evaluateRung(rung, nextState, nextRuntime) : false;
+    const evaluationState = shouldCommitScan ? nextState : currentState;
+    const energized = isWritableFunctionalBlock(rung.coilBlock) ? evaluateRung(rung, evaluationState, nextRuntime) : false;
     const previousRungPower = Boolean(currentRuntime.previousRungPower[rung.id]);
     rungResults[rung.id] = energized;
     nextRungPower[rung.id] = energized;
 
-    if (isWritableFunctionalBlock(rung.coilBlock)) {
+    if (shouldCommitScan && isWritableFunctionalBlock(rung.coilBlock)) {
       const result = applyFunctionalBlock(nextState, nextRuntime, rung.coilBlock, energized, previousRungPower);
       nextState = result.state;
       nextRuntime = result.runtime;
@@ -723,11 +725,17 @@ export function evaluateEditorProject(
     }
   }
 
-  nextRuntime = {
-    ...nextRuntime,
-    previousRungPower: nextRungPower,
-    previousContactValues: captureContactValues(project, nextState),
-  };
+  if (shouldCommitScan) {
+    nextRuntime = {
+      ...nextRuntime,
+      scanNumber,
+      previousRungPower: nextRungPower,
+      previousContactValues: captureContactValues(project, nextState),
+    };
+  } else {
+    nextState = { ...currentState };
+    nextRuntime = currentRuntime;
+  }
 
   const diagnostics = validateProject(project);
 
@@ -736,7 +744,7 @@ export function evaluateEditorProject(
     rungResults,
     diagnostics,
     runtime: nextRuntime,
-    scanNumber,
+    scanNumber: shouldCommitScan ? scanNumber : currentRuntime.scanNumber,
     explanation: buildEditorExplanation(project, nextState, rungResults, diagnostics),
   };
 }
