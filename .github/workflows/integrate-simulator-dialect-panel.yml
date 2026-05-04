@@ -1,0 +1,38 @@
+name: Integrate simulator dialect panel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/integrate-simulator-dialect-panel.mjs'
+      - '.github/workflows/integrate-simulator-dialect-panel.yml'
+      - 'src/components/SimulatorDialectPanel.tsx'
+      - 'src/plcProfiles/simulatorDialectRegression.ts'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate simulator dialect panel
+        run: node scripts/integrate-simulator-dialect-panel.mjs
+
+      - name: Commit simulator dialect integration
+        run: |
+          if git diff --quiet; then
+            echo "No simulator dialect changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "feat: show dialect selector in simulator"
+          git push
