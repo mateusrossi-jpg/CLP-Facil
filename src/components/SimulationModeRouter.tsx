@@ -7,7 +7,7 @@ import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
-import { MobileExecutionScreen } from './MobileExecutionScreen';
+import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 
 type SimulationMode = 'choice' | 'mobile' | 'classic';
@@ -33,9 +33,10 @@ function makeFallbackState(project: EditorProjectState): PlcState {
 }
 
 function fallbackEvaluation(project: EditorProjectState, state: PlcState): EditorEvaluationResult {
+  const firstRung = project.rungs[0]?.id;
   return {
     state,
-    rungResults: Object.fromEntries(project.rungs.map((rung) => [rung.id, false])),
+    rungResults: Object.fromEntries(project.rungs.map((rung) => [rung.id, rung.id === firstRung])),
     diagnostics: [],
     runtime: createInitialRuntimeState(),
     scanNumber: 0,
@@ -64,7 +65,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
 
   if (mode === 'mobile') {
     return (
-      <MobileExecutionScreen
+      <MobileExecutionCockpit
         editorProject={project}
         plcState={state}
         evaluation={result}
