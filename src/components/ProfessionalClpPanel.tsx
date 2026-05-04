@@ -1,8 +1,8 @@
 import { memo, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
-import { createProfessionalTagRows, createRungCommentRows, EducationalForceMap } from '../simulation/professionalClpView';
+import { createProfessionalTagRows, createRungCommentRows, EducationalForceMap, EducationalForceMode } from '../simulation/professionalClpView';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -11,7 +11,14 @@ type ProfessionalClpPanelProps = {
   plcState: PlcState;
   forces?: EducationalForceMap;
   rungComments?: Record<string, string>;
+  onSetForce?: (tag: string, force: EducationalForceMode) => void;
 };
+
+const forceOptions: { mode: EducationalForceMode; label: string }[] = [
+  { mode: 'normal', label: 'Normal' },
+  { mode: 'force_on', label: 'Force ON' },
+  { mode: 'force_off', label: 'Force OFF' },
+];
 
 function formatValue(value: boolean | number): string {
   if (typeof value === 'number') return String(value);
@@ -23,10 +30,12 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
   plcState,
   forces = {},
   rungComments = {},
+  onSetForce,
 }: ProfessionalClpPanelProps) {
   const tagRows = useMemo(() => createProfessionalTagRows(editorProject, plcState, forces), [editorProject, forces, plcState]);
   const commentRows = useMemo(() => createRungCommentRows(editorProject, rungComments), [editorProject, rungComments]);
   const forcedRows = tagRows.filter((row) => row.forced !== 'normal');
+  const forceEditable = Boolean(onSetForce);
 
   return (
     <View style={styles.card}>
@@ -59,7 +68,7 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
               <Text style={[styles.tagCell, styles.tagHeaderCell]}>Escopo</Text>
               <Text style={[styles.tagCell, styles.tagHeaderCell]}>Valor</Text>
               <Text style={[styles.tagCell, styles.tagHeaderCell, styles.tagDescriptionCell]}>Descrição</Text>
-              <Text style={[styles.tagCell, styles.tagHeaderCell]}>Forçado</Text>
+              <Text style={[styles.tagCell, styles.tagHeaderCell, styles.tagForceCell]}>Forçado</Text>
             </View>
             {tagRows.map((row) => (
               <View key={row.tag} style={[styles.tagRow, row.forced !== 'normal' && styles.tagRowForced]}>
@@ -68,7 +77,25 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
                 <Text style={styles.tagCell}>{row.scope}</Text>
                 <Text style={[styles.tagCell, row.value && styles.tagCellOn]}>{formatValue(row.value)}</Text>
                 <Text style={[styles.tagCell, styles.tagDescriptionCell]} numberOfLines={1}>{row.description}</Text>
-                <Text style={[styles.tagCell, row.forced !== 'normal' && styles.tagForceOn]}>{row.forcedLabel}</Text>
+                <View style={[styles.tagCell, styles.tagForceCell]}>
+                  <Text style={[styles.forceReadout, row.forced !== 'normal' && styles.tagForceOn]}>{row.forcedLabel}</Text>
+                  {forceEditable && row.type === 'boolean' ? (
+                    <View style={styles.forceButtonRow}>
+                      {forceOptions.map((option) => {
+                        const selected = row.forced === option.mode;
+                        return (
+                          <Pressable
+                            key={`${row.tag}-${option.mode}`}
+                            onPress={() => onSetForce?.(row.tag, option.mode)}
+                            style={[styles.forceButton, selected && styles.forceButtonSelected]}
+                          >
+                            <Text style={[styles.forceButtonText, selected && styles.forceButtonTextSelected]}>{option.label}</Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </View>
               </View>
             ))}
           </View>
@@ -216,12 +243,46 @@ const styles = StyleSheet.create({
   tagDescriptionCell: {
     width: 180,
   },
+  tagForceCell: {
+    width: 238,
+  },
   tagCellOn: {
     color: colors.green,
+  },
+  forceReadout: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+    marginBottom: 4,
   },
   tagForceOn: {
     color: colors.red,
     fontWeight: '900',
+  },
+  forceButtonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  forceButton: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    backgroundColor: colors.surfaceElevated,
+  },
+  forceButtonSelected: {
+    borderColor: colors.amber,
+    backgroundColor: colors.goldSoft,
+  },
+  forceButtonText: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  forceButtonTextSelected: {
+    color: colors.amber,
   },
   commentList: {
     gap: spacing.xs,
