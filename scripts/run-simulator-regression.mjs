@@ -6,6 +6,7 @@ const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
 const { runPlcProfileRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/plcProfileRegression.js');
 const { runSimulatorDialectRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/simulatorDialectRegression.js');
+const { runSmartphoneProgramViewRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/smartphoneProgramViewRegression.js');
 const { runProtocolRegressionSuite } = require('/tmp/easy-clp-sim-test/communication/protocolRegression.js');
 const { runExampleLibraryRegressionSuite } = require('/tmp/easy-clp-sim-test/data/exampleLibraryRegression.js');
 const { runQuickStartRegressionSuite } = require('/tmp/easy-clp-sim-test/data/quickStartRegression.js');
@@ -21,6 +22,7 @@ const results = [
   ...runHardwareRegressionSuite(),
   ...runPlcProfileRegressionSuite(),
   ...runSimulatorDialectRegressionSuite(),
+  ...runSmartphoneProgramViewRegressionSuite(),
   ...runProtocolRegressionSuite(),
   ...runExampleLibraryRegressionSuite(),
   ...runQuickStartRegressionSuite(),
