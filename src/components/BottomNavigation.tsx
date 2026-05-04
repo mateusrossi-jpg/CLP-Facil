@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ReferenceFallbackPanel } from './ReferenceFallbackPanel';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -24,37 +25,43 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
   const effectiveCompact = Boolean(compact || width < 720);
 
   return (
-    <View style={[styles.container, effectiveCompact && styles.containerCompact]}>
-      {items.map((item) => {
-        const selected = active === item.key;
-        return (
-          <Pressable
-            key={item.key}
-            onPress={() => onChange(item.key)}
-            style={({ pressed }) => [
-              styles.item,
-              effectiveCompact && styles.itemCompact,
-              selected && styles.itemActive,
-              pressed && styles.pressed,
-            ]}
-          >
-            {selected ? <View style={[styles.activeIndicator, effectiveCompact && styles.activeIndicatorCompact]} /> : null}
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.78}
-              style={[styles.label, effectiveCompact && styles.labelCompact, selected && styles.activeText]}
+    <View style={styles.wrapper}>
+      <View style={[styles.container, effectiveCompact && styles.containerCompact]}>
+        {items.map((item) => {
+          const selected = active === item.key;
+          return (
+            <Pressable
+              key={item.key}
+              onPress={() => onChange(item.key)}
+              style={({ pressed }) => [
+                styles.item,
+                effectiveCompact && styles.itemCompact,
+                selected && styles.itemActive,
+                pressed && styles.pressed,
+              ]}
             >
-              {effectiveCompact ? item.shortLabel : item.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+              {selected ? <View style={[styles.activeIndicator, effectiveCompact && styles.activeIndicatorCompact]} /> : null}
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.78}
+                style={[styles.label, effectiveCompact && styles.labelCompact, selected && styles.activeText]}
+              >
+                {effectiveCompact ? item.shortLabel : item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {active === 'reference' ? <ReferenceFallbackPanel /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    gap: spacing.md,
+  },
   container: {
     flexDirection: 'row',
     gap: spacing.sm,
