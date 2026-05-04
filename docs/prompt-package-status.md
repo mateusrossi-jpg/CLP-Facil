@@ -39,6 +39,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - BottomNavigation renderiza `PremiumLearningScreen` quando Aprender está ativo.
 - BottomNavigation renderiza `PremiumProjectsScreen` quando a aba projects está ativa, mantendo temporariamente o rótulo antigo Hardware até a limpeza final da navegação.
 - BottomNavigation renderiza `PremiumEditorExportScreen` quando a aba Pro está ativa, permitindo testar Editor Ladder + Exportação no visual premium.
+- BottomNavigation renderiza `PremiumTagsDiagnosticsScreen` junto da aba Ref, permitindo testar Tags + Diagnóstico no visual premium.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
 - Nova `MobileExecutionScreen` criada como primeira versão funcional da execução mobile.
 - Nova `MobileExecutionCockpit` criada como versão visual alinhada ao conceito aprovado: fundo #020817, cockpit escuro, header Easy-PLC, RUN/AUTO/SCAN, I/Os horizontais, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
@@ -49,6 +50,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Nova `PremiumLearningScreen` criada para Aprender com trilhas, módulos, desafios, conquistas e conteúdo de História do CLP / funcionamento / Ladder / aplicações / diagnóstico.
 - Nova `PremiumProjectsScreen` criada para biblioteca premium de projetos/exemplos, com busca visual, filtros, projeto em destaque, cards de Partida direta, Selo, Reversão, Estrela-triângulo, Semáforo, Bomba alternada, Esteira e Portão.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
+- Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
 
 ## Decisão de produto
 
@@ -68,6 +70,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Tocar na aba atualmente rotulada Hardware e conferir a `PremiumProjectsScreen`.
   - Tocar na aba Pro e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
+  - Conferir `PremiumTagsDiagnosticsScreen` na aba Ref.
   - Ref > Mobile.
   - Ref > Tags.
   - Ref > Rotinas.
@@ -84,7 +87,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Próximo bloco recomendado
 
-A próxima etapa ideal é criar uma tela `PremiumTagsDiagnosticsScreen` para tabela de tags, Force didático e diagnóstico no mesmo padrão premium, e depois limpar a navegação final para rótulos definitivos: Início, Aprender, Simular, Projetos, Editor/Exportar e Ref/Pro conforme decisão de produto.
+A próxima etapa ideal é limpar a navegação final para rótulos definitivos e/ou criar uma tela Pro/Loja premium separada. Sugestão de navegação final: Início, Aprender, Simular, Projetos, Editor e Ref/Pro, dependendo da decisão de produto.
 
 Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
