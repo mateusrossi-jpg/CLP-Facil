@@ -7,7 +7,9 @@ export function HomeHero() {
   return (
     <View style={styles.container}>
       <View style={styles.heroTop}>
-        <BrandLogo />
+        <View style={styles.logoWrap}>
+          <BrandLogo />
+        </View>
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>Laboratório Ladder</Text>
         </View>
@@ -53,13 +55,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: spacing.lg,
+    flexWrap: 'wrap',
+    rowGap: spacing.md,
+    columnGap: spacing.lg,
+  },
+  logoWrap: {
+    minWidth: 0,
+    flexShrink: 1,
   },
   textBox: {
     marginTop: spacing.xl,
   },
   heroBadge: {
     flexShrink: 0,
+    maxWidth: '100%',
+    alignSelf: 'flex-start',
     borderColor: colors.gold,
     borderWidth: 1,
     borderRadius: 999,
