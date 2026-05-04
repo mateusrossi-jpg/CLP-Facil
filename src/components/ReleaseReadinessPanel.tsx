@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { criticalReleaseStages, releaseChecklistStages, releaseStatusLabel } from '../release/releaseChecklist';
 import { colors } from '../theme/colors';
@@ -15,7 +16,7 @@ function statusTextTone(status: string) {
   return styles.polishText;
 }
 
-export function ReleaseReadinessPanel() {
+export const ReleaseReadinessPanel = memo(function ReleaseReadinessPanel() {
   const criticalCount = criticalReleaseStages().length;
 
   return (
@@ -69,7 +70,7 @@ export function ReleaseReadinessPanel() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

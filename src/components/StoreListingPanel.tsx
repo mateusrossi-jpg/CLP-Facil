@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { privacyPolicyDraft, storeListingDraft, storeScreenshotPlan } from '../release/storeListingDraft';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-export function StoreListingPanel() {
+export const StoreListingPanel = memo(function StoreListingPanel() {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -73,7 +74,7 @@ export function StoreListingPanel() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

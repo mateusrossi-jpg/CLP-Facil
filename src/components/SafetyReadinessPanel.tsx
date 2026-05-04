@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { mandatorySafetyItems, safetyCategories, safetyLevelLabel } from '../safety/safetyCatalog';
 import { colors } from '../theme/colors';
@@ -15,7 +16,7 @@ function levelTextTone(level: string) {
   return styles.attentionText;
 }
 
-export function SafetyReadinessPanel() {
+export const SafetyReadinessPanel = memo(function SafetyReadinessPanel() {
   const mandatoryCount = mandatorySafetyItems().length;
 
   return (
@@ -72,7 +73,7 @@ export function SafetyReadinessPanel() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

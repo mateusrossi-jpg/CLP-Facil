@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { GestureResponderEvent, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { ComponentCategory, simulatorComponents, SimulatorComponent } from '../data/componentLibrary';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
@@ -185,7 +185,7 @@ function blockOnlineActive(block: EditorBlock, state: PlcState, rungActive = fal
   return Boolean(state[block.variable.trim().toUpperCase()]);
 }
 
-function CircuitBlock({
+const CircuitBlock = memo(function CircuitBlock({
   block,
   active,
   selected,
@@ -248,9 +248,9 @@ function CircuitBlock({
       <View style={[styles.blockLead, active && styles.wireOn]} />
     </View>
   );
-}
+});
 
-function DropZone({
+const DropZone = memo(function DropZone({
   label,
   selected,
   locked,
@@ -269,9 +269,9 @@ function DropZone({
       <Text style={[styles.dropZoneText, selected && styles.dropZoneTextSelected]}>{label}</Text>
     </Pressable>
   );
-}
+});
 
-function SignalRow({
+const SignalRow = memo(function SignalRow({
   id,
   address,
   name,
@@ -338,9 +338,9 @@ function SignalRow({
       ) : null}
     </Pressable>
   );
-}
+});
 
-function FunctionVariableCard({
+const FunctionVariableCard = memo(function FunctionVariableCard({
   block,
   evaluation,
 }: {
@@ -398,9 +398,9 @@ function FunctionVariableCard({
   }
 
   return null;
-}
+});
 
-function DeclaredFunctionVariableCard({
+const DeclaredFunctionVariableCard = memo(function DeclaredFunctionVariableCard({
   variable,
   onRemove,
 }: {
@@ -444,7 +444,7 @@ function DeclaredFunctionVariableCard({
       </View>
     </View>
   );
-}
+});
 
 export function PlcWorkbench({
   editor,
@@ -483,7 +483,7 @@ export function PlcWorkbench({
   const rung = editor.rungs.find((item) => item.id === editor.selectedRungId) ?? editor.rungs[0];
   const selectedZone = editor.selectedZone;
   const selectedSeriesIndex = editor.selectedSeriesIndex ?? 0;
-  const components = simulatorComponents.filter((component) => component.category === category);
+  const components = useMemo(() => simulatorComponents.filter((component) => component.category === category), [category]);
   const timers = Object.entries(evaluation.runtime.timers);
   const counters = Object.entries(evaluation.runtime.counters);
   const usedByBlocks = new Set<string>();

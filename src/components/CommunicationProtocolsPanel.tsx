@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { communicationProtocols, difficultyLabel, maturityLabel } from '../communication/protocolCatalog';
 import { colors } from '../theme/colors';
@@ -15,7 +16,7 @@ function maturityTextTone(maturity: string) {
   return styles.researchBadgeText;
 }
 
-export function CommunicationProtocolsPanel() {
+export const CommunicationProtocolsPanel = memo(function CommunicationProtocolsPanel() {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -84,7 +85,7 @@ export function CommunicationProtocolsPanel() {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EditorExampleProject } from '../data/editorExampleProjects';
 import { colors } from '../theme/colors';
@@ -66,20 +67,25 @@ function difficultyTextTone(difficulty: EditorExampleProject['difficulty']) {
   return styles.advancedBadgeText;
 }
 
-export function ExampleLibraryPanel({ examples, onOpenExample }: ExampleLibraryPanelProps) {
-  const coveredIds = new Set<string>();
-  const categoryGroups = categories
-    .map((category) => {
-      const grouped = examplesForCategory(examples, category).filter((example) => {
-        if (coveredIds.has(example.id)) return false;
-        coveredIds.add(example.id);
-        return true;
-      });
-      return { category, examples: grouped };
-    })
-    .filter((group) => group.examples.length > 0);
+export const ExampleLibraryPanel = memo(function ExampleLibraryPanel({ examples, onOpenExample }: ExampleLibraryPanelProps) {
+  const { categoryGroups, remainingExamples } = useMemo(() => {
+    const coveredIds = new Set<string>();
+    const groups = categories
+      .map((category) => {
+        const grouped = examplesForCategory(examples, category).filter((example) => {
+          if (coveredIds.has(example.id)) return false;
+          coveredIds.add(example.id);
+          return true;
+        });
+        return { category, examples: grouped };
+      })
+      .filter((group) => group.examples.length > 0);
 
-  const remainingExamples = examples.filter((example) => !coveredIds.has(example.id)).slice(0, 8);
+    return {
+      categoryGroups: groups,
+      remainingExamples: examples.filter((example) => !coveredIds.has(example.id)).slice(0, 8),
+    };
+  }, [examples]);
 
   return (
     <View style={styles.card}>
@@ -146,7 +152,7 @@ export function ExampleLibraryPanel({ examples, onOpenExample }: ExampleLibraryP
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

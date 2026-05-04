@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EditorProjectState } from '../engine/editorTypes';
 import { createPlcProfileProjectView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
@@ -11,9 +12,9 @@ type SimulatorDialectPanelProps = {
   compact?: boolean;
 };
 
-export function SimulatorDialectPanel({ editorProject, selectedProfile, onSelectProfile, compact }: SimulatorDialectPanelProps) {
-  const profileView = createPlcProfileProjectView(editorProject, selectedProfile);
-  const firstRungs = profileView.rungs.slice(0, compact ? 1 : 3);
+export const SimulatorDialectPanel = memo(function SimulatorDialectPanel({ editorProject, selectedProfile, onSelectProfile, compact }: SimulatorDialectPanelProps) {
+  const profileView = useMemo(() => createPlcProfileProjectView(editorProject, selectedProfile), [editorProject, selectedProfile]);
+  const firstRungs = useMemo(() => profileView.rungs.slice(0, compact ? 1 : 3), [compact, profileView.rungs]);
 
   return (
     <View style={[styles.card, compact && styles.cardCompact]}>
@@ -57,7 +58,7 @@ export function SimulatorDialectPanel({ editorProject, selectedProfile, onSelect
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
