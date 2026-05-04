@@ -6,7 +6,6 @@ import { PlcState } from '../engine/projectTypes';
 import { createPlcProfileProjectView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
 import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
 import { createSmartphoneIoSummary, SmartphoneIoGroupId, SmartphoneSignalSnapshot } from '../simulation/smartphoneIoView';
-import { createSmartphoneIoSummary, SmartphoneIoGroupId, SmartphoneSignalSnapshot } from '../simulation/smartphoneIoView';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -301,26 +300,6 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
                 </Pressable>
               );
             })}
-          </View>
-
-          <View style={styles.summaryBox}>
-            <Text style={styles.sectionTitle}>Resumo de {ioSummary.label}</Text>
-            <View style={styles.programMetaRow}>
-              <View style={styles.programMetaCard}>
-                <Text style={styles.programMetaLabel}>Total</Text>
-                <Text style={styles.programMetaValue}>{ioSummary.totalCount}</Text>
-              </View>
-              <View style={styles.programMetaCard}>
-                <Text style={styles.programMetaLabel}>Ativos</Text>
-                <Text style={styles.programMetaValue}>{ioSummary.activeCount}</Text>
-              </View>
-            </View>
-            <Text style={styles.educationText}>{ioSummary.guidance}</Text>
-            {ioSummary.activeAddresses.length > 0 ? (
-              <View style={styles.chipWrap}>
-                {ioSummary.activeAddresses.map((address) => <Text key={address} style={styles.activeChip}>{address}</Text>)}
-              </View>
-            ) : null}
           </View>
 
           <View style={styles.summaryBox}>
