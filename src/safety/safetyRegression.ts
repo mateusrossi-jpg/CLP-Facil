@@ -7,7 +7,7 @@ type SafetyRegressionResult = {
 };
 
 function assertResult(name: string, condition: boolean, details?: string): SafetyRegressionResult {
-  return { name, passed, details: condition ? undefined : details };
+  return { name, passed: condition, details: condition ? undefined : details };
 }
 
 function runSafetyCoverageRegression(): SafetyRegressionResult {
