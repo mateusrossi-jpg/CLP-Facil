@@ -47,6 +47,7 @@ function initialReferenceState(project: EditorProjectState): PlcState {
 export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectPlcProfile }: ReferenceHubPanelProps) {
   const [tab, setTab] = useState<ReferenceTab>('dialects');
   const [educationalForces, setEducationalForces] = useState<EducationalForceMap>({});
+  const [rungComments, setRungComments] = useState<Record<string, string>>({});
   const referenceState = useMemo(() => initialReferenceState(editorProject), [editorProject]);
 
   function setEducationalForce(tag: string, force: EducationalForceMode) {
@@ -54,6 +55,16 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
       const next = { ...current };
       if (force === 'normal') delete next[tag];
       else next[tag] = force;
+      return next;
+    });
+  }
+
+  function setRungComment(rungId: string, comment: string) {
+    setRungComments((current) => {
+      const next = { ...current };
+      const cleaned = comment.trimStart();
+      if (!cleaned.trim()) delete next[rungId];
+      else next[rungId] = cleaned;
       return next;
     });
   }
@@ -105,7 +116,9 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           editorProject={editorProject}
           plcState={referenceState}
           forces={educationalForces}
+          rungComments={rungComments}
           onSetForce={setEducationalForce}
+          onSetRungComment={setRungComment}
         />
       ) : tab === 'protocols' ? (
         <CommunicationProtocolsPanel />
