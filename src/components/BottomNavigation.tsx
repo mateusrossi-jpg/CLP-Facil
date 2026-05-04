@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-export type BottomNavKey = 'home' | 'learn' | 'simulate' | 'projects' | 'pro';
+export type BottomNavKey = 'home' | 'learn' | 'simulate' | 'reference' | 'projects' | 'pro';
 
 type BottomNavigationProps = {
   active: BottomNavKey;
@@ -14,6 +14,7 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'home', label: 'Início', shortLabel: 'Início' },
   { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
   { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
+  { key: 'reference', label: 'Referência', shortLabel: 'Ref' },
   { key: 'projects', label: 'Hardware', shortLabel: 'HW' },
   { key: 'pro', label: 'Pro', shortLabel: 'Pro' },
 ];
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   labelCompact: {
-    fontSize: 11,
+    fontSize: 10,
   },
   activeText: {
     color: colors.text,
