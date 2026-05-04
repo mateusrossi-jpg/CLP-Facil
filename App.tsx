@@ -15,6 +15,7 @@ import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
 import { LessonCard } from './src/components/LessonCard';
 import { LaunchQuickStartPanel } from './src/components/LaunchQuickStartPanel';
+import { LearningPathPanel } from './src/components/LearningPathPanel';
 import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
@@ -809,6 +810,7 @@ export default function App() {
               onOpenReference={() => setMode('reference')}
               onOpenHardware={() => setMode('projects')}
             />
+            <LearningPathPanel />
             <AppCard
               title="Aprenda"
               description="Lições guiadas e exemplos passo a passo sobre comandos elétricos e lógica Ladder."
