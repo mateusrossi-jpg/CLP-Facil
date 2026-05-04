@@ -10,21 +10,21 @@ function replaceOnce(source, from, to, label) {
   return source.replace(from, to);
 }
 
+function insertBeforeLastStyleEnd(source, styleName, styleBlock) {
+  if (source.includes(`${styleName}: {`)) return source;
+  const marker = '\n});\n';
+  const index = source.lastIndexOf(marker);
+  if (index < 0) throw new Error(`Não encontrei fim do StyleSheet para ${styleName}.`);
+  return `${source.slice(0, index)}\n  ${styleName}: ${styleBlock},${source.slice(index)}`;
+}
+
 function patchApp() {
   const filePath = path.resolve('App.tsx');
   let source = fs.readFileSync(filePath, 'utf8');
   const original = source;
 
   if (!source.includes('<ReferenceHubPanel')) {
-    const referenceBlock = `
-          {mode === 'reference' ? (
-            <ReferenceHubPanel
-              editorProject={editorProject}
-              selectedPlcProfile={selectedPlcProfile}
-              onSelectPlcProfile={setSelectedPlcProfile}
-            />
-          ) : null}
-`;
+    const referenceBlock = `\n          {mode === 'reference' ? (\n            <ReferenceHubPanel\n              editorProject={editorProject}\n              selectedPlcProfile={selectedPlcProfile}\n              onSelectPlcProfile={setSelectedPlcProfile}\n            />\n          ) : null}\n`;
     const anchors = ["          {mode === 'projects' ? (", "          {mode === 'pro' ? (", '        </ScrollView>'];
     const anchor = anchors.find((item) => source.includes(item));
     if (!anchor) throw new Error('Não encontrei ponto seguro para inserir a aba Referência.');
@@ -130,7 +130,7 @@ function patchPlcWorkbench() {
     'trocar ícone da paleta conforme perfil',
   );
 
-  if (!source.includes('  selectedProfile = \'easy_clp\',')) {
+  if (!source.includes("  selectedProfile = 'easy_clp',")) {
     source = replaceOnce(
       source,
       '  evaluation,\n  mode,',
@@ -141,6 +141,88 @@ function patchPlcWorkbench() {
 
   source = source.split('{outputLike || functionLike ? coilSymbol(block) : contactSymbol(block)}').join('{outputLike || functionLike ? coilSymbol(block, selectedProfile) : contactSymbol(block, selectedProfile)}');
   source = source.split('{componentSymbol(component)}').join('{componentSymbol(component, selectedProfile)}');
+
+  if (!source.includes('mobileRungOutputCard')) {
+    source = replaceOnce(
+      source,
+      '        {complexityHint ? (',
+      `        {isMobile && targetRung.coilBlock ? (
+          <View style={styles.mobileRungOutputCard}>
+            <View style={styles.mobileRungOutputTextBox}>
+              <Text style={styles.mobileRungOutputLabel}>Carga / saída da linha</Text>
+              <Text style={styles.mobileRungOutputAddress}>{blockAddress(targetRung.coilBlock)}</Text>
+            </View>
+            <Text style={styles.mobileRungOutputSymbol}>{coilSymbol(targetRung.coilBlock, selectedProfile)}</Text>
+          </View>
+        ) : null}
+        {isMobile ? (
+          <View style={styles.mobileDragHintBox}>
+            <Text style={styles.mobileDragHintText}>Arraste lateralmente para navegar no Ladder. A carga aparece resumida acima para não se perder no smartphone.</Text>
+          </View>
+        ) : null}
+        {complexityHint ? (`,
+      'adicionar carga fixa e dica de arraste no rung mobile',
+    );
+  }
+
+  if (!source.includes('nestedScrollEnabled')) {
+    source = source.split('<ScrollView horizontal').join('<ScrollView horizontal nestedScrollEnabled directionalLockEnabled={false}');
+    console.log('ScrollViews horizontais receberam nestedScrollEnabled/directionalLockEnabled.');
+  }
+
+  source = insertBeforeLastStyleEnd(source, 'mobileRungOutputCard', `{
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.sm,
+    backgroundColor: colors.greenSoft,
+    marginBottom: spacing.sm,
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileRungOutputTextBox', `{
+    flex: 1,
+    minWidth: 0,
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileRungOutputLabel', `{
+    color: colors.green,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileRungOutputAddress', `{
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: 2,
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileRungOutputSymbol', `{
+    color: colors.green,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: colors.surface,
+    fontSize: 11,
+    fontWeight: '900',
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileDragHintBox', `{
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.sm,
+    backgroundColor: colors.cyanSoft,
+    marginBottom: spacing.sm,
+  }`);
+  source = insertBeforeLastStyleEnd(source, 'mobileDragHintText', `{
+    color: colors.cyan,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+  }`);
 
   if (source !== original) fs.writeFileSync(filePath, source);
 }
@@ -156,7 +238,7 @@ function patchCodeContrast() {
     let source = fs.readFileSync(filePath, 'utf8');
     const original = source;
     source = source.split('color: colors.text,\n    backgroundColor: colors.black,\n    borderColor: colors.borderStrong,').join("color: '#F8FAFC',\n    backgroundColor: '#020817',\n    borderColor: colors.cyan,");
-    if (!source.includes("fontWeight: '700',") && source.includes('fontFamily: \'monospace\'')) {
+    if (!source.includes("fontWeight: '700',") && source.includes("fontFamily: 'monospace'")) {
       source = source.replace("fontFamily: 'monospace',\n    fontSize:", "fontFamily: 'monospace',\n    fontWeight: '700',\n    fontSize:");
     }
     if (source !== original) {
@@ -169,4 +251,4 @@ function patchCodeContrast() {
 patchApp();
 patchPlcWorkbench();
 patchCodeContrast();
-console.log('Reference tab, profile symbols and code contrast patch ready.');
+console.log('Reference tab, profile symbols, mobile rung load and code contrast patch ready.');
