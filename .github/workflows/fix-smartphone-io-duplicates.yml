@@ -1,0 +1,36 @@
+name: Fix smartphone I/O duplicates
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/fix-smartphone-io-duplicates.mjs'
+      - '.github/workflows/fix-smartphone-io-duplicates.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix smartphone I/O duplicates
+        run: node scripts/fix-smartphone-io-duplicates.mjs
+
+      - name: Commit duplicate fix
+        run: |
+          if git diff --quiet; then
+            echo "No duplicate fixes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/SmartphoneSimulationPanel.tsx
+          git commit -m "fix: remove duplicated mobile I/O summary imports"
+          git push
