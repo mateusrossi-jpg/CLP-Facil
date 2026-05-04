@@ -1,5 +1,6 @@
 import { createInitialEditorProject } from '../engine/editorTypes';
 import { createPlcProfileProjectView } from '../plcProfiles/plcProfiles';
+import { createRungOutputSummary } from './rungOutputSummary';
 import { createSmartphoneProgramSummary } from './smartphoneProgramView';
 
 type SmartphoneProgramRegressionResult = {
@@ -41,9 +42,24 @@ function runFlowProgramSummaryRegression(): SmartphoneProgramRegressionResult {
   );
 }
 
+function runRungOutputSummaryRegression(): SmartphoneProgramRegressionResult {
+  const project = createInitialEditorProject();
+  const rung = project.rungs[0];
+  const variable = rung.coilBlock?.variable ?? 'Q0.0';
+  const off = createRungOutputSummary(rung, { [variable]: false });
+  const on = createRungOutputSummary(rung, { [variable]: true });
+
+  return assertResult(
+    'resumo fixo da saida do rung preserva endereco e estado',
+    off.isDefined && off.outputAddress === variable && off.stateLabel === 'OFF' && on.stateLabel === 'ON',
+    `address=${off.outputAddress}, off=${off.stateLabel}, on=${on.stateLabel}`,
+  );
+}
+
 export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegressionResult[] {
   return [
     runRockwellProgramSummaryRegression(),
     runFlowProgramSummaryRegression(),
+    runRungOutputSummaryRegression(),
   ];
 }
