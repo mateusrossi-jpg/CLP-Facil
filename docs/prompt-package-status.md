@@ -32,6 +32,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Painel de exportação usando contraste centralizado no bloco de código.
 - Painel de perfis com legenda didática por dialeto.
 - BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
+- Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
 
 ## Ainda pendente para fechamento visual/manual
 
@@ -51,7 +52,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Próximo bloco recomendado
 
-A próxima etapa visual deve integrar os controles de zoom/enquadramento diretamente no `SmartphoneSimulationPanel.tsx`, usando o modelo `src/simulation/smartphoneViewScale.ts` e o componente `src/components/SmartphoneViewScaleControl.tsx`. Como esse arquivo é grande, fazer alteração mínima e testar imediatamente.
+A próxima etapa visual deve substituir o bloco interno da aba Programa em `SmartphoneSimulationPanel.tsx` pelo componente `src/components/SmartphoneProgramPanel.tsx`. Isso reduz o risco de editar o arquivo gigante, pois o novo painel já concentra Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral.
 
 Depois que o `App.tsx` puder ser editado com leitura completa, remover a renderização emergencial do `ReferenceHubPanel` dentro do `BottomNavigation` e deixar a referência renderizada somente no bloco principal da aba.
 
