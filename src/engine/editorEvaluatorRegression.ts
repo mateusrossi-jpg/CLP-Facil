@@ -409,9 +409,9 @@ const guidedPracticeSequences: Record<string, PlcState[]> = {
   ],
   'reversing-star-delta': [
     { 'I0.0': true },
-    ...repeatedPatch(45, { 'I0.0': false }),
+    ...repeatedPatch(50, { 'I0.0': false }),
     { 'I0.1': true },
-    ...repeatedPatch(45, { 'I0.1': false }),
+    ...repeatedPatch(55, { 'I0.1': false }),
   ],
   'reversing-star-delta-tof': [
     { 'I0.0': true },
