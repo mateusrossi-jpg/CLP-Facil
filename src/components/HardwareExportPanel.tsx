@@ -331,13 +331,9 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         <Text style={styles.codeTitle}>{format === 'arduino' ? 'Sketch gerado' : 'YAML gerado'}</Text>
         <Text style={styles.codeMeta}>{generatedCode.split('\n').length} linhas</Text>
       </View>
-      <TextInput
-        value={generatedCode}
-        editable={false}
-        multiline
-        scrollEnabled
-        style={styles.codeBox}
-      />
+      <ScrollView style={styles.codeBox} contentContainerStyle={styles.codeContent}>
+        <Text selectable style={styles.codeText}>{generatedCode}</Text>
+      </ScrollView>
     </View>
   );
 }
@@ -693,17 +689,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   codeBox: {
-    minHeight: 260,
-    maxHeight: 420,
-    color: colors.text,
+    minHeight: 300,
+    maxHeight: 460,
     borderColor: colors.borderStrong,
     borderWidth: 1,
     borderRadius: 14,
+    backgroundColor: '#071629',
+  },
+  codeContent: {
     padding: spacing.md,
-    backgroundColor: colors.black,
+  },
+  codeText: {
+    color: '#EAF2FF',
     fontFamily: 'monospace',
-    fontSize: 11,
-    lineHeight: 16,
-    textAlignVertical: 'top',
+    fontSize: 12,
+    lineHeight: 18,
   },
 });
