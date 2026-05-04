@@ -1,0 +1,38 @@
+name: Integrate launch quick start panel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/integrate-launch-quick-start-panel.mjs'
+      - '.github/workflows/integrate-launch-quick-start-panel.yml'
+      - 'src/components/LaunchQuickStartPanel.tsx'
+      - 'src/data/quickStartRegression.ts'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrate launch quick start panel
+        run: node scripts/integrate-launch-quick-start-panel.mjs
+
+      - name: Commit quick start integration
+        run: |
+          if git diff --quiet; then
+            echo "No quick start changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "feat: show quick start flow on home"
+          git push
