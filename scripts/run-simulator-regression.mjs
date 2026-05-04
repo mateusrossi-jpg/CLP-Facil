@@ -4,11 +4,13 @@ const require = createRequire(import.meta.url);
 const { runEditorEvaluatorRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorEvaluatorRegression.js');
 const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/edgeRegression.js');
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
+const { runPlcProfileRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/plcProfileRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
   ...runEdgeContactRegressionSuite(),
   ...runHardwareRegressionSuite(),
+  ...runPlcProfileRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
