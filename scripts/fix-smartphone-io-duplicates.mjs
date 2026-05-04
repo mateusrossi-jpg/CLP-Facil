@@ -23,38 +23,27 @@ if (importCount > 1) {
   console.log(`Import duplicado removido: ${importCount - 1}`);
 }
 
-const summaryBlock = `          <View style={styles.summaryBox}>
-            <Text style={styles.sectionTitle}>Resumo de {ioSummary.label}</Text>
-            <View style={styles.programMetaRow}>
-              <View style={styles.programMetaCard}>
-                <Text style={styles.programMetaLabel}>Total</Text>
-                <Text style={styles.programMetaValue}>{ioSummary.totalCount}</Text>
-              </View>
-              <View style={styles.programMetaCard}>
-                <Text style={styles.programMetaLabel}>Ativos</Text>
-                <Text style={styles.programMetaValue}>{ioSummary.activeCount}</Text>
-              </View>
-            </View>
-            <Text style={styles.educationText}>{ioSummary.guidance}</Text>
-            {ioSummary.activeAddresses.length > 0 ? (
-              <View style={styles.chipWrap}>
-                {ioSummary.activeAddresses.map((address) => <Text key={address} style={styles.activeChip}>{address}</Text>)}
-              </View>
-            ) : null}
-          </View>`;
+const summaryStart = '          <View style={styles.summaryBox}>\n            <Text style={styles.sectionTitle}>Resumo de {ioSummary.label}</Text>';
+const starts = [];
+let offset = 0;
+while (true) {
+  const index = source.indexOf(summaryStart, offset);
+  if (index < 0) break;
+  starts.push(index);
+  offset = index + summaryStart.length;
+}
 
-const blockCount = source.split(summaryBlock).length - 1;
-if (blockCount > 1) {
-  let seen = false;
-  source = source.replace(new RegExp(summaryBlock.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), (match) => {
-    if (!seen) {
-      seen = true;
-      return match;
-    }
-    return '';
-  });
+if (starts.length > 1) {
+  for (let i = starts.length - 1; i >= 1; i -= 1) {
+    const start = starts[i];
+    const signalListIndex = source.indexOf('          <View style={styles.signalList}>', start);
+    const nextSummaryIndex = source.indexOf(summaryStart, start + summaryStart.length);
+    const nextMarker = nextSummaryIndex >= 0 && nextSummaryIndex < signalListIndex ? nextSummaryIndex : signalListIndex;
+    if (nextMarker < 0) throw new Error('Não encontrei fim do bloco de resumo I/O duplicado.');
+    source = `${source.slice(0, start)}${source.slice(nextMarker)}`;
+  }
   source = source.replace(/\n{3,}/g, '\n\n');
-  console.log(`Resumo I/O duplicado removido: ${blockCount - 1}`);
+  console.log(`Resumo I/O duplicado removido: ${starts.length - 1}`);
 }
 
 if (source !== original) {
@@ -63,3 +52,5 @@ if (source !== original) {
 } else {
   console.log('Nenhuma duplicidade encontrada.');
 }
+
+console.log('Smartphone I/O duplicate fix script ready.');
