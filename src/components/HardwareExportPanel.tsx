@@ -160,6 +160,10 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
   const selectedIo = selectedIoVariable ? ioVariables.find((item) => item.variable === selectedIoVariable) ?? null : ioVariables[0] ?? null;
   const selectedMappedPin = selectedIo ? pinMap.find((pin) => pin.variable === selectedIo.variable) : undefined;
   const selectedBoardPin = selectedMappedPin ? getBoardPin(catalog, selectedMappedPin.pin) : undefined;
+  const codeLanguage = format === 'arduino' ? 'C++ / Arduino' : 'YAML / ESPHome';
+  const shellHint = format === 'arduino'
+    ? 'Arduino IDE / PlatformIO'
+    : 'ESPHome Dashboard / terminal';
 
   function updatePin(variable: string, value: string) {
     setPinOverrides((current) => ({ ...current, [variable]: value.trim() }));
@@ -362,6 +366,10 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
       <View style={styles.codeHeader}>
         <Text style={styles.codeTitle}>{format === 'arduino' ? 'Sketch gerado' : 'YAML gerado'}</Text>
         <Text style={styles.codeMeta}>{generatedCode.split('\n').length} linhas</Text>
+      </View>
+      <View style={styles.codeToolbar}>
+        <Text style={styles.codeLanguage}>{codeLanguage}</Text>
+        <Text style={styles.shellBadge}>{shellHint}</Text>
       </View>
       <ScrollView style={styles.codeBox} contentContainerStyle={styles.codeContent}>
         <Text selectable style={styles.codeText}>{generatedCode}</Text>
@@ -722,22 +730,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
+  codeToolbar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  codeLanguage: {
+    color: colors.cyan,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: colors.cyanSoft,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  shellBadge: {
+    color: colors.amber,
+    borderColor: colors.amber,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    backgroundColor: colors.goldSoft,
+    fontSize: 10,
+    fontWeight: '900',
+  },
   codeBox: {
     minHeight: 300,
     maxHeight: 460,
-    borderColor: colors.borderStrong,
+    borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: '#071629',
+    backgroundColor: '#020817',
   },
   codeContent: {
     padding: spacing.md,
   },
   codeText: {
-    color: '#EAF2FF',
+    color: '#F8FAFC',
     fontFamily: 'monospace',
     fontSize: 12,
     lineHeight: 18,
+    fontWeight: '700',
   },
   hardwareStepRow: {
     flexDirection: 'row',
