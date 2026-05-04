@@ -1,8 +1,10 @@
 import { createInitialEditorProject, EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { compileLadderProjectForHardware } from './compileLadderProject';
+import { getGpioBoardCatalog, getSelectablePins } from './gpioCatalog';
 import { exportArduinoSketch } from './exportArduinoSketch';
 import { exportEspHomeYaml } from './exportEspHomeYaml';
 import { HardwareExportConfig } from './hardwareTypes';
+import { validateGpioMap } from './validateGpioMap';
 
 type HardwareRegressionResult = {
   name: string;
@@ -165,11 +167,46 @@ function runEspHomeExportRegression(): HardwareRegressionResult {
   );
 }
 
+function runGpioCatalogRegression(): HardwareRegressionResult {
+  const esp32 = getGpioBoardCatalog('esp32');
+  const inputPins = getSelectablePins(esp32, 'input');
+  const outputPins = getSelectablePins(esp32, 'output');
+  const hasInputOnly = Boolean(esp32.pins.find((pin) => pin.gpio === '34' && pin.inputOnly));
+  const excludesFlashPins = !inputPins.some((pin) => pin.gpio === '6') && !outputPins.some((pin) => pin.gpio === '6');
+  const suggestsInput = inputPins.some((pin) => pin.gpio === '32');
+  const suggestsOutput = outputPins.some((pin) => pin.gpio === '26');
+
+  return assertResult(
+    'catalogo GPIO ESP32 separa pinos seguros',
+    hasInputOnly && excludesFlashPins && suggestsInput && suggestsOutput,
+    `inputOnly=${hasInputOnly}, excludesFlash=${excludesFlashPins}, input32=${suggestsInput}, output26=${suggestsOutput}`,
+  );
+}
+
+function runGpioValidationRegression(): HardwareRegressionResult {
+  const issues = validateGpioMap('esp32', [
+    { variable: 'Q0.0', pin: '34', mode: 'output', outputPolarity: 'active_high' },
+    { variable: 'I0.0', pin: '6', mode: 'input_pullup' },
+    { variable: 'I0.1', pin: '0', mode: 'input_pullup' },
+  ]);
+  const catchesInputOnlyOutput = issues.some((issue) => issue.severity === 'error' && issue.message.includes('somente entrada'));
+  const catchesReserved = issues.some((issue) => issue.severity === 'error' && issue.message.includes('reservado'));
+  const catchesBootWarning = issues.some((issue) => issue.severity === 'warning' && issue.message.includes('boot'));
+
+  return assertResult(
+    'valida pinagem GPIO invalida',
+    catchesInputOnlyOutput && catchesReserved && catchesBootWarning,
+    `inputOnly=${catchesInputOnlyOutput}, reserved=${catchesReserved}, boot=${catchesBootWarning}`,
+  );
+}
+
 export function runHardwareRegressionSuite(): HardwareRegressionResult[] {
   return [
     runSealExportRegression(),
     runEdgeExportRegression(),
     runTimerExportRegression(),
     runEspHomeExportRegression(),
+    runGpioCatalogRegression(),
+    runGpioValidationRegression(),
   ];
 }
