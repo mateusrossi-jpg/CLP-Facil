@@ -31,6 +31,22 @@ export const colors = {
   codeBackground: '#020817',
   codeSurface: '#0B1220',
   codeText: '#F8FAFC',
+
+  // Compatibility aliases for older components while the premium refactor is completed.
+  primary: '#22D3EE',
+  primarySoft: 'rgba(34, 211, 238, 0.12)',
+  success: '#22C55E',
+  successSoft: 'rgba(34, 197, 94, 0.14)',
+  warning: '#F59E0B',
+  warningSoft: 'rgba(245, 158, 11, 0.14)',
+  danger: '#FB7185',
+  dangerSoft: 'rgba(251, 113, 133, 0.14)',
+  blue: '#22D3EE',
+  blueSoft: 'rgba(34, 211, 238, 0.12)',
+  orange: '#F59E0B',
+  orangeSoft: 'rgba(245, 158, 11, 0.14)',
+  gray: '#64748B',
+  white: '#F8FAFC',
 };
 
 export const premiumDarkColors = {
