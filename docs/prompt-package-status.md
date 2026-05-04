@@ -23,6 +23,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - GitHub Actions atualizado para rodar `typecheck`, `test:simulator` e `test:quality` em push, pull request e workflow manual.
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
+- Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 
 ## Concluído na interface
 
@@ -60,6 +61,18 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - No desktop/tablet, manter o modo clássico como padrão e oferecer a execução mobile como alternativa.
 - A refatoração visual agora deve seguir tela por tela usando o kit premium: Home, Aprender, Simular, Projetos, Editor, Exportação e Tags/Diagnóstico.
 
+## Fechamento estrutural do pacote visual
+
+O pacote visual premium está estruturalmente fechado: as telas principais existem, estão conectadas na navegação final e seguem a mesma linguagem escura premium. O GitHub não retornou checks/status automáticos para o último commit pelo conector, portanto o fechamento técnico final ainda depende de rodar localmente ou no Actions:
+
+```bash
+npm run typecheck
+npm run test:simulator
+npm run test:quality
+```
+
+Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck/regressão, sem adicionar novas telas.
+
 ## Ainda pendente para fechamento visual/manual
 
 - Confirmar o resultado do GitHub Actions após o próximo push ou execução manual.
@@ -86,7 +99,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Próximo bloco recomendado
 
-A próxima etapa ideal é rodar o quality gate e corrigir erros de TypeScript/contraste/regressão antes de continuar refinando o visual.
+Rodar o quality gate e corrigir erros de TypeScript/contraste/regressão antes de continuar refinando o visual.
 
 Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
