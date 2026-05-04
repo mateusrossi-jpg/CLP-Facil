@@ -64,3 +64,5 @@ if (source !== original) {
 } else {
   console.log('Nenhuma alteração necessária.');
 }
+
+console.log('Smartphone compact simulation integration script ready.');
