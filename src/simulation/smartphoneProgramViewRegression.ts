@@ -1,5 +1,6 @@
 import { createInitialEditorProject } from '../engine/editorTypes';
 import { createPlcProfileProjectView } from '../plcProfiles/plcProfiles';
+import { runCodeContrastRegressionSuite } from '../theme/codeContrastRegression';
 import { createProfessionalTagRows, createRungCommentRows } from './professionalClpView';
 import { createRungOutputSummary } from './rungOutputSummary';
 import { createSmartphoneProgramSummary } from './smartphoneProgramView';
@@ -89,5 +90,6 @@ export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegr
     runRungOutputSummaryRegression(),
     runProfessionalTagTableRegression(),
     runRungCommentsRegression(),
+    ...runCodeContrastRegressionSuite(),
   ];
 }
