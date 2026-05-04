@@ -9,6 +9,7 @@ const { runProtocolRegressionSuite } = require('/tmp/easy-clp-sim-test/communica
 const { runExampleLibraryRegressionSuite } = require('/tmp/easy-clp-sim-test/data/exampleLibraryRegression.js');
 const { runQuickStartRegressionSuite } = require('/tmp/easy-clp-sim-test/data/quickStartRegression.js');
 const { runSafetyRegressionSuite } = require('/tmp/easy-clp-sim-test/safety/safetyRegression.js');
+const { runReleaseRegressionSuite } = require('/tmp/easy-clp-sim-test/release/releaseRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
@@ -19,6 +20,7 @@ const results = [
   ...runExampleLibraryRegressionSuite(),
   ...runQuickStartRegressionSuite(),
   ...runSafetyRegressionSuite(),
+  ...runReleaseRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
