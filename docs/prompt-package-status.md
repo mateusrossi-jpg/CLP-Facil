@@ -37,6 +37,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo, garantindo acesso visível à execução mobile mesmo antes de substituir o bloco clássico no `App.tsx`.
 - BottomNavigation renderiza `PremiumHomeScreen` quando Início está ativo.
 - BottomNavigation renderiza `PremiumLearningScreen` quando Aprender está ativo.
+- BottomNavigation renderiza `PremiumProjectsScreen` quando a aba projects está ativa, mantendo temporariamente o rótulo antigo Hardware até a limpeza final da navegação.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
 - Nova `MobileExecutionScreen` criada como primeira versão funcional da execução mobile.
 - Nova `MobileExecutionCockpit` criada como versão visual alinhada ao conceito aprovado: fundo #020817, cockpit escuro, header Easy-PLC, RUN/AUTO/SCAN, I/Os horizontais, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
@@ -45,6 +46,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Novo `SimulationModeRouter` criado para alternar entre aviso, execução mobile e conteúdo clássico, com fallback seguro para projeto didático.
 - Nova `PremiumHomeScreen` criada como conceito implementável da Home no padrão visual aprovado.
 - Nova `PremiumLearningScreen` criada para Aprender com trilhas, módulos, desafios, conquistas e conteúdo de História do CLP / funcionamento / Ladder / aplicações / diagnóstico.
+- Nova `PremiumProjectsScreen` criada para biblioteca premium de projetos/exemplos, com busca visual, filtros, projeto em destaque, cards de Partida direta, Selo, Reversão, Estrela-triângulo, Semáforo, Bomba alternada, Esteira e Portão.
 
 ## Decisão de produto
 
@@ -61,6 +63,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
   - Tocar em Aprender e conferir a `PremiumLearningScreen`.
+  - Tocar na aba atualmente rotulada Hardware e conferir a `PremiumProjectsScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
   - Ref > Mobile.
   - Ref > Tags.
@@ -72,13 +75,13 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Conferir modos Lista, Fluxo e Rung compacto.
   - Confirmar saída/carga fixa e rodapé de diagnóstico.
   - Conferir se o modo clássico ainda aparece/continua acessível.
-  - Aba Hardware > 1 Placa / 2 Pinos / 3 Código.
+  - Aba Hardware/Projetos > verificar se a biblioteca premium não eliminou acesso futuro à exportação.
   - Contraste do código gerado.
   - Trilha guiada e progresso.
 
 ## Próximo bloco recomendado
 
-A próxima etapa ideal é criar e conectar a tela `PremiumProjectsScreen` para biblioteca de projetos/exemplos prontos, seguida da tela `PremiumEditorExportScreen` para Editor Ladder + Exportação.
+A próxima etapa ideal é criar e conectar a tela `PremiumEditorExportScreen` para Editor Ladder + Exportação, incluindo toolbar de instruções, rungs compactos, comentários, tabs Arduino/ESP32/ESPHome e code preview premium.
 
 Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
