@@ -3,6 +3,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { createInitialEditorProject, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
+import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -31,15 +32,14 @@ function makeFallbackState(project: EditorProjectState): PlcState {
   return state;
 }
 
-function fallbackEvaluation(project: EditorProjectState): EditorEvaluationResult {
+function fallbackEvaluation(project: EditorProjectState, state: PlcState): EditorEvaluationResult {
   return {
-    nextState: {},
+    state,
     rungResults: Object.fromEntries(project.rungs.map((rung) => [rung.id, false])),
-    timers: {},
-    counters: {},
-    edgeMemory: {},
-    errors: [],
-    warnings: [],
+    diagnostics: [],
+    runtime: createInitialRuntimeState(),
+    scanNumber: 0,
+    explanation: 'Simulação mobile pronta para execução.',
   };
 }
 
@@ -60,7 +60,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   const fallbackProject = useMemo(() => createInitialEditorProject(), []);
   const project = editorProject ?? fallbackProject;
   const state = plcState ?? makeFallbackState(project);
-  const result = evaluation ?? fallbackEvaluation(project);
+  const result = evaluation ?? fallbackEvaluation(project, state);
 
   if (mode === 'mobile') {
     return (
