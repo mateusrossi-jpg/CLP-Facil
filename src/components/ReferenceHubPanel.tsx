@@ -6,15 +6,17 @@ import { ProfessionalClpPanel } from './ProfessionalClpPanel';
 import { ProfessionalRoutinePanel } from './ProfessionalRoutinePanel';
 import { ReleaseReadinessPanel } from './ReleaseReadinessPanel';
 import { SafetyReadinessPanel } from './SafetyReadinessPanel';
+import { SmartphoneViewScaleControl } from './SmartphoneViewScaleControl';
 import { StoreListingPanel } from './StoreListingPanel';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { EducationalForceMap, EducationalForceMode } from '../simulation/professionalClpView';
+import { SmartphoneViewScaleId } from '../simulation/smartphoneViewScale';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-type ReferenceTab = 'dialects' | 'tags' | 'routines' | 'protocols' | 'safety' | 'release' | 'store';
+type ReferenceTab = 'dialects' | 'mobile' | 'tags' | 'routines' | 'protocols' | 'safety' | 'release' | 'store';
 
 type ReferenceHubPanelProps = {
   editorProject: EditorProjectState;
@@ -45,11 +47,24 @@ function initialReferenceState(project: EditorProjectState): PlcState {
   return state;
 }
 
+function selectedRungMobileMetrics(project: EditorProjectState): { conditionCount: number; parallelBranchCount: number } {
+  const selected = project.rungs.find((rung) => rung.id === project.selectedRungId) ?? project.rungs[0];
+  if (!selected) return { conditionCount: 0, parallelBranchCount: 0 };
+  const parallelBranches = selected.parallelBranches ?? [];
+  const legacyParallelCount = selected.parallelBlocks.length > 0 ? 1 : 0;
+  return {
+    conditionCount: selected.seriesBlocks.length + selected.parallelBlocks.length + parallelBranches.reduce((sum, branch) => sum + branch.blocks.length, 0),
+    parallelBranchCount: parallelBranches.length + legacyParallelCount,
+  };
+}
+
 export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectPlcProfile }: ReferenceHubPanelProps) {
   const [tab, setTab] = useState<ReferenceTab>('dialects');
+  const [mobileScale, setMobileScale] = useState<SmartphoneViewScaleId>('fit');
   const [educationalForces, setEducationalForces] = useState<EducationalForceMap>({});
   const [rungComments, setRungComments] = useState<Record<string, string>>({});
   const referenceState = useMemo(() => initialReferenceState(editorProject), [editorProject]);
+  const mobileMetrics = useMemo(() => selectedRungMobileMetrics(editorProject), [editorProject]);
 
   function setEducationalForce(tag: string, force: EducationalForceMode) {
     setEducationalForces((current) => {
@@ -76,7 +91,7 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.heroHeader}>
           <View style={styles.heroText}>
             <Text style={styles.eyebrow}>Referência técnica</Text>
-            <Text style={styles.title}>Dialetos, tags, rotinas, protocolos, segurança e lançamento</Text>
+            <Text style={styles.title}>Dialetos, mobile, tags, rotinas, protocolos, segurança e lançamento</Text>
             <Text style={styles.subtitle}>Área separada para consulta, comparação, checklist de bancada, loja e preparação para lançamento sem poluir a simulação.</Text>
           </View>
           <View style={styles.badge}>
@@ -87,6 +102,9 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.tabRow}>
           <Pressable onPress={() => setTab('dialects')} style={[styles.tabButton, tab === 'dialects' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'dialects' && styles.tabTextActive]}>Dialetos</Text>
+          </Pressable>
+          <Pressable onPress={() => setTab('mobile')} style={[styles.tabButton, tab === 'mobile' && styles.tabButtonActive]}>
+            <Text style={[styles.tabText, tab === 'mobile' && styles.tabTextActive]}>Mobile</Text>
           </Pressable>
           <Pressable onPress={() => setTab('tags')} style={[styles.tabButton, tab === 'tags' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'tags' && styles.tabTextActive]}>Tags</Text>
@@ -114,6 +132,13 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           editorProject={editorProject}
           selectedProfile={selectedPlcProfile}
           onSelectProfile={onSelectPlcProfile}
+        />
+      ) : tab === 'mobile' ? (
+        <SmartphoneViewScaleControl
+          value={mobileScale}
+          conditionCount={mobileMetrics.conditionCount}
+          parallelBranchCount={mobileMetrics.parallelBranchCount}
+          onChange={setMobileScale}
         />
       ) : tab === 'tags' ? (
         <ProfessionalClpPanel
