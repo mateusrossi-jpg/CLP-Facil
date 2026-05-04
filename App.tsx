@@ -1047,13 +1047,15 @@ export default function App() {
               </View>
 
               
-            <SimulatorDialectPanel
+            {!(compactSimulator && editorMode === 'simulate') ? (
+              <SimulatorDialectPanel
               editorProject={editorProject}
               selectedProfile={selectedPlcProfile}
               onSelectProfile={setSelectedPlcProfile}
               compact={compactSimulator}
             />
-            {compactSimulator ? (
+            ) : null}
+            {compactSimulator && editorMode === 'simulate' ? (
               <SmartphoneSimulationPanel
                 editorProject={editorProject}
                 plcState={editorEvaluation.state}
@@ -1066,7 +1068,8 @@ export default function App() {
                 onSetValue={setEditorValue}
               />
             ) : null}
-            <PlcWorkbench
+            {!(compactSimulator && editorMode === 'simulate') ? (
+              <PlcWorkbench
                 editor={editorProject}
                 state={editorEvaluation.state}
                 evaluation={editorEvaluation}
@@ -1089,6 +1092,7 @@ export default function App() {
                 onAddVariable={addEditorVariable}
                 onRemoveVariable={removeEditorVariable}
               />
+            ) : null}
             <PlcProfilePanel
               editorProject={editorProject}
               selectedProfile={selectedPlcProfile}
