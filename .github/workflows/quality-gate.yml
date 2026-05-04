@@ -15,7 +15,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,5 +34,11 @@ jobs:
             npm install
           fi
 
-      - name: Run quality gate
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Simulator regressions
+        run: npm run test:simulator
+
+      - name: Quality checklist
         run: npm run test:quality
