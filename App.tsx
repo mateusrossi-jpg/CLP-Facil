@@ -1093,11 +1093,6 @@ export default function App() {
                 onRemoveVariable={removeEditorVariable}
               />
             ) : null}
-            <PlcProfilePanel
-              editorProject={editorProject}
-              selectedProfile={selectedPlcProfile}
-              onSelectProfile={setSelectedPlcProfile}
-            />
               <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
