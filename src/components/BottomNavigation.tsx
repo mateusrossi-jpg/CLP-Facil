@@ -14,7 +14,7 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'home', label: 'Início', shortLabel: 'Início' },
   { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
   { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
-  { key: 'projects', label: 'Projetos', shortLabel: 'Proj' },
+  { key: 'projects', label: 'Hardware', shortLabel: 'HW' },
   { key: 'pro', label: 'Pro', shortLabel: 'Pro' },
 ];
 
