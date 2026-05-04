@@ -183,6 +183,24 @@ function runGpioCatalogRegression(): HardwareRegressionResult {
   );
 }
 
+function runGpioVariantsRegression(): HardwareRegressionResult {
+  const s3 = getGpioBoardCatalog('esp32_s3');
+  const c3 = getGpioBoardCatalog('esp32_c3');
+  const cam = getGpioBoardCatalog('esp32_cam');
+  const mega = getGpioBoardCatalog('arduino_mega');
+
+  const hasS3Outputs = getSelectablePins(s3, 'output').some((pin) => pin.gpio === '38');
+  const hasC3BootWarning = Boolean(c3.pins.find((pin) => pin.gpio === '9' && pin.bootSensitive));
+  const hasCamCaution = Boolean(cam.pins.find((pin) => pin.gpio === '4' && pin.risk === 'caution'));
+  const hasMegaOutputs = getSelectablePins(mega, 'output').some((pin) => pin.gpio === '40');
+
+  return assertResult(
+    'catalogo GPIO cobre variantes ESP32 e Arduino Mega',
+    hasS3Outputs && hasC3BootWarning && hasCamCaution && hasMegaOutputs,
+    `s3=${hasS3Outputs}, c3=${hasC3BootWarning}, cam=${hasCamCaution}, mega=${hasMegaOutputs}`,
+  );
+}
+
 function runGpioValidationRegression(): HardwareRegressionResult {
   const issues = validateGpioMap('esp32', [
     { variable: 'Q0.0', pin: '34', mode: 'output', outputPolarity: 'active_high' },
@@ -207,6 +225,7 @@ export function runHardwareRegressionSuite(): HardwareRegressionResult[] {
     runTimerExportRegression(),
     runEspHomeExportRegression(),
     runGpioCatalogRegression(),
+    runGpioVariantsRegression(),
     runGpioValidationRegression(),
   ];
 }
