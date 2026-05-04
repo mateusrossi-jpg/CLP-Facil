@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { ReferenceFallbackPanel } from './ReferenceFallbackPanel';
+import { ReferenceHubPanel } from './ReferenceHubPanel';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -53,7 +53,7 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
           );
         })}
       </View>
-      {active === 'reference' ? <ReferenceFallbackPanel /> : null}
+      {active === 'reference' ? <ReferenceHubPanel /> : null}
     </View>
   );
 }
