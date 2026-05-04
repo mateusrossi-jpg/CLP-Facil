@@ -1,0 +1,38 @@
+name: Fix reference content branch
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/fix-reference-content-branch.mjs'
+      - '.github/workflows/fix-reference-content-branch.yml'
+      - 'src/components/ReferenceHubPanel.tsx'
+      - 'src/components/BottomNavigation.tsx'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix reference content branch
+        run: node scripts/fix-reference-content-branch.mjs
+
+      - name: Commit reference content branch fix
+        run: |
+          if git diff --quiet; then
+            echo "No reference branch changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "fix: render reference hub content"
+          git push
