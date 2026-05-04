@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CommunicationProtocolsPanel } from './CommunicationProtocolsPanel';
 import { PlcProfilePanel } from './PlcProfilePanel';
+import { ProfessionalClpPanel } from './ProfessionalClpPanel';
 import { ReleaseReadinessPanel } from './ReleaseReadinessPanel';
 import { SafetyReadinessPanel } from './SafetyReadinessPanel';
 import { StoreListingPanel } from './StoreListingPanel';
 import { EditorProjectState } from '../engine/editorTypes';
+import { PlcState } from '../engine/projectTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-type ReferenceTab = 'dialects' | 'protocols' | 'safety' | 'release' | 'store';
+type ReferenceTab = 'dialects' | 'tags' | 'protocols' | 'safety' | 'release' | 'store';
 
 type ReferenceHubPanelProps = {
   editorProject: EditorProjectState;
@@ -18,8 +20,32 @@ type ReferenceHubPanelProps = {
   onSelectPlcProfile: (profile: PlcProfileId) => void;
 };
 
+function initialReferenceState(project: EditorProjectState): PlcState {
+  const state: PlcState = {};
+  for (const variable of project.projectVariables ?? []) {
+    state[variable.address || variable.id] = variable.dataType === 'number' ? 0 : false;
+  }
+  for (const rung of project.rungs) {
+    const blocks = [
+      ...rung.seriesBlocks,
+      ...rung.parallelBlocks,
+      ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
+      ...(rung.coilBlock ? [rung.coilBlock] : []),
+    ];
+    for (const block of blocks) {
+      for (const variable of [block.variable, block.sourceA, block.sourceB, block.destination, block.downSource, block.resetSource]) {
+        const address = variable?.trim().toUpperCase();
+        if (!address || Number.isFinite(Number(address.replace(',', '.')))) continue;
+        if (!(address in state)) state[address] = false;
+      }
+    }
+  }
+  return state;
+}
+
 export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectPlcProfile }: ReferenceHubPanelProps) {
   const [tab, setTab] = useState<ReferenceTab>('dialects');
+  const referenceState = useMemo(() => initialReferenceState(editorProject), [editorProject]);
 
   return (
     <View style={styles.wrapper}>
@@ -27,7 +53,7 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.heroHeader}>
           <View style={styles.heroText}>
             <Text style={styles.eyebrow}>Referência técnica</Text>
-            <Text style={styles.title}>Dialetos, protocolos, segurança e lançamento</Text>
+            <Text style={styles.title}>Dialetos, tags, protocolos, segurança e lançamento</Text>
             <Text style={styles.subtitle}>Área separada para consulta, comparação, checklist de bancada, loja e preparação para lançamento sem poluir a simulação.</Text>
           </View>
           <View style={styles.badge}>
@@ -38,6 +64,9 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.tabRow}>
           <Pressable onPress={() => setTab('dialects')} style={[styles.tabButton, tab === 'dialects' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'dialects' && styles.tabTextActive]}>Dialetos</Text>
+          </Pressable>
+          <Pressable onPress={() => setTab('tags')} style={[styles.tabButton, tab === 'tags' && styles.tabButtonActive]}>
+            <Text style={[styles.tabText, tab === 'tags' && styles.tabTextActive]}>Tags</Text>
           </Pressable>
           <Pressable onPress={() => setTab('protocols')} style={[styles.tabButton, tab === 'protocols' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'protocols' && styles.tabTextActive]}>Protocolos</Text>
@@ -60,6 +89,8 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
           selectedProfile={selectedPlcProfile}
           onSelectProfile={onSelectPlcProfile}
         />
+      ) : tab === 'tags' ? (
+        <ProfessionalClpPanel editorProject={editorProject} plcState={referenceState} />
       ) : tab === 'protocols' ? (
         <CommunicationProtocolsPanel />
       ) : tab === 'safety' ? (
