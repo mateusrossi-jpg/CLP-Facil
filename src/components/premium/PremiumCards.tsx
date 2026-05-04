@@ -43,11 +43,12 @@ export const PremiumMetric = memo(function PremiumMetric({ label, value, hint, t
 
 export const PremiumProgress = memo(function PremiumProgress({ value, label }: ProgressProps) {
   const safeValue = Math.max(0, Math.min(100, value));
+  const fillWidth = `${safeValue}%` as `${number}%`;
   return (
     <View style={styles.progressBlock}>
       {label ? <Text style={styles.progressLabel}>{label}</Text> : null}
       <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${safeValue}%` }]} />
+        <View style={[styles.progressFill, { width: fillWidth }]} />
       </View>
     </View>
   );
