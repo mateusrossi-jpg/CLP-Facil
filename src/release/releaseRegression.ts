@@ -1,3 +1,4 @@
+import { createInitialEditorProject } from '../engine/editorTypes';
 import { criticalReleaseStages, releaseChecklistStages, releaseStatusLabel } from './releaseChecklist';
 
 type ReleaseRegressionResult = {
@@ -59,6 +60,19 @@ function runPromptCompletionChecklistRegression(): ReleaseRegressionResult {
   );
 }
 
+function runReferenceFallbackRegression(): ReleaseRegressionResult {
+  const fallbackProject = createInitialEditorProject();
+  const hasRungs = fallbackProject.rungs.length > 0;
+  const hasVariables = (fallbackProject.projectVariables ?? []).length > 0;
+  const hasSelected = Boolean(fallbackProject.selectedRungId ?? fallbackProject.rungs[0]?.id);
+
+  return assertResult(
+    'referencia possui projeto fallback para evitar tela vazia',
+    hasRungs && hasVariables && hasSelected,
+    `rungs=${fallbackProject.rungs.length}, variables=${fallbackProject.projectVariables?.length ?? 0}, selected=${fallbackProject.selectedRungId}`,
+  );
+}
+
 function runReleaseLabelsRegression(): ReleaseRegressionResult {
   return assertResult(
     'labels de release estao definidos',
@@ -71,6 +85,7 @@ export function runReleaseRegressionSuite(): ReleaseRegressionResult[] {
     runReleaseCoverageRegression(),
     runCriticalReleaseRegression(),
     runPromptCompletionChecklistRegression(),
+    runReferenceFallbackRegression(),
     runReleaseLabelsRegression(),
   ];
 }
