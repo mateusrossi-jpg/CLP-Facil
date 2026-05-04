@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CommunicationProtocolsPanel } from './CommunicationProtocolsPanel';
 import { PlcProfilePanel } from './PlcProfilePanel';
+import { ReleaseReadinessPanel } from './ReleaseReadinessPanel';
 import { SafetyReadinessPanel } from './SafetyReadinessPanel';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-type ReferenceTab = 'dialects' | 'protocols' | 'safety';
+type ReferenceTab = 'dialects' | 'protocols' | 'safety' | 'release';
 
 type ReferenceHubPanelProps = {
   editorProject: EditorProjectState;
@@ -25,8 +26,8 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         <View style={styles.heroHeader}>
           <View style={styles.heroText}>
             <Text style={styles.eyebrow}>Referência técnica</Text>
-            <Text style={styles.title}>Dialetos, protocolos e segurança</Text>
-            <Text style={styles.subtitle}>Área separada para consulta, comparação, planejamento técnico e checklist de bancada sem poluir a simulação.</Text>
+            <Text style={styles.title}>Dialetos, protocolos, segurança e divulgação</Text>
+            <Text style={styles.subtitle}>Área separada para consulta, comparação, checklist de bancada e preparação para lançamento sem poluir a simulação.</Text>
           </View>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>REF</Text>
@@ -35,13 +36,16 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
 
         <View style={styles.tabRow}>
           <Pressable onPress={() => setTab('dialects')} style={[styles.tabButton, tab === 'dialects' && styles.tabButtonActive]}>
-            <Text style={[styles.tabText, tab === 'dialects' && styles.tabTextActive]}>Dialetos CLP</Text>
+            <Text style={[styles.tabText, tab === 'dialects' && styles.tabTextActive]}>Dialetos</Text>
           </Pressable>
           <Pressable onPress={() => setTab('protocols')} style={[styles.tabButton, tab === 'protocols' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'protocols' && styles.tabTextActive]}>Protocolos</Text>
           </Pressable>
           <Pressable onPress={() => setTab('safety')} style={[styles.tabButton, tab === 'safety' && styles.tabButtonActive]}>
             <Text style={[styles.tabText, tab === 'safety' && styles.tabTextActive]}>Segurança</Text>
+          </Pressable>
+          <Pressable onPress={() => setTab('release')} style={[styles.tabButton, tab === 'release' && styles.tabButtonActive]}>
+            <Text style={[styles.tabText, tab === 'release' && styles.tabTextActive]}>Divulgação</Text>
           </Pressable>
         </View>
       </View>
@@ -54,8 +58,10 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
         />
       ) : tab === 'protocols' ? (
         <CommunicationProtocolsPanel />
-      ) : (
+      ) : tab === 'safety' ? (
         <SafetyReadinessPanel />
+      ) : (
+        <ReleaseReadinessPanel />
       )}
     </View>
   );
@@ -127,7 +133,7 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    minWidth: 104,
+    minWidth: 94,
     borderRadius: 10,
     paddingVertical: spacing.sm,
     alignItems: 'center',
