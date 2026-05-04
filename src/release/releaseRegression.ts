@@ -47,13 +47,15 @@ function runPromptCompletionChecklistRegression(): ReleaseRegressionResult {
 
   const mobileHasRungFlow = Boolean(mobile?.checklist.some((item) => /Fluxo|saída|carga/i.test(item.text)));
   const professionalHasForce = Boolean(professional?.checklist.some((item) => /Force ON/i.test(item.text)) && professional?.checklist.some((item) => /Force OFF/i.test(item.text)));
+  const professionalHasRoutines = Boolean(professional?.checklist.some((item) => /rotinas|MainRoutine|MotorControl|SafetyLogic|Sequencer/i.test(item.text)));
   const learningHasMastery = Boolean(learning?.checklist.some((item) => /domínio/i.test(item.text)));
   const referenceHasTags = Boolean(reference?.checklist.some((item) => /tags/i.test(item.text)));
+  const referenceHasRoutines = Boolean(reference?.checklist.some((item) => /rotinas|programas/i.test(item.text)));
 
   return assertResult(
     'checklist cobre prompt mobile profissional aprendizado e referencia',
-    mobileHasRungFlow && professionalHasForce && learningHasMastery && referenceHasTags,
-    `mobile=${mobileHasRungFlow}, force=${professionalHasForce}, mastery=${learningHasMastery}, tags=${referenceHasTags}`,
+    mobileHasRungFlow && professionalHasForce && professionalHasRoutines && learningHasMastery && referenceHasTags && referenceHasRoutines,
+    `mobile=${mobileHasRungFlow}, force=${professionalHasForce}, routines=${professionalHasRoutines}, mastery=${learningHasMastery}, tags=${referenceHasTags}, refRoutines=${referenceHasRoutines}`,
   );
 }
 
