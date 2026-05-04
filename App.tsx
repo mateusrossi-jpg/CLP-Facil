@@ -14,6 +14,7 @@ import { HomeHero } from './src/components/HomeHero';
 import { InputButton } from './src/components/InputButton';
 import { LadderDiagram } from './src/components/LadderDiagram';
 import { LessonCard } from './src/components/LessonCard';
+import { LaunchQuickStartPanel } from './src/components/LaunchQuickStartPanel';
 import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
@@ -761,6 +762,13 @@ export default function App() {
         {mode === 'home' ? (
           <>
             <HomeHero />
+            <LaunchQuickStartPanel
+              examples={educationalEditorExamples}
+              onOpenExample={(example) => openEducationalExample(example, true)}
+              onOpenLearn={() => setMode('learn')}
+              onOpenReference={() => setMode('reference')}
+              onOpenHardware={() => setMode('projects')}
+            />
             <AppCard
               title="Aprenda"
               description="Lições guiadas e exemplos passo a passo sobre comandos elétricos e lógica Ladder."
