@@ -18,6 +18,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
+import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
@@ -1005,6 +1006,7 @@ export default function App() {
                 onAddVariable={addEditorVariable}
                 onRemoveVariable={removeEditorVariable}
               />
+              <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
                   block={selectedEditorBlock}
