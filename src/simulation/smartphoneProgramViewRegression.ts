@@ -1,5 +1,6 @@
 import { createInitialEditorProject } from '../engine/editorTypes';
 import { createPlcProfileProjectView } from '../plcProfiles/plcProfiles';
+import { createProfessionalTagRows, createRungCommentRows } from './professionalClpView';
 import { createRungOutputSummary } from './rungOutputSummary';
 import { createSmartphoneProgramSummary } from './smartphoneProgramView';
 
@@ -56,10 +57,37 @@ function runRungOutputSummaryRegression(): SmartphoneProgramRegressionResult {
   );
 }
 
+function runProfessionalTagTableRegression(): SmartphoneProgramRegressionResult {
+  const project = createInitialEditorProject();
+  const rows = createProfessionalTagRows(project, { 'I0.0': false, 'Q0.0': false }, { 'Q0.0': 'force_on' });
+  const start = rows.find((row) => row.tag === 'I0.0');
+  const motor = rows.find((row) => row.tag === 'Q0.0');
+
+  return assertResult(
+    'tabela de tags profissional inclui escopo valor descricao e force',
+    Boolean(start && motor && start.scope === 'input' && motor.scope === 'output' && motor.value === true && motor.forcedLabel === 'Force ON' && motor.safetyWarning),
+    `rows=${rows.length}`,
+  );
+}
+
+function runRungCommentsRegression(): SmartphoneProgramRegressionResult {
+  const project = createInitialEditorProject();
+  const automatic = createRungCommentRows(project)[0];
+  const custom = createRungCommentRows(project, { [project.rungs[0].id]: 'Partida direta com selo do motor.' })[0];
+
+  return assertResult(
+    'comentarios por rung suportam automatico e personalizado',
+    automatic.hasCustomComment === false && custom.hasCustomComment === true && custom.comment.includes('selo'),
+    `auto=${automatic.comment}, custom=${custom.comment}`,
+  );
+}
+
 export function runSmartphoneProgramViewRegressionSuite(): SmartphoneProgramRegressionResult[] {
   return [
     runRockwellProgramSummaryRegression(),
     runFlowProgramSummaryRegression(),
     runRungOutputSummaryRegression(),
+    runProfessionalTagTableRegression(),
+    runRungCommentsRegression(),
   ];
 }
