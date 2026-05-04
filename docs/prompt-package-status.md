@@ -26,6 +26,13 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Concluído na interface
 
+- BottomNavigation finalizado com rótulos premium: Início, Aprender, Simular, Projetos, Editor e Ref.
+- BottomNavigation renderiza `PremiumHomeScreen` quando Início está ativo.
+- BottomNavigation renderiza `PremiumLearningScreen` quando Aprender está ativo.
+- BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo.
+- BottomNavigation renderiza `PremiumProjectsScreen` quando Projetos está ativo.
+- BottomNavigation renderiza `PremiumEditorExportScreen` quando Editor está ativo.
+- BottomNavigation renderiza `ReferenceHubPanel` e `PremiumTagsDiagnosticsScreen` quando Ref está ativa.
 - Aba Referência com Dialetos, Mobile, Tags, Rotinas, Protocolos, Segurança, Divulgação e Loja.
 - Aba Referência > Mobile com controle Compacto / Enquadrar / Amplo e orientação de Fluxo para rung grande.
 - Aba Referência > Tags com tabela profissional, Force editável e comentários por rung editáveis.
@@ -33,13 +40,6 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Painel de trilha educativa atualizado com progresso, conclusão de lição e abertura de exemplo.
 - Painel de exportação usando contraste centralizado no bloco de código.
 - Painel de perfis com legenda didática por dialeto.
-- BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
-- BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo, garantindo acesso visível à execução mobile mesmo antes de substituir o bloco clássico no `App.tsx`.
-- BottomNavigation renderiza `PremiumHomeScreen` quando Início está ativo.
-- BottomNavigation renderiza `PremiumLearningScreen` quando Aprender está ativo.
-- BottomNavigation renderiza `PremiumProjectsScreen` quando a aba projects está ativa, mantendo temporariamente o rótulo antigo Hardware até a limpeza final da navegação.
-- BottomNavigation renderiza `PremiumEditorExportScreen` quando a aba Pro está ativa, permitindo testar Editor Ladder + Exportação no visual premium.
-- BottomNavigation renderiza `PremiumTagsDiagnosticsScreen` junto da aba Ref, permitindo testar Tags + Diagnóstico no visual premium.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
 - Nova `MobileExecutionScreen` criada como primeira versão funcional da execução mobile.
 - Nova `MobileExecutionCockpit` criada como versão visual alinhada ao conceito aprovado: fundo #020817, cockpit escuro, header Easy-PLC, RUN/AUTO/SCAN, I/Os horizontais, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
@@ -67,8 +67,8 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
   - Tocar em Aprender e conferir a `PremiumLearningScreen`.
-  - Tocar na aba atualmente rotulada Hardware e conferir a `PremiumProjectsScreen`.
-  - Tocar na aba Pro e conferir a `PremiumEditorExportScreen`.
+  - Tocar em Projetos e conferir a `PremiumProjectsScreen`.
+  - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
   - Conferir `PremiumTagsDiagnosticsScreen` na aba Ref.
   - Ref > Mobile.
@@ -81,13 +81,12 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Conferir modos Lista, Fluxo e Rung compacto.
   - Confirmar saída/carga fixa e rodapé de diagnóstico.
   - Conferir se o modo clássico ainda aparece/continua acessível.
-  - Aba Hardware/Projetos > verificar se a biblioteca premium não eliminou acesso futuro à exportação.
   - Contraste do código gerado.
   - Trilha guiada e progresso.
 
 ## Próximo bloco recomendado
 
-A próxima etapa ideal é limpar a navegação final para rótulos definitivos e/ou criar uma tela Pro/Loja premium separada. Sugestão de navegação final: Início, Aprender, Simular, Projetos, Editor e Ref/Pro, dependendo da decisão de produto.
+A próxima etapa ideal é rodar o quality gate e corrigir erros de TypeScript/contraste/regressão antes de continuar refinando o visual.
 
 Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
@@ -116,5 +115,4 @@ O pacote pode ser considerado fechado quando:
 8. No celular, tocar em Simular oferece a execução mobile.
 9. A execução mobile mostra I/Os horizontais, Lista/Fluxo/Rung compacto, saída/carga fixa e diagnóstico de scan em visual escuro premium próximo ao conceito.
 10. Home, Aprender, Projetos, Editor, Exportação e Tags seguem o mesmo sistema visual premium.
-11. Hardware mantém seleção de placa/pino separada da simulação.
-12. Código exportado tem fundo escuro e texto claro.
+11. Código exportado tem fundo escuro e texto claro.
