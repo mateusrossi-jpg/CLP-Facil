@@ -1,0 +1,37 @@
+name: Compact mobile simulation layout
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/compact-mobile-simulation-layout.mjs'
+      - '.github/workflows/compact-mobile-simulation-layout.yml'
+      - 'src/components/SmartphoneSimulationPanel.tsx'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply compact mobile simulation layout
+        run: node scripts/compact-mobile-simulation-layout.mjs
+
+      - name: Commit compact mobile simulation layout
+        run: |
+          if git diff --quiet; then
+            echo "No compact mobile layout changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx
+          git commit -m "feat: avoid duplicated simulator UI on mobile"
+          git push
