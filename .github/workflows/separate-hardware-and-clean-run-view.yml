@@ -1,0 +1,36 @@
+name: Separate hardware tab and clean run view
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/separate-hardware-and-clean-run-view.mjs'
+      - '.github/workflows/separate-hardware-and-clean-run-view.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply UI cleanup
+        run: node scripts/separate-hardware-and-clean-run-view.mjs
+
+      - name: Commit UI cleanup
+        run: |
+          if git diff --quiet; then
+            echo "No UI cleanup changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx src/components/PlcWorkbench.tsx
+          git commit -m "fix: separate hardware export and clean run view"
+          git push
