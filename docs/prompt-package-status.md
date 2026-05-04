@@ -20,7 +20,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Tokens centrais de contraste para código: fundo #020817 / #0B1220 e texto #F8FAFC.
 - Checklist de release expandido para mobile, profissional, ensino, exemplos, hardware e referência.
 - Proteção contra aba Ref vazia: `ReferenceHubPanel` aceita props opcionais e cria projeto didático fallback.
-- GitHub Actions atualizado para rodar `typecheck`, `test:simulator` e `test:quality` em push, pull request e workflow manual.
+- GitHub Actions confirmado em `.github/workflows/quality-gate.yml` para rodar `typecheck`, `test:simulator` e `test:quality` em push, pull request e workflow manual.
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
@@ -63,7 +63,9 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Fechamento estrutural do pacote visual
 
-O pacote visual premium está estruturalmente fechado: as telas principais existem, estão conectadas na navegação final e seguem a mesma linguagem escura premium. O GitHub não retornou checks/status automáticos para o último commit pelo conector, portanto o fechamento técnico final ainda depende de rodar localmente ou no Actions:
+O pacote visual premium está estruturalmente fechado: as telas principais existem, estão conectadas na navegação final e seguem a mesma linguagem escura premium.
+
+O workflow de quality gate existe e está configurado em `.github/workflows/quality-gate.yml`, mas o conector não retornou runs/status automáticos para o último commit. Portanto, o fechamento técnico final ainda depende de rodar localmente ou acionar o workflow manualmente no GitHub Actions:
 
 ```bash
 npm run typecheck
@@ -75,7 +77,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
 
 ## Ainda pendente para fechamento visual/manual
 
-- Confirmar o resultado do GitHub Actions após o próximo push ou execução manual.
+- Confirmar o resultado do GitHub Actions após execução manual ou próximo push.
 - Testar no celular real:
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
