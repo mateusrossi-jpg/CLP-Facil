@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { GpioPinPicker } from './GpioPinPicker';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { compileLadderProjectForHardware } from '../hardware/compileLadderProject';
 import { getHardwareBoardProfile, hardwareBoardProfiles } from '../hardware/defaultBoards';
 import { exportArduinoSketch } from '../hardware/exportArduinoSketch';
 import { exportEspHomeYaml } from '../hardware/exportEspHomeYaml';
+import { BoardPin, getBoardPin, getGpioBoardCatalog, getSelectablePins } from '../hardware/gpioCatalog';
 import { HardwareExportConfig, HardwareOutputPolarity, HardwarePinMap, HardwareTarget } from '../hardware/hardwareTypes';
+import { GpioValidationIssue, validateGpioMap } from '../hardware/validateGpioMap';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -84,13 +87,25 @@ function collectIoVariables(project: EditorProjectState): IoVariable[] {
 }
 
 function defaultPinFor(index: number, scope: 'input' | 'output', target: HardwareTarget): string {
-  const profile = getHardwareBoardProfile(target);
-  const list = scope === 'input' ? profile.digitalInputPins : profile.digitalOutputPins;
-  return list[index] ?? '';
+  const catalog = getGpioBoardCatalog(target);
+  const list = getSelectablePins(catalog, scope);
+  return list[index]?.gpio ?? '';
 }
 
 function formatTargetLabel(target: HardwareTarget): string {
-  return hardwareBoardProfiles.find((profile) => profile.target === target)?.label ?? target;
+  return hardwareBoardProfiles.find((profile) => profile.target === target)?.label ?? getGpioBoardCatalog(target).label;
+}
+
+function issueTone(issue: GpioValidationIssue) {
+  if (issue.severity === 'error') return styles.issueError;
+  if (issue.severity === 'warning') return styles.issueWarning;
+  return styles.issueInfo;
+}
+
+function issueTextTone(issue: GpioValidationIssue) {
+  if (issue.severity === 'error') return styles.issueTextError;
+  if (issue.severity === 'warning') return styles.issueTextWarning;
+  return styles.issueTextInfo;
 }
 
 export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps) {
@@ -101,9 +116,11 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
   const [pinOverrides, setPinOverrides] = useState<Record<string, string>>({});
   const [outputPolarity, setOutputPolarity] = useState<Record<string, HardwareOutputPolarity>>({});
   const [safeStates, setSafeStates] = useState<Record<string, boolean>>({});
+  const [selectedIoVariable, setSelectedIoVariable] = useState<string | null>(null);
 
   const ioVariables = useMemo(() => collectIoVariables(editorProject), [editorProject]);
   const profile = getHardwareBoardProfile(target);
+  const catalog = getGpioBoardCatalog(target);
   const inputVariables = ioVariables.filter((variable) => variable.scope === 'input');
   const outputVariables = ioVariables.filter((variable) => variable.scope === 'output');
 
@@ -123,6 +140,9 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
     };
   }), [ioVariables, inputVariables, outputVariables, outputPolarity, pinOverrides, safeStates, target]);
 
+  const gpioIssues = useMemo(() => validateGpioMap(target, pinMap), [pinMap, target]);
+  const blockingIssues = gpioIssues.some((issue) => issue.severity === 'error');
+
   const config: HardwareExportConfig = useMemo(() => ({
     target,
     nodeName,
@@ -135,9 +155,23 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
     if (format === 'esphome') return exportEspHomeYaml(compiledProject);
     return exportArduinoSketch(compiledProject);
   }, [compiledProject, format]);
+  const selectedIo = selectedIoVariable ? ioVariables.find((item) => item.variable === selectedIoVariable) ?? null : ioVariables[0] ?? null;
+  const selectedMappedPin = selectedIo ? pinMap.find((pin) => pin.variable === selectedIo.variable) : undefined;
+  const selectedBoardPin = selectedMappedPin ? getBoardPin(catalog, selectedMappedPin.pin) : undefined;
 
   function updatePin(variable: string, value: string) {
     setPinOverrides((current) => ({ ...current, [variable]: value.trim() }));
+  }
+
+  function selectTarget(nextTarget: HardwareTarget) {
+    setTarget(nextTarget);
+    setPinOverrides({});
+    setSelectedIoVariable(null);
+    if (nextTarget === 'esphome') setFormat('esphome');
+  }
+
+  function selectPinForVariable(variable: string, pin: BoardPin) {
+    updatePin(variable, pin.gpio);
   }
 
   function togglePolarity(variable: string) {
@@ -157,7 +191,7 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         <View style={styles.headerText}>
           <Text style={styles.eyebrow}>Hardware</Text>
           <Text style={styles.title}>Exportar para ESP32, Arduino e ESPHome</Text>
-          <Text style={styles.subtitle}>Mapeie as entradas e saídas do Ladder para GPIOs e gere o código de bancada.</Text>
+          <Text style={styles.subtitle}>Escolha a placa, toque no diagrama de pinos e gere o código de bancada.</Text>
         </View>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>BETA</Text>
@@ -174,12 +208,12 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         {hardwareBoardProfiles.map((board) => {
           const selected = target === board.target;
           return (
-            <Pressable key={board.target} onPress={() => setTarget(board.target)} style={[styles.targetChip, selected && styles.targetChipSelected]}>
+            <Pressable key={board.target} onPress={() => selectTarget(board.target)} style={[styles.targetChip, selected && styles.targetChipSelected]}>
               <Text style={[styles.targetChipText, selected && styles.targetChipTextSelected]}>{board.label}</Text>
             </Pressable>
           );
         })}
-        <Pressable onPress={() => { setTarget('esphome'); setFormat('esphome'); }} style={[styles.targetChip, target === 'esphome' && styles.targetChipSelected]}>
+        <Pressable onPress={() => selectTarget('esphome')} style={[styles.targetChip, target === 'esphome' && styles.targetChipSelected]}>
           <Text style={[styles.targetChipText, target === 'esphome' && styles.targetChipTextSelected]}>ESPHome YAML</Text>
         </Pressable>
       </ScrollView>
@@ -203,21 +237,22 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
           const mapped = pinMap.find((pin) => pin.variable === item.variable);
           const activeLow = mapped?.outputPolarity === 'active_low';
           const safeOn = Boolean(mapped?.safeState);
+          const boardPin = mapped ? getBoardPin(catalog, mapped.pin) : undefined;
+          const selected = selectedIo?.variable === item.variable;
           return (
-            <View key={item.variable} style={styles.mapRow}>
+            <Pressable key={item.variable} onPress={() => setSelectedIoVariable(item.variable)} style={[styles.mapRow, selected && styles.mapRowSelected]}>
               <View style={styles.mapInfo}>
                 <Text style={styles.mapVariable}>{item.variable}</Text>
                 <Text style={styles.mapLabel} numberOfLines={1}>{item.label}</Text>
                 <Text style={styles.mapScope}>{item.scope === 'input' ? 'Entrada' : 'Saída'}</Text>
               </View>
-              <TextInput
-                value={mapped?.pin ?? ''}
-                onChangeText={(value) => updatePin(item.variable, value)}
-                placeholder="GPIO"
-                placeholderTextColor={colors.textDim}
-                style={styles.pinInput}
-                autoCapitalize="characters"
-              />
+              <View style={styles.pinSelectorInfo}>
+                <Text style={styles.pinSelectorLabel}>Pino</Text>
+                <Text style={[styles.pinSelectorValue, boardPin?.risk === 'caution' && styles.pinSelectorValueCaution, boardPin?.risk === 'blocked' && styles.pinSelectorValueError]}>
+                  {boardPin?.label ?? (mapped?.pin ? `GPIO${mapped.pin}` : 'Selecionar')}
+                </Text>
+                <Text style={styles.pinSelectorHint}>{boardPin?.note ?? catalog.label}</Text>
+              </View>
               {item.scope === 'output' ? (
                 <View style={styles.outputActions}>
                   <Pressable onPress={() => togglePolarity(item.variable)} style={[styles.smallChip, activeLow && styles.smallChipSelected]}>
@@ -228,10 +263,28 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
                   </Pressable>
                 </View>
               ) : null}
-            </View>
+            </Pressable>
           );
         })}
       </View>
+
+      {selectedIo ? (
+        <GpioPinPicker
+          catalog={catalog}
+          variable={selectedIo.variable}
+          label={selectedIo.label}
+          scope={selectedIo.scope}
+          selectedPin={selectedMappedPin?.pin}
+          onSelectPin={(pin) => selectPinForVariable(selectedIo.variable, pin)}
+        />
+      ) : null}
+
+      {selectedBoardPin?.note ? (
+        <View style={styles.selectedPinNote}>
+          <Text style={styles.selectedPinNoteTitle}>{selectedBoardPin.label}</Text>
+          <Text style={styles.selectedPinNoteText}>{selectedBoardPin.note}</Text>
+        </View>
+      ) : null}
 
       <Text style={styles.sectionLabel}>Formato de saída</Text>
       <View style={styles.formatRow}>
@@ -250,10 +303,27 @@ export function HardwareExportPanel({ editorProject }: HardwareExportPanelProps)
         </View>
       ) : null}
 
+      {gpioIssues.length > 0 ? (
+        <View style={styles.notesBox}>
+          <Text style={styles.notesTitle}>Validação da pinagem</Text>
+          {gpioIssues.map((issue) => (
+            <View key={`${issue.variable}-${issue.pin}-${issue.message}`} style={[styles.issueRow, issueTone(issue)]}>
+              <Text style={[styles.issueText, issueTextTone(issue)]}>• {issue.message}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {compiledProject.warnings.length > 0 ? (
         <View style={styles.notesBox}>
           <Text style={styles.notesTitle}>Pendências do mapeamento</Text>
           {compiledProject.warnings.map((warning) => <Text key={warning} style={styles.noteText}>• {warning}</Text>)}
+        </View>
+      ) : null}
+
+      {blockingIssues ? (
+        <View style={styles.blockingBox}>
+          <Text style={styles.blockingText}>Há erro de pinagem. Corrija os pinos marcados antes de usar o código em bancada.</Text>
         </View>
       ) : null}
 
@@ -409,6 +479,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     gap: spacing.sm,
   },
+  mapRowSelected: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
   mapInfo: {
     minWidth: 0,
   },
@@ -428,15 +502,37 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginTop: 3,
   },
-  pinInput: {
-    color: colors.text,
+  pinSelectorInfo: {
     borderColor: colors.borderStrong,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.black,
+    backgroundColor: colors.surface,
+  },
+  pinSelectorLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
     fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  pinSelectorValue: {
+    color: colors.green,
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  pinSelectorValueCaution: {
+    color: colors.amber,
+  },
+  pinSelectorValueError: {
+    color: colors.red,
+  },
+  pinSelectorHint: {
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 2,
   },
   outputActions: {
     flexDirection: 'row',
@@ -469,6 +565,24 @@ const styles = StyleSheet.create({
   },
   safeOnText: {
     color: colors.amber,
+  },
+  selectedPinNote: {
+    borderColor: colors.amber,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: colors.goldSoft,
+  },
+  selectedPinNoteTitle: {
+    color: colors.amber,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  selectedPinNoteText: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
   },
   formatRow: {
     flexDirection: 'row',
@@ -503,6 +617,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: spacing.md,
     backgroundColor: colors.black,
+    gap: spacing.xs,
   },
   notesTitle: {
     color: colors.text,
@@ -514,6 +629,47 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  issueRow: {
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  issueInfo: {
+    backgroundColor: colors.cyanSoft,
+  },
+  issueWarning: {
+    backgroundColor: colors.goldSoft,
+  },
+  issueError: {
+    backgroundColor: colors.redSoft,
+  },
+  issueText: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+  },
+  issueTextInfo: {
+    color: colors.cyan,
+  },
+  issueTextWarning: {
+    color: colors.amber,
+  },
+  issueTextError: {
+    color: colors.red,
+  },
+  blockingBox: {
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: colors.redSoft,
+  },
+  blockingText: {
+    color: colors.red,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
   },
   emptyText: {
     color: colors.textMuted,
