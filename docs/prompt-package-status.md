@@ -33,6 +33,16 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Painel de perfis com legenda didática por dialeto.
 - BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
+- Nova `MobileExecutionScreen` criada para reproduzir o conceito final da execução mobile: topo com RUN/AUTO/SCAN, navegação horizontal de I/Os, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
+- Novo `MobileSimulationEntryCard` criado para perguntar ao usuário se deseja abrir a execução mobile ou continuar no modo clássico.
+- Novo `SimulationModeRouter` criado para alternar entre aviso, execução mobile e conteúdo clássico, com fallback seguro para projeto didático.
+
+## Decisão de produto
+
+- A simulação deve ter uma tela mobile própria, porque é o ambiente mais crítico no celular.
+- Outros ambientes também podem ter telas próprias quando fizer sentido, mas não precisam virar telas separadas agora.
+- O fluxo recomendado é: ao tocar em Simular no celular, mostrar um aviso oferecendo `Abrir execução mobile` ou `Continuar modo clássico`.
+- No desktop/tablet, manter o modo clássico como padrão e oferecer a execução mobile como alternativa.
 
 ## Ainda pendente para fechamento visual/manual
 
@@ -46,13 +56,19 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Simular > Programa > Fluxo.
   - Saída/carga fixa do rung.
   - Arraste lateral real em rung grande.
+  - Tela de aviso da execução mobile.
+  - Tela `MobileExecutionScreen`.
   - Aba Hardware > 1 Placa / 2 Pinos / 3 Código.
   - Contraste do código gerado.
   - Trilha guiada e progresso.
 
 ## Próximo bloco recomendado
 
-A próxima etapa visual deve substituir o bloco interno da aba Programa em `SmartphoneSimulationPanel.tsx` pelo componente `src/components/SmartphoneProgramPanel.tsx`. Isso reduz o risco de editar o arquivo gigante, pois o novo painel já concentra Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral.
+A próxima etapa visual deve integrar `src/components/SimulationModeRouter.tsx` no fluxo de `Simular`. O roteador já concentra:
+
+- aviso de entrada para execução mobile;
+- tela mobile final de execução;
+- continuidade do modo clássico via `classicContent`.
 
 Depois que o `App.tsx` puder ser editado com leitura completa, remover a renderização emergencial do `ReferenceHubPanel` dentro do `BottomNavigation` e deixar a referência renderizada somente no bloco principal da aba.
 
@@ -67,6 +83,7 @@ O pacote pode ser considerado fechado quando:
 5. Ref > Mobile mostra Compacto / Enquadrar / Amplo.
 6. Ref > Tags mostra tabela profissional, comentários e Force didático.
 7. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
-8. No celular, rungs grandes têm arraste lateral real e saída/carga sempre visível.
-9. Hardware mantém seleção de placa/pino separada da simulação.
-10. Código exportado tem fundo escuro e texto claro.
+8. No celular, tocar em Simular oferece a execução mobile.
+9. A execução mobile mostra I/Os horizontais, Lista/Fluxo/Rung compacto, saída/carga fixa e diagnóstico de scan.
+10. Hardware mantém seleção de placa/pino separada da simulação.
+11. Código exportado tem fundo escuro e texto claro.
