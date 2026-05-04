@@ -5,6 +5,7 @@ import { PremiumEditorExportScreen } from './premium/PremiumEditorExportScreen';
 import { PremiumHomeScreen } from './premium/PremiumHomeScreen';
 import { PremiumLearningScreen } from './premium/PremiumLearningScreen';
 import { PremiumProjectsScreen } from './premium/PremiumProjectsScreen';
+import { PremiumTagsDiagnosticsScreen } from './premium/PremiumTagsDiagnosticsScreen';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -63,7 +64,7 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
       {active === 'simulate' ? <SimulationModeRouter /> : null}
       {active === 'projects' ? <PremiumProjectsScreen /> : null}
       {active === 'pro' ? <PremiumEditorExportScreen /> : null}
-      {active === 'reference' ? <ReferenceHubPanel /> : null}
+      {active === 'reference' ? <><ReferenceHubPanel /><PremiumTagsDiagnosticsScreen /></> : null}
     </View>
   );
 }
