@@ -4,6 +4,7 @@ import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { createPlcProfileProjectView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
+import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -126,8 +127,7 @@ function collectSignals(editorProject: EditorProjectState): SignalItem[] {
 }
 
 function signalValue(plcState: PlcState, signal: SignalItem) {
-  const raw = plcState[signal.address] ?? plcState[signal.id];
-  return raw;
+  return plcState[signal.address] ?? plcState[signal.id];
 }
 
 function isSignalOn(plcState: PlcState, signal: SignalItem) {
@@ -138,11 +138,22 @@ function activeSummary(signals: SignalItem[], plcState: PlcState, type: SignalIt
   return signals.filter((signal) => signal.type === type && isSignalOn(plcState, signal)).slice(0, 4);
 }
 
-function ProgramLine({ text, active }: { text: string; active?: boolean }) {
+function ProgramLine({
+  text,
+  active,
+  focused,
+  onPress,
+}: {
+  text: string;
+  active?: boolean;
+  focused?: boolean;
+  onPress: () => void;
+}) {
   return (
-    <View style={[styles.programLine, active && styles.programLineActive]}>
-      <Text style={[styles.programLineText, active && styles.programLineTextActive]}>{text}</Text>
-    </View>
+    <Pressable onPress={onPress} style={[styles.programLine, active && styles.programLineActive, focused && styles.programLineFocused]}>
+      <View style={[styles.programLineMarker, active && styles.programLineMarkerActive, focused && styles.programLineMarkerFocused]} />
+      <Text style={[styles.programLineText, active && styles.programLineTextActive, focused && styles.programLineTextFocused]}>{text}</Text>
+    </Pressable>
   );
 }
 
@@ -178,13 +189,17 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const [activeTab, setActiveTab] = useState<MobileTab>('execution');
   const [ioGroup, setIoGroup] = useState<IoGroup>('inputs');
   const [programView, setProgramView] = useState<ProgramView>('list');
+  const [focusedRungId, setFocusedRungId] = useState<string | null>(null);
   const signals = useMemo(() => collectSignals(editorProject), [editorProject]);
   const profileView = useMemo(() => createPlcProfileProjectView(editorProject, selectedProfile), [editorProject, selectedProfile]);
   const selectedRungId = editorProject.selectedRungId ?? editorProject.rungs[0]?.id;
+  const programSummary = useMemo(
+    () => createSmartphoneProgramSummary(profileView, evaluation.rungResults, selectedRungId, focusedRungId, programView),
+    [evaluation.rungResults, focusedRungId, profileView, programView, selectedRungId],
+  );
   const activeInputs = activeSummary(signals, plcState, 'input');
   const activeOutputs = activeSummary(signals, plcState, 'output');
   const activeFunctions = activeSummary(signals, plcState, 'function');
-  const activeRungs = Object.entries(evaluation.rungResults).filter(([, active]) => Boolean(active)).length;
   const diagnostics = evaluation.diagnostics ?? [];
 
   const shownSignals = signals.filter((signal) => {
@@ -242,7 +257,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
               <Text style={styles.metricLabel}>saídas ON</Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{activeRungs}</Text>
+              <Text style={styles.metricValue}>{programSummary.activeCount}</Text>
               <Text style={styles.metricLabel}>linhas ON</Text>
             </View>
           </View>
@@ -260,7 +275,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
           <View style={styles.summaryBox}>
             <Text style={styles.sectionTitle}>Linha em foco</Text>
-            <Text style={styles.focusText}>{profileView.rungs.find((rung) => rung.rungId === selectedRungId)?.textLine ?? 'Selecione uma linha para acompanhar.'}</Text>
+            <Text style={styles.focusText}>{programSummary.focusedLine?.text ?? 'Selecione uma linha para acompanhar.'}</Text>
+            {programSummary.focusedLine ? <Text style={styles.educationText}>{programSummary.focusedLine.explanation}</Text> : null}
           </View>
         </View>
       ) : null}
@@ -299,6 +315,20 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       {activeTab === 'program' ? (
         <View style={styles.sectionStack}>
+          <View style={styles.programHeaderBox}>
+            <View style={styles.programMetaRow}>
+              <View style={styles.programMetaCard}>
+                <Text style={styles.programMetaLabel}>Dialeto</Text>
+                <Text style={styles.programMetaValue}>{programSummary.dialectShortName}</Text>
+              </View>
+              <View style={styles.programMetaCard}>
+                <Text style={styles.programMetaLabel}>Ativas</Text>
+                <Text style={styles.programMetaValue}>{programSummary.activeCount}</Text>
+              </View>
+            </View>
+            <Text style={styles.programDisclaimer}>{programSummary.disclaimer}</Text>
+          </View>
+
           <View style={styles.subTabRow}>
             {plcProfiles.map((profile) => {
               const selected = profile.id === selectedProfile;
@@ -322,12 +352,23 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
           </View>
 
           <View style={styles.programBox}>
-            {profileView.rungs.map((rung, index) => {
-              const active = Boolean(evaluation.rungResults[rung.rungId]);
-              const prefix = programView === 'flow' ? `${index + 1} ▶ ` : `${index + 1}. `;
-              return <ProgramLine key={rung.rungId} text={`${prefix}${rung.textLine}`} active={active} />;
-            })}
+            {programSummary.lines.map((line) => (
+              <ProgramLine
+                key={line.rungId}
+                text={line.text}
+                active={line.active}
+                focused={line.focused}
+                onPress={() => setFocusedRungId(line.rungId)}
+              />
+            ))}
           </View>
+
+          {programSummary.focusedLine ? (
+            <View style={styles.educationBox}>
+              <Text style={styles.educationTitle}>O que esta linha faz?</Text>
+              <Text style={styles.educationText}>{programSummary.focusedLine.explanation}</Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -411,6 +452,9 @@ const styles = StyleSheet.create({
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   activeChip: { color: colors.green, borderColor: colors.green, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '900', backgroundColor: colors.greenSoft },
   focusText: { color: colors.text, fontFamily: 'monospace', fontSize: 11, lineHeight: 16 },
+  educationBox: { borderColor: colors.amber, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: colors.goldSoft, gap: 3 },
+  educationTitle: { color: colors.amber, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  educationText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '700' },
   subTabRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   subTabButton: { flexGrow: 1, minWidth: 72, borderColor: colors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 6, alignItems: 'center', backgroundColor: colors.surfaceElevated },
   subTabButtonActive: { borderColor: colors.gold, backgroundColor: colors.goldSoft },
@@ -426,10 +470,21 @@ const styles = StyleSheet.create({
   signalName: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   signalState: { color: colors.textMuted, fontSize: 11, fontWeight: '900', borderColor: colors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   signalStateOn: { color: colors.green, borderColor: colors.green, backgroundColor: colors.surface },
+  programHeaderBox: { borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
+  programMetaRow: { flexDirection: 'row', gap: spacing.xs },
+  programMetaCard: { flex: 1, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 10, padding: spacing.sm, backgroundColor: colors.black },
+  programMetaLabel: { color: colors.textDim, fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
+  programMetaValue: { color: colors.text, fontSize: 13, fontWeight: '900', marginTop: 2 },
+  programDisclaimer: { color: colors.textMuted, fontSize: 10, lineHeight: 15 },
   programBox: { gap: spacing.xs },
-  programLine: { borderColor: colors.border, borderWidth: 1, borderRadius: 10, padding: spacing.sm, backgroundColor: colors.black },
+  programLine: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.xs, borderColor: colors.border, borderWidth: 1, borderRadius: 10, padding: spacing.sm, backgroundColor: colors.black },
   programLineActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  programLineText: { color: colors.textMuted, fontFamily: 'monospace', fontSize: 10, lineHeight: 15 },
+  programLineFocused: { borderColor: colors.amber, borderWidth: 2 },
+  programLineMarker: { width: 4, borderRadius: 999, backgroundColor: colors.borderStrong },
+  programLineMarkerActive: { backgroundColor: colors.green },
+  programLineMarkerFocused: { backgroundColor: colors.amber },
+  programLineText: { color: colors.textMuted, fontFamily: 'monospace', fontSize: 10, lineHeight: 15, flex: 1 },
   programLineTextActive: { color: colors.text, fontWeight: '900' },
+  programLineTextFocused: { color: colors.text },
   diagnosticText: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
 });
