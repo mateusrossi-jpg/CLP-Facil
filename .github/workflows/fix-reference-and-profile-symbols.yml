@@ -1,0 +1,36 @@
+name: Fix reference and profile symbols
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/fix-reference-and-plc-profile-symbols.mjs'
+      - '.github/workflows/fix-reference-and-profile-symbols.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix reference tab and profile symbols
+        run: node scripts/fix-reference-and-plc-profile-symbols.mjs
+
+      - name: Commit fixes
+        run: |
+          if git diff --quiet; then
+            echo "No reference/profile fixes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx src/components/PlcWorkbench.tsx src/components/PlcProfilePanel.tsx src/components/SimulatorDialectPanel.tsx
+          git commit -m "fix: show reference tab and profile-specific simulator symbols"
+          git push
