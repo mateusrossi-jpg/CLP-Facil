@@ -21,6 +21,8 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Checklist de release expandido para mobile, profissional, ensino, exemplos, hardware e referência.
 - Proteção contra aba Ref vazia: `ReferenceHubPanel` aceita props opcionais e cria projeto didático fallback.
 - GitHub Actions atualizado para rodar `typecheck`, `test:simulator` e `test:quality` em push, pull request e workflow manual.
+- Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
+- Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
 
 ## Concluído na interface
 
@@ -39,6 +41,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - `SimulationModeRouter` agora abre `MobileExecutionCockpit` na execução mobile, substituindo visualmente a primeira versão que estava distante do mockup.
 - Novo `MobileSimulationEntryCard` criado para perguntar ao usuário se deseja abrir a execução mobile ou continuar no modo clássico.
 - Novo `SimulationModeRouter` criado para alternar entre aviso, execução mobile e conteúdo clássico, com fallback seguro para projeto didático.
+- Nova `PremiumHomeScreen` criada como conceito implementável da Home no padrão visual aprovado.
 
 ## Decisão de produto
 
@@ -46,11 +49,13 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Outros ambientes também podem ter telas próprias quando fizer sentido, mas não precisam virar telas separadas agora.
 - O fluxo recomendado é: ao tocar em Simular no celular, mostrar um aviso oferecendo `Abrir execução mobile` ou `Continuar modo clássico`.
 - No desktop/tablet, manter o modo clássico como padrão e oferecer a execução mobile como alternativa.
+- A refatoração visual agora deve seguir tela por tela usando o kit premium: Home, Aprender, Simular, Projetos, Editor, Exportação e Tags/Diagnóstico.
 
 ## Ainda pendente para fechamento visual/manual
 
 - Confirmar o resultado do GitHub Actions após o próximo push ou execução manual.
 - Testar no celular real:
+  - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Ref e confirmar que não fica vazia.
   - Ref > Mobile.
   - Ref > Tags.
@@ -68,7 +73,9 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 ## Próximo bloco recomendado
 
-A próxima etapa ideal, quando o `App.tsx` puder ser editado com leitura completa, é substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
+A próxima etapa ideal é conectar `PremiumHomeScreen` à aba Início e, depois, criar a tela `PremiumLearningScreen` para a aba Aprender no mesmo padrão visual.
+
+Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco clássico interno da aba Simular por `src/components/SimulationModeRouter.tsx` passando os estados reais:
 
 - `editorProject`;
 - `editorState`;
@@ -94,5 +101,6 @@ O pacote pode ser considerado fechado quando:
 7. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
 8. No celular, tocar em Simular oferece a execução mobile.
 9. A execução mobile mostra I/Os horizontais, Lista/Fluxo/Rung compacto, saída/carga fixa e diagnóstico de scan em visual escuro premium próximo ao conceito.
-10. Hardware mantém seleção de placa/pino separada da simulação.
-11. Código exportado tem fundo escuro e texto claro.
+10. Home, Aprender, Projetos, Editor, Exportação e Tags seguem o mesmo sistema visual premium.
+11. Hardware mantém seleção de placa/pino separada da simulação.
+12. Código exportado tem fundo escuro e texto claro.
