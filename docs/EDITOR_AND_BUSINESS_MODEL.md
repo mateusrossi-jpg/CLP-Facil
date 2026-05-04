@@ -1,8 +1,8 @@
-# Editor visual e modelo de negócio — CLP Fácil
+# Editor visual e modelo de negócio — Easy-CLP
 
 ## Decisão principal
 
-O CLP Fácil deve unir dois mundos:
+O Easy-CLP deve unir dois mundos:
 
 1. **Educação livre** — todo o conteúdo didático deve ser gratuito e de fácil acesso.
 2. **Simulador profissional/Pro** — o uso do app como ferramenta para montar, editar, salvar e simular projetos próprios pode ser monetizado.
@@ -48,7 +48,7 @@ A referência conceitual é:
 - remover elementos do circuito;
 - alternar entre modo edição e modo simulação.
 
-Não copiar marca, layout, código, nomes internos, ícones ou materiais de outros apps. A identidade visual do CLP Fácil deve ser própria.
+Não copiar marca, layout, código, nomes internos, ícones ou materiais de outros apps. A identidade visual do Easy-CLP deve ser própria.
 
 ## Fluxo ideal do simulador
 
@@ -151,7 +151,7 @@ Exemplo:
 ```text
 Este componente é Pro para uso em projetos próprios.
 
-Você pode estudar o funcionamento dele gratuitamente no modo Aprender, mas para usar em seus próprios circuitos no simulador é necessário desbloquear o CLP Fácil Pro.
+Você pode estudar o funcionamento dele gratuitamente no modo Aprender, mas para usar em seus próprios circuitos no simulador é necessário desbloquear o Easy-CLP Pro.
 ```
 
 ## Prioridade de desenvolvimento

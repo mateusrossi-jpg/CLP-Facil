@@ -30,6 +30,7 @@ function badgeStyle(tone: AppCardTone) {
 export function AppCard({ title, description, badge, icon, tone = 'default', onPress }: AppCardProps) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, toneStyle(tone), pressed && styles.pressed]}>
+      <View style={[styles.accent, accentStyle(tone)]} />
       <View style={styles.row}>
         {icon ? <View style={[styles.icon, toneStyle(tone)]}>{icon}</View> : null}
         <View style={styles.content}>
@@ -45,31 +46,56 @@ export function AppCard({ title, description, badge, icon, tone = 'default', onP
   );
 }
 
+function accentStyle(tone: AppCardTone) {
+  if (tone === 'amber') return styles.accentAmber;
+  if (tone === 'green') return styles.accentGreen;
+  if (tone === 'cyan') return styles.accentCyan;
+  return null;
+}
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surfaceGlass,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 12,
     padding: spacing.lg,
     marginBottom: spacing.md,
     shadowColor: colors.black,
-    shadowOpacity: 0.28,
+    shadowOpacity: 0.07,
     shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 2,
+    overflow: 'hidden',
   },
   cardCyan: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   cardGreen: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   cardAmber: {
-    borderColor: colors.amber,
-    backgroundColor: colors.amberSoft,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  accent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: colors.border,
+  },
+  accentCyan: {
+    backgroundColor: colors.cyan,
+  },
+  accentGreen: {
+    backgroundColor: colors.green,
+  },
+  accentAmber: {
+    backgroundColor: colors.gold,
   },
   pressed: {
     opacity: 0.78,
@@ -83,8 +109,8 @@ const styles = StyleSheet.create({
   icon: {
     width: 48,
     height: 48,
-    borderRadius: 16,
-    backgroundColor: colors.cyanSoft,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -101,7 +127,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '900',
   },
   badge: {
@@ -116,8 +142,8 @@ const styles = StyleSheet.create({
   },
   badgeAmber: {
     color: colors.amber,
-    borderColor: colors.amber,
-    backgroundColor: colors.amberSoft,
+    borderColor: colors.gold,
+    backgroundColor: colors.goldSoft,
   },
   badgeCyan: {
     color: colors.cyan,
@@ -136,9 +162,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   chevron: {
-    color: colors.text,
-    fontSize: 34,
-    fontWeight: '200',
-    opacity: 0.8,
+    color: colors.cyan,
+    fontSize: 26,
+    fontWeight: '700',
   },
 });

@@ -22,11 +22,11 @@ export function ComponentEditPanel({ component, proLocked }: ComponentEditPanelP
     <View style={[styles.container, component.isPro && styles.proContainer]}>
       <View style={styles.header}>
         <Text style={styles.title}>{component.name}</Text>
-        <Text style={[styles.badge, component.isPro ? styles.proBadge : styles.freeBadge]}>{component.isPro ? 'PRO' : 'FREE'}</Text>
+        <Text style={[styles.badge, component.isPro ? styles.proBadge : styles.freeBadge]}>{component.isPro ? 'Pro' : 'Livre'}</Text>
       </View>
       <Text style={styles.text}>{component.description}</Text>
       {proLocked ? (
-        <Text style={styles.locked}>Este componente pode ser estudado gratuitamente, mas o uso em projetos próprios será liberado no CLP Fácil Pro.</Text>
+        <Text style={styles.locked}>Este componente pode ser estudado gratuitamente; projetos próprios e exportação entram na área avançada do Easy-CLP.</Text>
       ) : null}
       <Text style={styles.sectionTitle}>Campos de edição</Text>
       {component.editFields.map((field) => (
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
   badge: {
     fontSize: 11,
     fontWeight: '900',
+    textTransform: 'uppercase',
   },
   freeBadge: {
     color: colors.green,

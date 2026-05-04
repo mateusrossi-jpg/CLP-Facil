@@ -1,1 +1,29 @@
-{"scripts":{"start":"expo start","android":"expo start --android","ios":"expo start --ios","web":"expo start --web","typecheck":"tsc --noEmit"},"dependencies":{"@expo/vector-icons":"^14.0.2","expo":"~51.0.28","expo-status-bar":"~1.12.1","react":"18.2.0","react-native":"0.74.5"},"devDependencies":{"@babel/core":"^7.24.0","@types/react":"~18.2.79","typescript":"~5.3.3"},"private":true,"name":"clp-facil","version":"0.1.0","main":"expo/AppEntry.js"}
+{
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test:simulator": "tsc src/engine/editorEvaluatorRegression.ts --outDir /tmp/easy-clp-sim-test --module commonjs --target es2018 --moduleResolution node --strict --esModuleInterop --skipLibCheck && node scripts/run-simulator-regression.mjs"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
+    "@expo/vector-icons": "^14.0.2",
+    "expo": "~51.0.28",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-web": "~0.19.10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/react": "~18.2.79",
+    "typescript": "~5.3.3"
+  },
+  "private": true,
+  "name": "easy-clp",
+  "version": "0.1.0",
+  "main": "expo/AppEntry.js"
+}

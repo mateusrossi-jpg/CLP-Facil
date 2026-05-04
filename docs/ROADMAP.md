@@ -1,4 +1,4 @@
-# Roadmap — CLP Fácil
+# Roadmap — Easy-CLP
 
 ## Fase 0 — Base do projeto
 

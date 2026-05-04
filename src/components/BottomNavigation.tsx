@@ -7,25 +7,26 @@ export type BottomNavKey = 'home' | 'learn' | 'simulate' | 'projects' | 'pro';
 type BottomNavigationProps = {
   active: BottomNavKey;
   onChange: (key: BottomNavKey) => void;
+  compact?: boolean;
 };
 
-const items: { key: BottomNavKey; label: string; icon: string }[] = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'learn', label: 'Aprender', icon: '▤' },
-  { key: 'simulate', label: 'Simular', icon: '▷' },
-  { key: 'projects', label: 'Projetos', icon: '▣' },
-  { key: 'pro', label: 'Pro', icon: '♕' },
+const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
+  { key: 'home', label: 'Início', shortLabel: 'Início' },
+  { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
+  { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
+  { key: 'projects', label: 'Projetos', shortLabel: 'Proj' },
+  { key: 'pro', label: 'Pro', shortLabel: 'Pro' },
 ];
 
-export function BottomNavigation({ active, onChange }: BottomNavigationProps) {
+export function BottomNavigation({ active, onChange, compact }: BottomNavigationProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compact && styles.containerCompact]}>
       {items.map((item) => {
         const selected = active === item.key;
         return (
-          <Pressable key={item.key} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, selected && styles.itemActive, pressed && styles.pressed]}>
-            <Text style={[styles.icon, selected && styles.activeText]}>{item.icon}</Text>
-            <Text style={[styles.label, selected && styles.activeText]}>{item.label}</Text>
+          <Pressable key={item.key} onPress={() => onChange(item.key)} style={({ pressed }) => [styles.item, compact && styles.itemCompact, selected && styles.itemActive, pressed && styles.pressed]}>
+            {selected ? <View style={styles.activeIndicator} /> : null}
+            <Text style={[styles.label, compact && styles.labelCompact, selected && styles.activeText]}>{compact ? item.shortLabel : item.label}</Text>
           </Pressable>
         );
       })}
@@ -36,44 +37,62 @@ export function BottomNavigation({ active, onChange }: BottomNavigationProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    backgroundColor: colors.surfaceGlass,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 18,
     padding: spacing.sm,
     marginTop: spacing.xl,
     shadowColor: colors.black,
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  containerCompact: {
+    borderRadius: 12,
+    padding: spacing.xs,
+    marginTop: spacing.sm,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 10,
+    minHeight: 42,
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  itemCompact: {
+    borderRadius: 8,
+    minHeight: 36,
+    paddingVertical: spacing.xs,
   },
   itemActive: {
-    backgroundColor: colors.cyanSoft,
-    borderColor: colors.cyan,
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.borderStrong,
     borderWidth: 1,
   },
-  icon: {
-    color: colors.textDim,
-    fontSize: 18,
-    fontWeight: '900',
+  activeIndicator: {
+    width: 20,
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: colors.gold,
+    marginBottom: spacing.xs,
   },
   label: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
-    marginTop: 2,
+  },
+  labelCompact: {
+    fontSize: 11,
   },
   activeText: {
-    color: colors.cyan,
+    color: colors.text,
   },
   pressed: {
     opacity: 0.75,

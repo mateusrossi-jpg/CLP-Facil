@@ -1,63 +1,46 @@
-# CLP Fácil
+# Easy-CLP
 
-Aplicativo Android educativo para aprendizado e simulação de lógica CLP/Ladder, com foco em estudantes, eletricistas, técnicos, professores e profissionais que desejam aprender automação de forma prática no celular.
+Aplicativo educativo para aprender e simular lógica CLP/Ladder de forma prática, visual e guiada.
 
-## Visão do produto
+## Produto
 
-O **CLP Fácil** nasce como um simulador didático de Ladder para Android, com lições guiadas, exemplos práticos de comandos elétricos, motores, temporizadores, contadores e desafios progressivos.
+O **Easy-CLP** combina três frentes:
 
-A proposta inicial não é copiar ferramentas web existentes, mas criar uma experiência mobile própria, visual, em português brasileiro, simples de usar e tecnicamente coerente.
+- Aulas curtas com teoria aplicada.
+- Simulador Ladder com editor visual, scan, diagnóstico e bancada de campo.
+- Projetos prontos para estudar partida, selo, temporizadores, contadores e intertravamentos.
 
-## Objetivo do MVP
+O objetivo é entregar uma experiência mobile própria, clara e profissional para estudantes, técnicos, professores e iniciantes em automação.
 
-A primeira versão deve validar três pontos:
+## Recursos atuais
 
-1. Se o usuário entende visualmente a lógica Ladder no celular.
-2. Se lições interativas de motores e comandos geram valor educacional.
-3. Se o app tem potencial para monetização via anúncios leves e versão Pro.
+- Editor Ladder com contatos em série/paralelo e instrução final de saída/função.
+- Bobinas, SET/RESET, pulso, temporizadores TON/TOF/TP, contadores CTU/CTD/CTUD, comparadores e matemática.
+- Tabela de Tags/I/O gerada conforme o projeto.
+- Simulação por scan manual ou automático.
+- Diagnóstico de regras Ladder e mensagens educativas.
+- Lições guiadas com teste prático no simulador.
+- Biblioteca de modelos de automação.
+- Identidade visual Easy-CLP em tema claro premium.
+
+## Plataformas-alvo
+
+O Easy-CLP foi preparado para uso multiplataforma:
+
+- **Smartphone:** navegação compacta, simulador em abas, bancada e I/O separados para caber na tela.
+- **Tablet:** suporte a rotação e uso em retrato ou paisagem, aproveitando mais área para o Ladder.
+- **Desktop/Web:** layout centralizado com largura ampliada, ideal para estudo, projeção em sala e uso com mouse/teclado.
+
+No Expo, a orientação está configurada como `default` para permitir retrato e paisagem. No desktop, a entrega principal é via web.
 
 ## Público-alvo
 
 - Alunos de elétrica, eletrotécnica, automação, mecatrônica e manutenção industrial.
-- Professores que desejam demonstrar lógicas de CLP em sala.
-- Eletricistas que querem migrar para automação.
-- Técnicos que desejam revisar comandos elétricos e lógica Ladder.
-- Usuários iniciantes que precisam aprender contato NA, NF, selo, temporizador, contador e intertravamento.
+- Professores que desejam demonstrar lógica Ladder em sala.
+- Eletricistas migrando para automação.
+- Técnicos que desejam revisar comandos e CLP.
+- Usuários iniciantes que precisam praticar NA, NF, selo, timer, contador e intertravamento.
 
-## Escopo inicial
+## Observação
 
-A versão inicial deve conter:
-
-- Tema escuro profissional.
-- Tela inicial com módulos de estudo.
-- Módulo Fundamentos.
-- Módulo Motores.
-- Simulação de partida direta com selo.
-- Botões virtuais: Liga, Desliga, Emergência e Sobrecarga.
-- Visualização do estado das entradas, saídas, contator e motor.
-- Explicação didática de cada circuito.
-- Estrutura preparada para futuras lições, desafios e monetização.
-
-## Direção visual
-
-- Interface escura, técnica e moderna.
-- Cards modulares.
-- Destaques em azul/ciano para lógica ativa.
-- Verde para funcionamento correto.
-- Âmbar para alerta.
-- Vermelho para emergência/falha.
-- Ícones simples e consistentes.
-- Layout pensado primeiro para Android.
-
-## Estratégia de evolução
-
-1. MVP educativo com lições prontas e simulação visual.
-2. Editor Ladder simples por blocos.
-3. Desafios com validação automática.
-4. Exportação de imagem/PDF.
-5. Modo professor/aluno.
-6. Futuro motor lógico reutilizável em produtos de automação educacional.
-
-## Observação importante
-
-Este projeto é educacional. Ele não deve ser apresentado como substituto de CLPs industriais reais, normas técnicas, treinamento profissional certificado ou validação de segurança em máquinas reais.
+Este projeto é educacional. Ele não substitui CLPs industriais reais, normas técnicas, treinamento profissional certificado ou validação de segurança em máquinas reais.

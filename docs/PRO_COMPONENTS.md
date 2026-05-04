@@ -1,8 +1,8 @@
-# Componentes Pro — CLP Fácil
+# Componentes Pro — Easy-CLP
 
 ## Decisão de produto
 
-O CLP Fácil deve ser um simulador educativo com uma base gratuita realmente útil e uma versão Pro que libera componentes avançados.
+O Easy-CLP deve ser um simulador educativo com uma base gratuita realmente útil e uma versão Pro que libera componentes avançados.
 
 A versão gratuita precisa permitir ao usuário entender o valor do app, montar comandos básicos e simular lógicas simples. A versão Pro deve liberar recursos mais completos, especialmente para quem estuda, ensina ou trabalha com automação.
 

@@ -1,4 +1,4 @@
-# MVP — CLP Fácil
+# MVP — Easy-CLP
 
 ## Objetivo
 
@@ -21,7 +21,7 @@ A primeira versão deve funcionar como um professor interativo:
 
 ### 1. Tela inicial
 
-- Nome do app: CLP Fácil.
+- Nome do app: Easy-CLP.
 - Subtítulo: Simulador Ladder Educativo.
 - Cards de módulos:
   - Fundamentos;

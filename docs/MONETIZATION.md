@@ -1,4 +1,4 @@
-# Monetização — CLP Fácil
+# Monetização — Easy-CLP
 
 ## Princípio
 
@@ -54,4 +54,4 @@ Usar apenas formatos pouco invasivos:
 
 ## Funil futuro
 
-O CLP Fácil pode gerar autoridade para outros produtos técnicos, mas deve se manter como app próprio e útil por si só.
+O Easy-CLP pode gerar autoridade para outros produtos técnicos, mas deve se manter como app próprio e útil por si só.

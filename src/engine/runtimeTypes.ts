@@ -9,11 +9,14 @@ export type CounterRuntimeState = {
   q: boolean;
   previousCu: boolean;
   previousCd: boolean;
+  previousReset: boolean;
 };
 
 export type EditorRuntimeState = {
   scanNumber: number;
   scanStepMs: number;
+  previousRungPower: Record<string, boolean>;
+  previousContactValues: Record<string, boolean>;
   timers: Record<string, TimerRuntimeState>;
   counters: Record<string, CounterRuntimeState>;
 };
@@ -22,6 +25,8 @@ export function createInitialRuntimeState(): EditorRuntimeState {
   return {
     scanNumber: 0,
     scanStepMs: 100,
+    previousRungPower: {},
+    previousContactValues: {},
     timers: {},
     counters: {},
   };
@@ -41,5 +46,6 @@ export function getCounterRuntime(runtime: EditorRuntimeState, blockId: string):
     q: false,
     previousCu: false,
     previousCd: false,
+    previousReset: false,
   };
 }

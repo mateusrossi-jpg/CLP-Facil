@@ -1,6 +1,6 @@
-# Mapa completo de componentes Ladder — CLP Fácil
+# Mapa completo de componentes Ladder — Easy-CLP
 
-Este documento organiza os componentes que o CLP Fácil deve conhecer, ensinar e implementar gradualmente no simulador.
+Este documento organiza os componentes que o Easy-CLP deve conhecer, ensinar e implementar gradualmente no simulador.
 
 ## Modelo de produto
 
@@ -315,6 +315,6 @@ No editor mobile, o painel de seleção deve ser dividido assim:
 
 ## 17. Observação importante
 
-Este mapa não é uma promessa de implementação imediata. Ele é a referência de arquitetura e produto para guiar a evolução do CLP Fácil.
+Este mapa não é uma promessa de implementação imediata. Ele é a referência de arquitetura e produto para guiar a evolução do Easy-CLP.
 
 O simulador deve começar simples, funcionar bem no celular e crescer por módulos.

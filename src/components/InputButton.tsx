@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   },
   dangerActive: {
     borderColor: colors.red,
-    backgroundColor: '#3A151A',
+    backgroundColor: colors.redSoft,
   },
   pressed: {
     opacity: 0.75,

@@ -1,4 +1,4 @@
-# Catálogo de Lições — CLP Fácil
+# Catálogo de Lições — Easy-CLP
 
 Este documento organiza as lições planejadas para o app. O objetivo é manter o conteúdo didático separado da implementação.
 

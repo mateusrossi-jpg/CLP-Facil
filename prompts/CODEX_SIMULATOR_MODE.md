@@ -1,10 +1,10 @@
-# Prompt para Codex — Modo Simulador do CLP Fácil
+# Prompt para Codex — Modo Simulador do Easy-CLP
 
 Use este prompt depois do bootstrap inicial do app ou junto com ele, se o projeto ainda estiver pequeno.
 
 ---
 
-Você está trabalhando no projeto **CLP Fácil**, um aplicativo Android educativo para aprendizado e simulação de lógica CLP/Ladder.
+Você está trabalhando no projeto **Easy-CLP**, um aplicativo Android educativo para aprendizado e simulação de lógica CLP/Ladder.
 
 O produto deve ter dois modos principais:
 

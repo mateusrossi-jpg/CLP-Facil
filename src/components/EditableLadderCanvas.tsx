@@ -40,7 +40,7 @@ function LadderBlock({ block, selected, locked, onPress }: { block: EditorBlock;
     >
       <Text style={styles.blockSymbol}>{blockLabel(block)}</Text>
       <Text style={styles.blockName}>{block.name}</Text>
-      {block.isPro ? <Text style={styles.proLabel}>PRO</Text> : null}
+      {block.isPro ? <Text style={styles.proLabel}>Pro</Text> : null}
     </Pressable>
   );
 }
@@ -65,7 +65,7 @@ export function EditableLadderCanvas({ editor, locked, rungResults, onSelectZone
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.title}>Canvas Ladder</Text>
-          <Text style={styles.subtitle}>Visual didático da linha selecionada com trilhos, contatos, ramo paralelo e bobina.</Text>
+          <Text style={styles.subtitle}>Visual didático da linha selecionada com trilhos, contatos, ramo paralelo e instrução final.</Text>
         </View>
         <Text style={[styles.statusBadge, energized && styles.statusBadgeOn]}>{energized ? 'Energizada' : 'Aberta'}</Text>
       </View>
@@ -113,7 +113,7 @@ export function EditableLadderCanvas({ editor, locked, rungResults, onSelectZone
             {rung.coilBlock ? (
               <LadderBlock block={rung.coilBlock} selected={editor.selectedBlockId === rung.coilBlock.id} locked={locked} onPress={() => onSelectBlock(rung.coilBlock?.id ?? '')} />
             ) : (
-              <InsertSlot label="+ Bobina" selected={editor.selectedZone === 'coil'} locked={locked} onPress={() => onSelectZone('coil')} />
+              <InsertSlot label="+ Saída / função" selected={editor.selectedZone === 'coil'} locked={locked} onPress={() => onSelectZone('coil')} />
             )}
           </View>
 
@@ -121,7 +121,7 @@ export function EditableLadderCanvas({ editor, locked, rungResults, onSelectZone
         </View>
       </ScrollView>
 
-      <Text style={styles.hint}>{locked ? 'Modo Simular: toque nas entradas no painel de simulação.' : 'Modo Editar: toque em + Série, + Paralelo ou + Bobina e depois escolha um componente.'}</Text>
+      <Text style={styles.hint}>{locked ? 'Modo Simular: toque nas entradas no painel de simulação.' : 'Modo Editar: contatos entram em Série/Paralelo; bobinas, timers e contadores entram em Saída/função.'}</Text>
     </View>
   );
 }
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   selectedBlock: {
     borderColor: colors.green,
-    backgroundColor: '#143822',
+    backgroundColor: colors.greenSoft,
   },
   lockedBlock: {
     opacity: 0.72,

@@ -4,8 +4,23 @@ import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
-const inputs = ['I0', 'I1', 'I2', 'I3'];
-const outputs = ['Q0', 'Q1', 'M0', 'M1', 'T0', 'T1', 'C0', 'C1'];
+const inputs = [
+  { id: 'I0', name: 'Start Button' },
+  { id: 'I1', name: 'Stop Button' },
+  { id: 'I2', name: 'Emergency' },
+  { id: 'I3', name: 'Overload' },
+];
+
+const outputs = [
+  { id: 'Q0', name: 'Motor' },
+  { id: 'Q1', name: 'Output 2' },
+  { id: 'M0', name: 'Memory 0' },
+  { id: 'M1', name: 'Memory 1' },
+  { id: 'T0', name: 'Timer 0' },
+  { id: 'T1', name: 'Timer 1' },
+  { id: 'C0', name: 'Counter 0' },
+  { id: 'C1', name: 'Counter 1' },
+];
 
 const severityLabel: Record<EditorDiagnosticSeverity, string> = {
   info: 'INFO',
@@ -52,10 +67,11 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput, onRunS
       <Text style={styles.sectionTitle}>Entradas</Text>
       <View style={styles.grid}>
         {inputs.map((input) => {
-          const active = Boolean(state[input]);
+          const active = Boolean(state[input.id]);
           return (
-            <Pressable key={input} onPress={() => onToggleInput(input)} style={({ pressed }) => [styles.ioCard, active && styles.inputActive, pressed && styles.pressed]}>
-              <Text style={styles.ioLabel}>{input}</Text>
+            <Pressable key={input.id} onPress={() => onToggleInput(input.id)} style={({ pressed }) => [styles.ioCard, active && styles.inputActive, pressed && styles.pressed]}>
+              <Text style={styles.ioLabel}>{input.name}</Text>
+              <Text style={styles.ioAddress}>{input.id}</Text>
               <Text style={[styles.ioState, active && styles.activeText]}>{active ? '1' : '0'}</Text>
             </Pressable>
           );
@@ -65,10 +81,11 @@ export function EditorSimulationPanel({ state, evaluation, onToggleInput, onRunS
       <Text style={styles.sectionTitle}>Saídas, memórias e blocos</Text>
       <View style={styles.grid}>
         {outputs.map((output) => {
-          const active = Boolean(evaluation.state[output]);
+          const active = Boolean(evaluation.state[output.id]);
           return (
-            <View key={output} style={[styles.ioCard, active && styles.outputActive]}>
-              <Text style={styles.ioLabel}>{output}</Text>
+            <View key={output.id} style={[styles.ioCard, active && styles.outputActive]}>
+              <Text style={styles.ioLabel}>{output.name}</Text>
+              <Text style={styles.ioAddress}>{output.id}</Text>
               <Text style={[styles.ioState, active && styles.outputText]}>{active ? '1' : '0'}</Text>
             </View>
           );
@@ -188,7 +205,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   ioCard: {
-    minWidth: 70,
+    minWidth: 112,
+    flexGrow: 1,
+    flexBasis: '45%',
     backgroundColor: colors.background,
     borderColor: colors.border,
     borderWidth: 1,
@@ -202,12 +221,19 @@ const styles = StyleSheet.create({
   },
   outputActive: {
     borderColor: colors.green,
-    backgroundColor: '#143822',
+    backgroundColor: colors.greenSoft,
   },
   ioLabel: {
     color: colors.text,
     fontSize: 13,
     fontWeight: '900',
+    textAlign: 'center',
+  },
+  ioAddress: {
+    color: colors.textDim,
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 2,
   },
   ioState: {
     color: colors.textMuted,
@@ -266,7 +292,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     padding: spacing.md,
-    backgroundColor: '#143822',
+    backgroundColor: colors.greenSoft,
   },
   diagnosticOkText: {
     color: colors.green,
@@ -285,11 +311,11 @@ const styles = StyleSheet.create({
   },
   diagnosticWarning: {
     borderColor: colors.amber,
-    backgroundColor: '#2B230F',
+    backgroundColor: colors.amberSoft,
   },
   diagnosticError: {
     borderColor: colors.red,
-    backgroundColor: '#3A151A',
+    backgroundColor: colors.redSoft,
   },
   diagnosticBadge: {
     color: colors.text,

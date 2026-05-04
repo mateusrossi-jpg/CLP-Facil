@@ -26,7 +26,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
           <Text style={styles.rungLabel}>{rung.label}</Text>
           <View style={styles.seriesRow}>
             {rung.seriesContacts.map((contact) => (
-              <View key={contact.id} style={[styles.contact, state[contact.variableId] && styles.contactActive]}>
+              <View key={contact.id} style={[styles.contact, Boolean(state[contact.variableId]) && styles.contactActive]}>
                 <Text style={styles.contactText}>{contact.label}</Text>
                 <Text style={styles.contactState}>{stateLabel(Boolean(state[contact.variableId]))}</Text>
               </View>
@@ -37,7 +37,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
             {rung.parallelBranches.map((branch) => (
               <View key={branch.id} style={styles.branchRow}>
                 {branch.contacts.map((contact) => (
-                  <View key={contact.id} style={[styles.contact, state[contact.variableId] && styles.contactActive]}>
+                  <View key={contact.id} style={[styles.contact, Boolean(state[contact.variableId]) && styles.contactActive]}>
                     <Text style={styles.contactText}>{contact.label}</Text>
                     <Text style={styles.contactState}>{stateLabel(Boolean(state[contact.variableId]))}</Text>
                   </View>
@@ -45,7 +45,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
               </View>
             ))}
           </View>
-          <View style={[styles.coil, state[rung.coilVariableId] && styles.coilActive]}>
+          <View style={[styles.coil, Boolean(state[rung.coilVariableId]) && styles.coilActive]}>
             <Text style={styles.coilText}>( {rung.coilVariableId} / K1 )</Text>
           </View>
         </View>
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   coilActive: {
     borderColor: colors.green,
-    backgroundColor: '#143822',
+    backgroundColor: colors.greenSoft,
   },
   coilText: {
     color: colors.text,

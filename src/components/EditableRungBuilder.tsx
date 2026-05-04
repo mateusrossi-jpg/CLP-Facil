@@ -15,7 +15,7 @@ function Block({ block, selected, onPress }: { block: EditorBlock; selected: boo
     <Pressable onPress={onPress} style={({ pressed }) => [styles.block, block.isPro && styles.proBlock, selected && styles.selectedBlock, pressed && styles.pressed]}>
       <Text style={styles.blockName}>{block.name}</Text>
       <Text style={styles.blockVariable}>{block.variable}</Text>
-      {block.isPro ? <Text style={styles.proText}>PRO</Text> : null}
+      {block.isPro ? <Text style={styles.proText}>Pro</Text> : null}
     </Pressable>
   );
 }
@@ -64,18 +64,18 @@ export function EditableRungBuilder({ editor, onSelectZone, onSelectBlock, onRem
       </Pressable>
 
       <Pressable onPress={() => onSelectZone('coil')} style={[styles.zone, editor.selectedZone === 'coil' && styles.selectedZone]}>
-        <Text style={styles.zoneTitle}>Bobina / saída</Text>
+        <Text style={styles.zoneTitle}>Saída / função</Text>
         <View style={styles.blockRow}>
           {rung.coilBlock ? (
             <Block block={rung.coilBlock} selected={editor.selectedBlockId === rung.coilBlock.id} onPress={() => onSelectBlock(rung.coilBlock?.id ?? '')} />
           ) : (
-            <EmptyZone label="Toque aqui e escolha bobina/saída" />
+            <EmptyZone label="Toque aqui e escolha saída/função" />
           )}
         </View>
       </Pressable>
 
       <View style={styles.actionRow}>
-        <Pressable onPress={onRemoveSelected} style={({ pressed }) => [styles.removeButton, !editor.selectedBlockId && styles.disabled, pressed && editor.selectedBlockId && styles.pressed]}>
+        <Pressable onPress={onRemoveSelected} style={({ pressed }) => [styles.removeButton, !editor.selectedBlockId && styles.disabled, pressed && Boolean(editor.selectedBlockId) && styles.pressed]}>
           <Text style={styles.removeText}>Remover selecionado</Text>
         </Pressable>
       </View>
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   selectedBlock: {
     borderColor: colors.green,
-    backgroundColor: '#143822',
+    backgroundColor: colors.greenSoft,
   },
   blockName: {
     color: colors.text,

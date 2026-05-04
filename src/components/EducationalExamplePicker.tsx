@@ -14,8 +14,8 @@ export function EducationalExamplePicker({ examples, locked, onLoadExample }: Ed
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Exemplos educativos</Text>
-          <Text style={styles.subtitle}>Carregue projetos prontos com blocos avançados para estudar gratuitamente.</Text>
+          <Text style={styles.title}>Modelos de automação</Text>
+          <Text style={styles.subtitle}>Carregue aplicações prontas como projetos Ladder reais, com linhas, contatos, bobinas e intertravamentos.</Text>
         </View>
         <Text style={styles.badge}>Livre</Text>
       </View>
@@ -31,7 +31,7 @@ export function EducationalExamplePicker({ examples, locked, onLoadExample }: Ed
             <Text style={styles.difficulty}>{example.difficulty}</Text>
           </View>
           <Text style={styles.description}>{example.description}</Text>
-          <Text style={styles.loadText}>{locked ? 'Volte para Editar para carregar' : 'Carregar exemplo'}</Text>
+          <Text style={styles.loadText}>{locked ? 'Volte para Editar para carregar' : 'Carregar modelo'}</Text>
         </Pressable>
       ))}
     </View>

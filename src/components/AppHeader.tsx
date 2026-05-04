@@ -1,18 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { BrandLogo } from './BrandLogo';
 
 type AppHeaderProps = {
   title: string;
   subtitle?: string;
+  compact?: boolean;
 };
 
-export function AppHeader({ title, subtitle }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, compact }: AppHeaderProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.kicker}>CLP Fácil</Text>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <View style={[styles.container, compact && styles.containerCompact]}>
+      <BrandLogo compact />
+      <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>{subtitle}</Text> : null}
     </View>
   );
 }
@@ -20,25 +22,35 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.xl,
+    alignItems: 'center',
   },
-  kicker: {
-    color: colors.cyan,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+  containerCompact: {
     marginBottom: spacing.sm,
   },
   title: {
     color: colors.text,
     fontSize: 32,
     fontWeight: '900',
-    letterSpacing: -0.6,
+    letterSpacing: 0,
+    marginTop: spacing.lg,
+    textAlign: 'center',
+  },
+  titleCompact: {
+    fontSize: 22,
+    letterSpacing: 0,
+    marginTop: spacing.sm,
   },
   subtitle: {
     color: colors.textMuted,
     fontSize: 15,
     lineHeight: 22,
     marginTop: spacing.sm,
+    textAlign: 'center',
+    maxWidth: 620,
+  },
+  subtitleCompact: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: spacing.xs,
   },
 });

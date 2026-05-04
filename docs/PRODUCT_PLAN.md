@@ -1,3 +1,3 @@
-# Plano de Produto — CLP Fácil
+# Plano de Produto — Easy-CLP
 
 Documento inicial do produto.

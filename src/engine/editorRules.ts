@@ -9,13 +9,15 @@ function isCoilComponent(component: SimulatorComponent): boolean {
     component.id.includes('light') ||
     component.id.includes('memory') ||
     component.category === 'timer' ||
-    component.category === 'counter'
+    component.category === 'counter' ||
+    component.category === 'math'
   );
 }
 
 function isContactComponent(component: SimulatorComponent): boolean {
   return (
     component.category === 'input' ||
+    component.category === 'compare' ||
     component.id.includes('contact') ||
     component.id.includes('memory')
   );
@@ -39,8 +41,8 @@ export function explainInsertionRule(component: SimulatorComponent, zone: Editor
   }
 
   if (zone === 'coil') {
-    return `${component.name} não deve ser inserido na zona Bobina/bloco funcional. Escolha bobina, contator, motor, lâmpada, memória, temporizador ou contador.`;
+    return `${component.name} não deve ser inserido na zona Saída/função. Escolha bobina, contator, motor, lâmpada, memória, temporizador, contador ou matemática.`;
   }
 
-  return `${component.name} não deve ser inserido em Série/Paralelo. Escolha contatos, botões, sensores ou memórias como condição lógica.`;
+  return `${component.name} não deve ser inserido em Série/Paralelo. Escolha contatos, botões, sensores, comparadores ou memórias como condição lógica.`;
 }

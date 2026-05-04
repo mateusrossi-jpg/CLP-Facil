@@ -1,4 +1,4 @@
-# Checklist Play Store — CLP Fácil
+# Checklist Play Store — Easy-CLP
 
 ## Antes do primeiro teste fechado
 
@@ -25,7 +25,7 @@
 
 ## Página da loja
 
-- Nome: CLP Fácil.
+- Nome: Easy-CLP.
 - Subtítulo: Simulador Ladder Educativo.
 - Categoria: Educação ou Ferramentas, a decidir.
 - Screenshots mostrando:

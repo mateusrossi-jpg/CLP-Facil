@@ -39,7 +39,7 @@ export type LadderProject = {
   actuatorLinks: Record<string, string>;
 };
 
-export type PlcState = Record<string, boolean>;
+export type PlcState = Record<string, boolean | number>;
 
 export type EvaluationResult = {
   state: PlcState;

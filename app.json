@@ -1,1 +1,31 @@
-{"expo":{"name":"CLP Fácil","slug":"clp-facil","version":"0.1.0","orientation":"portrait","userInterfaceStyle":"dark","assetBundlePatterns":["**/*"],"ios":{"supportsTablet":true},"android":{"package":"com.mateusrossi.clpfacil","adaptiveIcon":{"backgroundColor":"#071114"}},"web":{"bundler":"metro"}}}
+{
+  "expo": {
+    "name": "Easy-CLP",
+    "slug": "easy-clp",
+    "version": "0.1.0",
+    "description": "Simulador educacional de lógica Ladder e CLP com aulas guiadas, bancada virtual e projetos prontos.",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4F7FB"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.mateusrossi.easyclp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1220"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

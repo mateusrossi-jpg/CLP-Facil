@@ -1,10 +1,10 @@
-# Prompt para Codex — Bootstrap do CLP Fácil
+# Prompt para Codex — Bootstrap do Easy-CLP
 
 Use este prompt no Codex dentro do repositório `CLP-Facil`.
 
 ---
 
-Você está trabalhando no projeto **CLP Fácil**, um aplicativo Android educativo para aprendizado e simulação de lógica CLP/Ladder.
+Você está trabalhando no projeto **Easy-CLP**, um aplicativo Android educativo para aprendizado e simulação de lógica CLP/Ladder.
 
 Leia primeiro estes documentos do repositório:
 
@@ -66,7 +66,7 @@ src/
 
 A tela inicial deve exibir:
 
-- título: CLP Fácil;
+- título: Easy-CLP;
 - subtítulo: Simulador Ladder Educativo;
 - cards dos módulos:
   - Fundamentos;

@@ -1,8 +1,8 @@
-# Modo Simulador — CLP Fácil
+# Modo Simulador — Easy-CLP
 
 ## Decisão de produto
 
-O CLP Fácil não deve ser apenas um app de lições guiadas. Ele deve ter dois modos principais:
+O Easy-CLP não deve ser apenas um app de lições guiadas. Ele deve ter dois modos principais:
 
 1. **Modo Aprender** — lições guiadas, explicações e simulações prontas.
 2. **Modo Simulador** — ambiente livre para montar e testar comandos elétricos e lógicas Ladder.
@@ -13,7 +13,7 @@ O objetivo é unir aprendizado com prática. O usuário aprende o conceito em um
 
 O modo simulador deve se inspirar no valor de ferramentas de montagem e simulação de comandos, mas sem copiar interface, marca, código, ícones ou fluxo de outro aplicativo.
 
-A identidade do CLP Fácil deve ser própria:
+A identidade do Easy-CLP deve ser própria:
 
 - português brasileiro;
 - visual técnico escuro;
@@ -194,9 +194,9 @@ Prioridades:
 - feedback visual imediato;
 - evitar excesso de menus.
 
-## Diferença entre o CLP Fácil e um simulador comum
+## Diferença entre o Easy-CLP e um simulador comum
 
-O CLP Fácil deve ter uma camada educativa permanente:
+O Easy-CLP deve ter uma camada educativa permanente:
 
 - explicar por que a saída ligou;
 - mostrar qual contato está bloqueando a linha;

@@ -1,10 +1,10 @@
-# Taxonomia de comandos CLP/Ladder — CLP Fácil
+# Taxonomia de comandos CLP/Ladder — Easy-CLP
 
 Este documento organiza os elementos de CLP/Ladder e comandos elétricos que serão estudados, categorizados e implementados gradualmente no simulador.
 
 ## Princípio do app
 
-O CLP Fácil terá duas frentes permanentes:
+O Easy-CLP terá duas frentes permanentes:
 
 1. **Educação livre**: ensinar o funcionamento dos elementos, exemplos e lógica.
 2. **Simulador Pro**: permitir criar projetos próprios, salvar, editar e usar blocos avançados.

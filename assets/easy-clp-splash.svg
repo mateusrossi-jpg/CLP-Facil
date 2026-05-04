@@ -1,0 +1,14 @@
+<svg width="1242" height="2436" viewBox="0 0 1242 2436" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1242" height="2436" fill="#F4F7FB"/>
+  <rect x="221" y="812" width="800" height="800" rx="180" fill="#0B1220"/>
+  <rect x="285" y="876" width="672" height="672" rx="150" fill="#111827" stroke="#D7DFEA" stroke-width="10"/>
+  <path d="M349 1212H457" stroke="#B7791F" stroke-width="26" stroke-linecap="round"/>
+  <path d="M785 1212H893" stroke="#B7791F" stroke-width="26" stroke-linecap="round"/>
+  <path d="M507 1062V1362" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
+  <path d="M607 1062V1362" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
+  <path d="M532 1212H582" stroke="#1C7ED6" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="720" cy="1212" r="118" stroke="#1C7ED6" stroke-width="32"/>
+  <text x="720" y="1258" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="134" font-weight="900" fill="#FFFFFF">E</text>
+  <text x="621" y="1732" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" fill="#101828">Easy<tspan fill="#B7791F">-CLP</tspan></text>
+  <text x="621" y="1806" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#475467">Ladder e automação na prática</text>
+</svg>

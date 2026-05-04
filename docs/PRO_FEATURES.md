@@ -1,8 +1,8 @@
-# Recursos Pro — CLP Fácil
+# Recursos Pro — Easy-CLP
 
 ## Decisão de produto
 
-O CLP Fácil deve ser um simulador real, não apenas um app de lições. A versão gratuita precisa ser útil o suficiente para atrair usuários, estudantes e eletricistas, mas a versão paga deve liberar componentes avançados e recursos profissionais.
+O Easy-CLP deve ser um simulador real, não apenas um app de lições. A versão gratuita precisa ser útil o suficiente para atrair usuários, estudantes e eletricistas, mas a versão paga deve liberar componentes avançados e recursos profissionais.
 
 A monetização deve ser baseada em valor técnico adicional, não em limitar artificialmente o aprendizado básico.
 
@@ -117,7 +117,7 @@ Exemplo de mensagem:
 TON é um temporizador de atraso na energização.
 Ele permite ligar uma saída somente depois que a entrada permanecer ativa pelo tempo configurado.
 
-Este componente faz parte do CLP Fácil Pro.
+Este componente faz parte do Easy-CLP Pro.
 ```
 
 Botões:

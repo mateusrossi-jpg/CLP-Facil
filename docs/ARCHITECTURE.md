@@ -1,4 +1,4 @@
-# Arquitetura — CLP Fácil
+# Arquitetura — Easy-CLP
 
 ## Direção técnica recomendada
 
