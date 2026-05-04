@@ -44,42 +44,52 @@ function lessonFromExample(exampleId: ProfessionalExampleId): LearningLessonStep
   };
 }
 
+function lessonsFromExamples(exampleIds: ProfessionalExampleId[]): LearningLessonStep[] {
+  return exampleIds.map(lessonFromExample);
+}
+
+const starterExamples: ProfessionalExampleId[] = ['direct_start', 'seal_start'];
+const motorExamples: ProfessionalExampleId[] = ['reversing_motor', 'star_delta'];
+const timerCounterExamples: ProfessionalExampleId[] = ['traffic_light', 'conveyor_batch'];
+const processExamples: ProfessionalExampleId[] = ['reservoir_control', 'alternating_pumps'];
+const safetyExamples: ProfessionalExampleId[] = ['automatic_gate'];
+
 export const professionalLearningPath: LearningModule[] = [
   {
     id: 'starter_ladder',
     title: 'Fundamentos de Ladder no celular',
     description: 'Comece com contato, bobina, scan, saída e leitura em Lista/Fluxo.',
-    exampleIds: ['direct_start', 'seal_start'],
-    lessons: ['direct_start', 'seal_start'].map(lessonFromExample),
+    exampleIds: starterExamples,
+    lessons: lessonsFromExamples(starterExamples),
   },
   {
     id: 'motor_commands',
     title: 'Comandos elétricos reais',
     description: 'Treine comandos de motor usados em bancada, oficina e aulas técnicas.',
-    exampleIds: ['reversing_motor', 'star_delta'],
-    lessons: ['reversing_motor', 'star_delta'].map(lessonFromExample),
+    exampleIds: motorExamples,
+    lessons: lessonsFromExamples(motorExamples),
   },
   {
     id: 'timers_counters',
     title: 'Temporizadores e contadores',
     description: 'Use TON, CTU e sequência para transformar lógica simples em automação.',
-    exampleIds: ['traffic_light', 'conveyor_batch'],
-    lessons: ['traffic_light', 'conveyor_batch'].map(lessonFromExample),
+    exampleIds: timerCounterExamples,
+    lessons: lessonsFromExamples(timerCounterExamples),
   },
   {
     id: 'process_applications',
     title: 'Aplicações de processo',
     description: 'Controle situações comuns como bomba, reservatório, esteira e alternância.',
-    exampleIds: ['reservoir_control', 'alternating_pumps'],
-    lessons: ['reservoir_control', 'alternating_pumps'].map(lessonFromExample),
+    exampleIds: processExamples,
+    lessons: lessonsFromExamples(processExamples),
   },
   {
     id: 'safety_diagnostics',
     title: 'Segurança, diagnóstico e bancada',
     description: 'Entenda intertravamento, fins de curso, Force didático e validação antes da exportação.',
-    exampleIds: ['automatic_gate'],
+    exampleIds: safetyExamples,
     lessons: [
-      lessonFromExample('automatic_gate'),
+      ...lessonsFromExamples(safetyExamples),
       {
         title: 'Force didático e diagnóstico',
         concept: 'Force ON, Force OFF, tag forçada e alerta de segurança.',
@@ -110,7 +120,7 @@ export function moduleProgress(module: LearningModule, progress: LearningProgres
 export function overallLearningProgress(progress: LearningProgress): { completed: number; total: number; ratio: number } {
   const totals = professionalLearningPath.map((module) => moduleProgress(module, progress));
   const completed = totals.reduce((sum, item) => sum + item.completed, 0);
-  const total = totals.reduce((sum, item) => sum + item.total, 0);
+  const total = totals.reduce((sum, item) => item.total + sum, 0);
   return {
     completed,
     total,
