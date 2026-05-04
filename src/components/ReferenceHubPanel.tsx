@@ -8,7 +8,7 @@ import { ReleaseReadinessPanel } from './ReleaseReadinessPanel';
 import { SafetyReadinessPanel } from './SafetyReadinessPanel';
 import { SmartphoneViewScaleControl } from './SmartphoneViewScaleControl';
 import { StoreListingPanel } from './StoreListingPanel';
-import { EditorProjectState } from '../engine/editorTypes';
+import { createInitialEditorProject, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
 import { EducationalForceMap, EducationalForceMode } from '../simulation/professionalClpView';
@@ -19,9 +19,9 @@ import { spacing } from '../theme/spacing';
 type ReferenceTab = 'dialects' | 'mobile' | 'tags' | 'routines' | 'protocols' | 'safety' | 'release' | 'store';
 
 type ReferenceHubPanelProps = {
-  editorProject: EditorProjectState;
-  selectedPlcProfile: PlcProfileId;
-  onSelectPlcProfile: (profile: PlcProfileId) => void;
+  editorProject?: EditorProjectState;
+  selectedPlcProfile?: PlcProfileId;
+  onSelectPlcProfile?: (profile: PlcProfileId) => void;
 };
 
 function initialReferenceState(project: EditorProjectState): PlcState {
@@ -58,13 +58,18 @@ function selectedRungMobileMetrics(project: EditorProjectState): { conditionCoun
   };
 }
 
-export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectPlcProfile }: ReferenceHubPanelProps) {
+export function ReferenceHubPanel(props: ReferenceHubPanelProps = {}) {
+  const fallbackProject = useMemo(() => createInitialEditorProject(), []);
+  const editorProject = props.editorProject ?? fallbackProject;
+  const selectedPlcProfile = props.selectedPlcProfile ?? 'easy_clp';
+  const onSelectPlcProfile = props.onSelectPlcProfile ?? (() => undefined);
   const [tab, setTab] = useState<ReferenceTab>('dialects');
   const [mobileScale, setMobileScale] = useState<SmartphoneViewScaleId>('fit');
   const [educationalForces, setEducationalForces] = useState<EducationalForceMap>({});
   const [rungComments, setRungComments] = useState<Record<string, string>>({});
   const referenceState = useMemo(() => initialReferenceState(editorProject), [editorProject]);
   const mobileMetrics = useMemo(() => selectedRungMobileMetrics(editorProject), [editorProject]);
+  const usingFallback = !props.editorProject;
 
   function setEducationalForce(tag: string, force: EducationalForceMode) {
     setEducationalForces((current) => {
@@ -98,6 +103,13 @@ export function ReferenceHubPanel({ editorProject, selectedPlcProfile, onSelectP
             <Text style={styles.badgeText}>REF</Text>
           </View>
         </View>
+
+        {usingFallback ? (
+          <View style={styles.fallbackNotice}>
+            <Text style={styles.fallbackTitle}>Modo referência isolado</Text>
+            <Text style={styles.fallbackText}>A aba Ref abriu sem receber o projeto atual, então carreguei um projeto didático padrão para evitar tela vazia.</Text>
+          </View>
+        ) : null}
 
         <View style={styles.tabRow}>
           <Pressable onPress={() => setTab('dialects')} style={[styles.tabButton, tab === 'dialects' && styles.tabButtonActive]}>
@@ -217,6 +229,26 @@ const styles = StyleSheet.create({
     color: colors.cyan,
     fontSize: 10,
     fontWeight: '900',
+  },
+  fallbackNotice: {
+    borderColor: colors.amber,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: colors.goldSoft,
+  },
+  fallbackTitle: {
+    color: colors.amber,
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  fallbackText: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '700',
+    marginTop: 2,
   },
   tabRow: {
     flexDirection: 'row',
