@@ -26,6 +26,11 @@ function formatValue(value: boolean | number): string {
   return value ? 'ON' : 'OFF';
 }
 
+function isValueActive(value: boolean | number): boolean {
+  if (typeof value === 'number') return value !== 0;
+  return value;
+}
+
 export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
   editorProject,
   plcState,
@@ -78,7 +83,7 @@ export const ProfessionalClpPanel = memo(function ProfessionalClpPanel({
                 <Text style={[styles.tagCell, styles.tagNameCell]}>{row.tag}</Text>
                 <Text style={styles.tagCell}>{row.type}</Text>
                 <Text style={styles.tagCell}>{row.scope}</Text>
-                <Text style={[styles.tagCell, row.value && styles.tagCellOn]}>{formatValue(row.value)}</Text>
+                <Text style={[styles.tagCell, isValueActive(row.value) && styles.tagCellOn]}>{formatValue(row.value)}</Text>
                 <Text style={[styles.tagCell, styles.tagDescriptionCell]} numberOfLines={1}>{row.description}</Text>
                 <View style={[styles.tagCell, styles.tagForceCell]}>
                   <Text style={[styles.forceReadout, row.forced !== 'normal' && styles.tagForceOn]}>{row.forcedLabel}</Text>
