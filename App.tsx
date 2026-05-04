@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { AdPlaceholder } from './src/components/AdPlaceholder';
@@ -67,8 +67,15 @@ export default function App() {
   const [adsAccess] = useState(initialAdsAccess);
   const [commerceMessage, setCommerceMessage] = useState<string | null>(null);
   const [plcState, setPlcState] = useState<PlcState>(initial);
-  const evaluation = evaluateProject(project, plcState);
-  const editorEvaluation = evaluateEditorProject(editorProject, editorState, editorScanNumber, editorRuntime);
+  const editorProjectRef = useRef(editorProject);
+  const editorStateRef = useRef(editorState);
+  const editorRuntimeRef = useRef(editorRuntime);
+  const editorScanNumberRef = useRef(editorScanNumber);
+  const evaluation = useMemo(() => evaluateProject(project, plcState), [project, plcState]);
+  const editorEvaluation = useMemo(
+    () => evaluateEditorProject(editorProject, editorState, editorScanNumber, editorRuntime),
+    [editorProject, editorState, editorScanNumber, editorRuntime],
+  );
   const editingLocked = editorMode === 'simulate';
   const compactSimulator = width < 980;
   const showAds = shouldShowAds(proAccess.isPro, adsAccess);
@@ -91,12 +98,28 @@ export default function App() {
   const guidedDone = hydratedGuidedSteps.length > 0 && hydratedGuidedSteps.every((step) => step.passed);
 
   useEffect(() => {
+    editorProjectRef.current = editorProject;
+  }, [editorProject]);
+
+  useEffect(() => {
+    editorStateRef.current = editorState;
+  }, [editorState]);
+
+  useEffect(() => {
+    editorRuntimeRef.current = editorRuntime;
+  }, [editorRuntime]);
+
+  useEffect(() => {
+    editorScanNumberRef.current = editorScanNumber;
+  }, [editorScanNumber]);
+
+  useEffect(() => {
     if (!autoScan || editorMode !== 'simulate') return undefined;
     const interval = setInterval(() => {
-      runEditorScan();
+      runEditorScanFromRefs();
     }, 100);
     return () => clearInterval(interval);
-  }, [autoScan, editorMode, editorProject, editorEvaluation.state, editorEvaluation.runtime, editorScanNumber]);
+  }, [autoScan, editorMode]);
 
   useEffect(() => {
     if (!practiceLesson) return;
@@ -112,7 +135,7 @@ export default function App() {
       }
       return changed ? next : current;
     });
-  }, [practiceLesson?.id, editorEvaluation.state, editorEvaluation.runtime, editorEvaluation.scanNumber]);
+  }, [practiceLesson?.id, editorEvaluation]);
 
   function parallelBranchesForRung(rung: EditorProjectState['rungs'][number]): EditorParallelBranch[] {
     if (rung.parallelBranches) return rung.parallelBranches;
@@ -266,13 +289,29 @@ export default function App() {
       : `E-mail confirmado para beta: ${session.email}.`);
   }
 
-  function runEditorScan() {
-    if (editorMode !== 'simulate') return;
-    const nextScan = editorScanNumber + 1;
-    const result = evaluateEditorProject(editorProject, editorEvaluation.state, nextScan, editorEvaluation.runtime);
+  function commitEditorEvaluation(nextScan: number, result: ReturnType<typeof evaluateEditorProject>) {
+    editorScanNumberRef.current = nextScan;
+    editorStateRef.current = result.state;
+    editorRuntimeRef.current = result.runtime;
     setEditorScanNumber(nextScan);
     setEditorState(result.state);
     setEditorRuntime(result.runtime);
+  }
+
+  function runEditorScanFromRefs() {
+    const nextScan = editorScanNumberRef.current + 1;
+    const result = evaluateEditorProject(
+      editorProjectRef.current,
+      editorStateRef.current,
+      nextScan,
+      editorRuntimeRef.current,
+    );
+    commitEditorEvaluation(nextScan, result);
+  }
+
+  function runEditorScan() {
+    if (editorMode !== 'simulate') return;
+    runEditorScanFromRefs();
   }
 
   function changeEditorMode(nextMode: EditorRunMode) {
