@@ -163,8 +163,8 @@ export function getGuidedPracticeSteps(lessonId: string, evaluation: EditorEvalu
       return [
         step('rsd-forward-star', 'Comande avanço e observe estrela', 'K1 avanço e K3 estrela devem ligar, sem reverso.', boolValue(evaluation, 'Q0.0') && !boolValue(evaluation, 'Q0.1') && boolValue(evaluation, 'Q0.2') && !boolValue(evaluation, 'Q0.3')),
         step('rsd-forward-delta', 'Rode scans até triângulo em avanço', 'K3 deve cair e K4 triângulo deve ligar após T1.', boolValue(evaluation, 'Q0.0') && !boolValue(evaluation, 'Q0.1') && !boolValue(evaluation, 'Q0.2') && boolValue(evaluation, 'Q0.3') && boolValue(evaluation, 'T1')),
-        step('rsd-reverse-star', 'Comande reverso sem usar Stop', 'K2 reverso deve assumir sem K1, reiniciando em estrela.', boolValue(evaluation, 'I0.1') && !boolValue(evaluation, 'Q0.0') && boolValue(evaluation, 'Q0.1') && boolValue(evaluation, 'Q0.2') && !boolValue(evaluation, 'Q0.3')),
-        step('rsd-reverse-delta', 'Rode scans até triângulo em reverso', 'T2 deve finalizar e K4 triângulo deve ligar no reverso.', !boolValue(evaluation, 'Q0.0') && boolValue(evaluation, 'Q0.1') && !boolValue(evaluation, 'Q0.2') && boolValue(evaluation, 'Q0.3') && boolValue(evaluation, 'T2')),
+        step('rsd-reverse-star', 'Comande reverso sem usar Stop', 'K2 reverso deve assumir sem K1, reiniciando em estrela.', (boolValue(evaluation, 'I0.1') || boolValue(evaluation, 'M0.1') || boolValue(evaluation, 'Q0.1')) && !boolValue(evaluation, 'Q0.0') && boolValue(evaluation, 'Q0.1') && boolValue(evaluation, 'Q0.2') && !boolValue(evaluation, 'Q0.3')),
+        step('rsd-reverse-delta', 'Rode scans até triângulo em reverso', 'T2 deve finalizar e K4 triângulo deve ligar no reverso.', !boolValue(evaluation, 'Q0.0') && boolValue(evaluation, 'Q0.1') && !boolValue(evaluation, 'Q0.2') && boolValue(evaluation, 'T2') && (boolValue(evaluation, 'Q0.3') || boolValue(evaluation, 'M0.1'))),
       ];
 
     case 'reversing-star-delta-tof':
