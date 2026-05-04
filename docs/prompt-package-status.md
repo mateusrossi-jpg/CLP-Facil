@@ -34,7 +34,9 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - BottomNavigation renderiza `ReferenceHubPanel` quando Ref está ativa, garantindo conteúdo visível mesmo se o render principal estiver incompleto.
 - BottomNavigation renderiza `SimulationModeRouter` quando Simular está ativo, garantindo acesso visível à execução mobile mesmo antes de substituir o bloco clássico no `App.tsx`.
 - Novo `SmartphoneProgramPanel` modular criado com Lista/Fluxo, Compacto/Enquadrar/Amplo, saída/carga fixa e arraste lateral preparado.
-- Nova `MobileExecutionScreen` criada para reproduzir o conceito final da execução mobile: topo com RUN/AUTO/SCAN, navegação horizontal de I/Os, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
+- Nova `MobileExecutionScreen` criada como primeira versão funcional da execução mobile.
+- Nova `MobileExecutionCockpit` criada como versão visual alinhada ao conceito aprovado: fundo #020817, cockpit escuro, header Easy-PLC, RUN/AUTO/SCAN, I/Os horizontais, cards compactos, seletor Lista/Fluxo/Rung compacto e rodapé de diagnóstico.
+- `SimulationModeRouter` agora abre `MobileExecutionCockpit` na execução mobile, substituindo visualmente a primeira versão que estava distante do mockup.
 - Novo `MobileSimulationEntryCard` criado para perguntar ao usuário se deseja abrir a execução mobile ou continuar no modo clássico.
 - Novo `SimulationModeRouter` criado para alternar entre aviso, execução mobile e conteúdo clássico, com fallback seguro para projeto didático.
 
@@ -54,7 +56,9 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
   - Ref > Tags.
   - Ref > Rotinas.
   - Tocar em Simular e confirmar que aparece o aviso da execução mobile.
-  - Abrir execução mobile e conferir I/Os horizontais.
+  - Abrir execução mobile e conferir a nova tela `MobileExecutionCockpit`.
+  - Conferir se a execução mobile agora se aproxima do conceito visual aprovado.
+  - Conferir I/Os horizontais.
   - Conferir modos Lista, Fluxo e Rung compacto.
   - Confirmar saída/carga fixa e rodapé de diagnóstico.
   - Conferir se o modo clássico ainda aparece/continua acessível.
@@ -89,6 +93,6 @@ O pacote pode ser considerado fechado quando:
 6. Ref > Tags mostra tabela profissional, comentários e Force didático.
 7. Ref > Rotinas mostra MainRoutine, MotorControl, SafetyLogic e Sequencer.
 8. No celular, tocar em Simular oferece a execução mobile.
-9. A execução mobile mostra I/Os horizontais, Lista/Fluxo/Rung compacto, saída/carga fixa e diagnóstico de scan.
+9. A execução mobile mostra I/Os horizontais, Lista/Fluxo/Rung compacto, saída/carga fixa e diagnóstico de scan em visual escuro premium próximo ao conceito.
 10. Hardware mantém seleção de placa/pino separada da simulação.
 11. Código exportado tem fundo escuro e texto claro.
