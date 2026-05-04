@@ -1026,6 +1026,11 @@ export default function App() {
                 onAddVariable={addEditorVariable}
                 onRemoveVariable={removeEditorVariable}
               />
+            <PlcProfilePanel
+              editorProject={editorProject}
+              selectedProfile={selectedPlcProfile}
+              onSelectProfile={setSelectedPlcProfile}
+            />
               <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
