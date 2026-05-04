@@ -1,9 +1,9 @@
 import { memo, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
-import { createPlcProfileProjectView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
+import { createPlcProfileProjectView, PlcProfileBlockView, PlcProfileId, PlcProfileRungView, plcProfiles } from '../plcProfiles/plcProfiles';
 import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
 import { createSmartphoneIoSummary, SmartphoneIoGroupId, SmartphoneSignalSnapshot } from '../simulation/smartphoneIoView';
 import { colors } from '../theme/colors';
@@ -139,6 +139,30 @@ function activeSummary(signals: SignalItem[], plcState: PlcState, type: SignalIt
   return signals.filter((signal) => signal.type === type && isSignalOn(plcState, signal)).slice(0, 4);
 }
 
+function isNormallyClosedInstruction(instruction: string) {
+  const normalized = instruction.toUpperCase();
+  return normalized === 'XIO' || normalized.includes('NF') || normalized.includes('DESLIGA');
+}
+
+function isOutputInstruction(instruction: string) {
+  const normalized = instruction.toUpperCase();
+  return ['OTE', 'OTL', 'OTU', 'COIL', 'BOBINA', 'SET', 'RESET', 'S', 'R'].some((item) => normalized.includes(item));
+}
+
+function blockValue(plcState: PlcState, block: PlcProfileBlockView) {
+  const variable = normalizeVariable(block.variable || block.operand);
+  if (!variable || isNumericLiteral(variable)) return false;
+  const value = plcState[variable];
+  if (typeof value === 'number') return value !== 0;
+  return Boolean(value);
+}
+
+function blockConducting(plcState: PlcState, block: PlcProfileBlockView) {
+  const value = blockValue(plcState, block);
+  if (isOutputInstruction(block.instruction)) return value;
+  return isNormallyClosedInstruction(block.instruction) ? !value : value;
+}
+
 function ProgramLine({
   text,
   active,
@@ -174,6 +198,104 @@ function SignalPill({ signal, value, interactive, onToggle }: { signal: SignalIt
 
   if (!interactive) return content;
   return <Pressable onPress={onToggle}>{content}</Pressable>;
+}
+
+function FlowBlock({ block, active, output }: { block: PlcProfileBlockView; active: boolean; output?: boolean }) {
+  return (
+    <View style={[styles.flowBlock, active && styles.flowBlockActive, output && styles.flowBlockOutput]}>
+      <Text style={[styles.flowInstruction, active && styles.flowInstructionActive]}>{block.instruction}</Text>
+      <Text style={styles.flowOperand} numberOfLines={1}>{block.operand}</Text>
+      <Text style={styles.flowDescription} numberOfLines={1}>{block.label || block.description}</Text>
+      <Text style={[styles.flowState, active && styles.flowStateOn]}>{active ? 'ON' : 'OFF'}</Text>
+    </View>
+  );
+}
+
+function FlowConnector({ active }: { active: boolean }) {
+  return <View style={[styles.flowConnector, active && styles.flowConnectorOn]} />;
+}
+
+function RungFlowCard({
+  rung,
+  index,
+  active,
+  focused,
+  explanation,
+  plcState,
+  onPress,
+}: {
+  rung: PlcProfileRungView;
+  index: number;
+  active: boolean;
+  focused: boolean;
+  explanation: string;
+  plcState: PlcState;
+  onPress: () => void;
+}) {
+  const outputActive = rung.output ? blockValue(plcState, rung.output) : false;
+
+  return (
+    <Pressable onPress={onPress} style={[styles.flowCard, active && styles.flowCardActive, focused && styles.flowCardFocused]}>
+      <View style={styles.flowHeader}>
+        <View style={styles.flowHeaderText}>
+          <Text style={styles.flowRungLabel}>Linha {index + 1}</Text>
+          <Text style={styles.flowRungTitle} numberOfLines={1}>{rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
+        </View>
+        <Text style={[styles.flowRungStatus, active && styles.flowRungStatusOn]}>{active ? 'TRUE' : 'FALSE'}</Text>
+      </View>
+
+      <View style={[styles.outputSummaryCard, outputActive && styles.outputSummaryCardOn]}>
+        <View style={styles.outputSummaryTextBox}>
+          <Text style={styles.outputSummaryLabel}>Carga/saída sempre visível</Text>
+          <Text style={[styles.outputSummaryValue, outputActive && styles.outputSummaryValueOn]} numberOfLines={1}>
+            {rung.output ? `${rung.output.instruction}(${rung.output.operand})` : 'Sem saída definida'}
+          </Text>
+        </View>
+        <Text style={[styles.outputSummaryState, outputActive && styles.outputSummaryStateOn]}>{outputActive ? 'ON' : 'OFF'}</Text>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.flowScrollContent}>
+        <View style={styles.flowRail} />
+        <View style={styles.flowPathBox}>
+          <View style={styles.flowSeriesRow}>
+            {rung.series.length === 0 ? <Text style={styles.emptyText}>Sem condição em série.</Text> : null}
+            {rung.series.map((block, blockIndex) => {
+              const conducting = blockConducting(plcState, block);
+              return (
+                <View key={block.blockId} style={styles.flowItemGroup}>
+                  <FlowBlock block={block} active={conducting} />
+                  {blockIndex < rung.series.length - 1 ? <FlowConnector active={active} /> : null}
+                </View>
+              );
+            })}
+          </View>
+
+          {rung.parallelBranches.length > 0 ? (
+            <View style={styles.flowBranchesBox}>
+              <Text style={styles.flowBranchesTitle}>Caminhos paralelos</Text>
+              {rung.parallelBranches.map((branch, branchIndex) => (
+                <View key={`${rung.rungId}-branch-${branchIndex}`} style={styles.flowBranchRow}>
+                  <Text style={styles.flowBranchBadge}>R{branchIndex + 1}</Text>
+                  {branch.map((block, blockIndex) => {
+                    const conducting = blockConducting(plcState, block);
+                    return (
+                      <View key={block.blockId} style={styles.flowItemGroup}>
+                        <FlowBlock block={block} active={conducting} />
+                        {blockIndex < branch.length - 1 ? <FlowConnector active={conducting} /> : null}
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
+
+      <Text style={styles.flowHint}>Arraste para o lado para acompanhar rungs largos. A saída fica fixa no cartão acima.</Text>
+      <Text style={styles.educationText}>{explanation}</Text>
+    </Pressable>
+  );
 }
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel({
@@ -380,7 +502,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
           </View>
 
           <View style={styles.programBox}>
-            {programSummary.lines.map((line) => (
+            {programView === 'list' ? programSummary.lines.map((line) => (
               <ProgramLine
                 key={line.rungId}
                 text={line.text}
@@ -388,7 +510,21 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
                 focused={line.focused}
                 onPress={() => setFocusedRungId(line.rungId)}
               />
-            ))}
+            )) : profileView.rungs.map((rung, index) => {
+              const line = programSummary.lines.find((item) => item.rungId === rung.rungId);
+              return (
+                <RungFlowCard
+                  key={rung.rungId}
+                  rung={rung}
+                  index={index}
+                  active={Boolean(evaluation.rungResults[rung.rungId])}
+                  focused={Boolean(line?.focused)}
+                  explanation={line?.explanation ?? 'Linha sem explicação disponível.'}
+                  plcState={plcState}
+                  onPress={() => setFocusedRungId(rung.rungId)}
+                />
+              );
+            })}
           </View>
 
           {programSummary.focusedLine ? (
@@ -514,5 +650,43 @@ const styles = StyleSheet.create({
   programLineText: { color: colors.textMuted, fontFamily: 'monospace', fontSize: 10, lineHeight: 15, flex: 1 },
   programLineTextActive: { color: colors.text, fontWeight: '900' },
   programLineTextFocused: { color: colors.text },
+  flowCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.black, gap: spacing.sm },
+  flowCardActive: { borderColor: colors.green },
+  flowCardFocused: { borderColor: colors.amber, borderWidth: 2 },
+  flowHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  flowHeaderText: { flex: 1, minWidth: 0 },
+  flowRungLabel: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  flowRungTitle: { color: '#F8FAFC', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  flowRungStatus: { color: colors.textDim, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '900' },
+  flowRungStatusOn: { color: colors.green, borderColor: colors.green, backgroundColor: colors.greenSoft },
+  outputSummaryCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: '#020817' },
+  outputSummaryCardOn: { borderColor: colors.green },
+  outputSummaryTextBox: { flex: 1, minWidth: 0 },
+  outputSummaryLabel: { color: colors.textDim, fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
+  outputSummaryValue: { color: '#F8FAFC', fontFamily: 'monospace', fontSize: 12, lineHeight: 16, fontWeight: '900', marginTop: 2 },
+  outputSummaryValueOn: { color: colors.green },
+  outputSummaryState: { color: colors.textMuted, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '900' },
+  outputSummaryStateOn: { color: colors.green, borderColor: colors.green, backgroundColor: colors.greenSoft },
+  flowScrollContent: { alignItems: 'stretch', gap: spacing.sm, paddingVertical: spacing.xs, paddingRight: spacing.md },
+  flowRail: { width: 4, minHeight: 122, borderRadius: 999, backgroundColor: colors.cyan },
+  flowPathBox: { minWidth: 620, gap: spacing.sm },
+  flowSeriesRow: { flexDirection: 'row', alignItems: 'center', minHeight: 82 },
+  flowItemGroup: { flexDirection: 'row', alignItems: 'center' },
+  flowConnector: { width: 28, height: 3, borderRadius: 999, backgroundColor: colors.borderStrong, marginHorizontal: 2 },
+  flowConnectorOn: { backgroundColor: colors.green },
+  flowBlock: { width: 132, minHeight: 76, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: '#0B1220', gap: 2 },
+  flowBlockActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
+  flowBlockOutput: { borderColor: colors.cyan },
+  flowInstruction: { color: colors.cyan, fontFamily: 'monospace', fontSize: 12, fontWeight: '900' },
+  flowInstructionActive: { color: colors.green },
+  flowOperand: { color: '#F8FAFC', fontFamily: 'monospace', fontSize: 11, fontWeight: '900' },
+  flowDescription: { color: colors.textDim, fontSize: 9, fontWeight: '800' },
+  flowState: { alignSelf: 'flex-start', color: colors.textMuted, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, fontSize: 9, fontWeight: '900', marginTop: 2 },
+  flowStateOn: { color: colors.green, borderColor: colors.green, backgroundColor: colors.surface },
+  flowBranchesBox: { borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 12, padding: spacing.sm, gap: spacing.xs, backgroundColor: '#020817' },
+  flowBranchesTitle: { color: colors.amber, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  flowBranchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  flowBranchBadge: { color: colors.amber, borderColor: colors.amber, borderWidth: 1, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 3, fontSize: 9, fontWeight: '900' },
+  flowHint: { color: colors.textDim, fontSize: 10, lineHeight: 14, fontWeight: '800' },
   diagnosticText: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
 });
