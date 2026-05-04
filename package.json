@@ -1,9 +1,10 @@
 {
   "scripts": {
-    "start": "expo start",
+    "dev": "expo start --web --port 8084",
+    "start": "expo start --port 8084",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "expo start --web --port 8084",
     "typecheck": "tsc --noEmit",
     "test:simulator": "tsc src/engine/editorEvaluatorRegression.ts --outDir /tmp/easy-clp-sim-test --module commonjs --target es2018 --moduleResolution node --strict --esModuleInterop --skipLibCheck && node scripts/run-simulator-regression.mjs"
   },
@@ -25,5 +26,8 @@
   "private": true,
   "name": "easy-clp",
   "version": "0.1.0",
-  "main": "expo/AppEntry.js"
+  "main": "expo/AppEntry.js",
+  "engines": {
+    "node": ">=18 <23"
+  }
 }
