@@ -14,6 +14,7 @@ import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
+import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
@@ -100,6 +101,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           runtime={result.runtime}
           focusedRungId={project.selectedRungId}
         />
+        <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -143,6 +145,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           runtime={result.runtime}
           focusedRungId={project.selectedRungId}
         />
+        <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -188,6 +191,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         runtime={result.runtime}
         focusedRungId={project.selectedRungId}
       />
+      <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
       <ScanTraceDiagnosticCard
         project={project}
         state={state}
