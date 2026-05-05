@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { getProjectLearningLinkSummary } from '../../education/projectLearningLinks';
 import {
   getFeaturedTrainingProject,
   getProjectCategoryLabel,
@@ -32,6 +33,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
   const [filter, setFilter] = useState<ProjectFilter>('all');
   const filteredProjects = filterProjects(filter);
   const featuredProject = getFeaturedTrainingProject();
+  const featuredLearning = getProjectLearningLinkSummary(featuredProject.id);
 
   return (
     <PremiumScreen>
@@ -73,6 +75,10 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
             </View>
             <PremiumBadge label={getProjectDifficultyLabel(featuredProject.difficulty)} tone={difficultyTone(featuredProject.difficulty)} />
           </View>
+          <View style={styles.learningLinkBox}>
+            <Text style={styles.learningLinkTitle}>Ligado ao modo Aprender</Text>
+            <Text style={styles.learningLinkText}>{featuredLearning.linkedLessons.length} lições • {featuredLearning.linkedPracticeCount} práticas guiadas • score didático {featuredLearning.teachingScore}%</Text>
+          </View>
           <View style={styles.goalList}>
             {featuredProject.learningGoals.slice(0, 3).map((goal) => <Text key={goal} style={styles.goalText}>• {goal}</Text>)}
           </View>
@@ -91,34 +97,43 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
 
       <PremiumSection title="Projetos populares" subtitle="Escolha um modelo e comece a praticar" tone="cyan">
         <View style={styles.projectGrid}>
-          {filteredProjects.map((project) => (
-            <View key={project.id} style={styles.projectCard}>
-              <View style={styles.cardTop}>
-                <View style={[styles.projectIcon, project.favorite && styles.projectIconFavorite]}>
-                  <Text style={[styles.projectIconText, project.favorite && styles.projectIconTextFavorite]}>{project.title.slice(0, 1)}</Text>
+          {filteredProjects.map((project) => {
+            const learning = getProjectLearningLinkSummary(project.id);
+            return (
+              <View key={project.id} style={styles.projectCard}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.projectIcon, project.favorite && styles.projectIconFavorite]}>
+                    <Text style={[styles.projectIconText, project.favorite && styles.projectIconTextFavorite]}>{project.title.slice(0, 1)}</Text>
+                  </View>
+                  <View style={styles.projectCopy}>
+                    <Text style={styles.projectTitle}>{project.title}</Text>
+                    <Text style={styles.projectDescription}>{project.description}</Text>
+                  </View>
+                  <Text style={styles.favorite}>{project.favorite ? '★' : '☆'}</Text>
                 </View>
-                <View style={styles.projectCopy}>
-                  <Text style={styles.projectTitle}>{project.title}</Text>
-                  <Text style={styles.projectDescription}>{project.description}</Text>
+                <View style={styles.badgeRow}>
+                  <PremiumBadge label={getProjectDifficultyLabel(project.difficulty)} tone={difficultyTone(project.difficulty)} />
+                  <PremiumBadge label={getProjectCategoryLabel(project.category)} tone="cyan" />
+                  {learning.teachingScore > 0 ? <PremiumBadge label={`${learning.linkedLessons.length} aulas`} tone="green" /> : null}
                 </View>
-                <Text style={styles.favorite}>{project.favorite ? '★' : '☆'}</Text>
+                {learning.teachingScore > 0 ? (
+                  <View style={styles.learningMiniBox}>
+                    <Text style={styles.learningMiniText}>{learning.linkedPracticeCount} práticas guiadas • score didático {learning.teachingScore}%</Text>
+                  </View>
+                ) : null}
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaChip}>{project.rungs} rungs</Text>
+                  {project.timers > 0 ? <Text style={styles.metaChip}>{project.timers} timers</Text> : null}
+                  {project.counters > 0 ? <Text style={styles.metaChip}>{project.counters} contadores</Text> : null}
+                  <Text style={styles.metaChip}>I/O {project.ioSummary.inputs}/{project.ioSummary.outputs}</Text>
+                </View>
+                <View style={styles.instructionRow}>
+                  {project.instructions.slice(0, 4).map((instruction) => <Text key={instruction} style={styles.instructionChip}>{instruction}</Text>)}
+                </View>
+                <Pressable style={styles.openButton}><Text style={styles.openButtonText}>Abrir</Text></Pressable>
               </View>
-              <View style={styles.badgeRow}>
-                <PremiumBadge label={getProjectDifficultyLabel(project.difficulty)} tone={difficultyTone(project.difficulty)} />
-                <PremiumBadge label={getProjectCategoryLabel(project.category)} tone="cyan" />
-              </View>
-              <View style={styles.metaRow}>
-                <Text style={styles.metaChip}>{project.rungs} rungs</Text>
-                {project.timers > 0 ? <Text style={styles.metaChip}>{project.timers} timers</Text> : null}
-                {project.counters > 0 ? <Text style={styles.metaChip}>{project.counters} contadores</Text> : null}
-                <Text style={styles.metaChip}>I/O {project.ioSummary.inputs}/{project.ioSummary.outputs}</Text>
-              </View>
-              <View style={styles.instructionRow}>
-                {project.instructions.slice(0, 4).map((instruction) => <Text key={instruction} style={styles.instructionChip}>{instruction}</Text>)}
-              </View>
-              <Pressable style={styles.openButton}><Text style={styles.openButtonText}>Abrir</Text></Pressable>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </PremiumSection>
     </PremiumScreen>
@@ -141,6 +156,11 @@ const styles = StyleSheet.create({
   featuredCopy: { flex: 1, minWidth: 0 },
   featuredTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
   featuredDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  learningLinkBox: { borderColor: colors.green, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.greenSoft },
+  learningLinkTitle: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', marginBottom: 3 },
+  learningLinkText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800' },
+  learningMiniBox: { borderColor: colors.green, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: colors.greenSoft },
+  learningMiniText: { color: colors.text, fontSize: 10, lineHeight: 14, fontWeight: '800' },
   goalList: { gap: 3, borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface },
   goalText: { color: colors.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
