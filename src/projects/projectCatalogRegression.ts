@@ -1,4 +1,5 @@
 import {
+  filterTrainingProjects,
   getFeaturedTrainingProject,
   getProjectCategoryLabel,
   getProjectDifficultyLabel,
@@ -44,6 +45,11 @@ export function runProjectCatalogRegressionSuite(): ProjectCatalogRegressionResu
   );
   const categoriesHaveLabels = trainingProjects.every((project) => getProjectCategoryLabel(project.category).length >= 5);
   const featuredProject = getFeaturedTrainingProject();
+  const timerSearch = filterTrainingProjects({ search: 'timer' });
+  const semaforoSearch = filterTrainingProjects({ search: 'semaforo' });
+  const ctuSearch = filterTrainingProjects({ search: 'CTU' });
+  const favoriteSearch = filterTrainingProjects({ filter: 'favorites', search: 'portao' });
+  const advancedFilter = filterTrainingProjects({ filter: 'advanced' });
 
   return [
     assertResult(
@@ -65,6 +71,19 @@ export function runProjectCatalogRegressionSuite(): ProjectCatalogRegressionResu
       'projeto em destaque existe e e reutilizavel',
       Boolean(featuredProject.id && featuredProject.title && featuredProject.learningGoals.length >= 3),
       `featured=${featuredProject.id}`,
+    ),
+    assertResult(
+      'busca de projetos encontra nome, tags, instrucoes e termos sem acento',
+      timerSearch.some((project) => project.id === 'semaforo') &&
+        semaforoSearch.some((project) => project.id === 'semaforo') &&
+        ctuSearch.some((project) => project.id === 'esteira') &&
+        favoriteSearch.some((project) => project.id === 'portao-automatico'),
+      `timer=${timerSearch.map((project) => project.id).join(',')}; semaforo=${semaforoSearch.map((project) => project.id).join(',')}; ctu=${ctuSearch.map((project) => project.id).join(',')}; fav=${favoriteSearch.map((project) => project.id).join(',')}`,
+    ),
+    assertResult(
+      'filtro de dificuldade retorna somente projetos do nivel escolhido',
+      advancedFilter.length > 0 && advancedFilter.every((project) => project.difficulty === 'advanced'),
+      `advanced=${advancedFilter.map((project) => project.id).join(',')}`,
     ),
   ];
 }
