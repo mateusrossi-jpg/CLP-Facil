@@ -1,6 +1,7 @@
-import { memo, useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { memo, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
+import { PlcForceEntry, applyPlcForces, clearPlcForce, upsertPlcForce } from '../engine/plcForceTable';
 import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -8,6 +9,7 @@ import { spacing } from '../theme/spacing';
 type PlcForceTableCardProps = {
   project: EditorProjectState;
   state: PlcState;
+  onSetValue?: (variable: string, value: boolean | number) => void;
 };
 
 type ForceCandidateKind = 'input' | 'output' | 'memory';
@@ -105,9 +107,40 @@ function isActive(value: boolean | number | undefined): boolean {
   return Boolean(value);
 }
 
-export const PlcForceTableCard = memo(function PlcForceTableCard({ project, state }: PlcForceTableCardProps) {
+function forceFor(address: string, entries: PlcForceEntry[]): PlcForceEntry | undefined {
+  const normalized = normalize(address);
+  return entries.find((entry) => normalize(entry.address) === normalized);
+}
+
+export const PlcForceTableCard = memo(function PlcForceTableCard({ project, state, onSetValue }: PlcForceTableCardProps) {
+  const [forceEntries, setForceEntries] = useState<PlcForceEntry[]>([]);
+  const [lastMessage, setLastMessage] = useState('Nenhum force aplicado nesta sessão.');
   const candidates = useMemo(() => collectForceCandidates(project, state), [project, state]);
-  const blockedCount = candidates.filter((candidate) => candidate.forceStatus !== 'available').length;
+  const preview = useMemo(() => applyPlcForces(state, forceEntries), [forceEntries, state]);
+  const blockedCount = candidates.filter((candidate) => candidate.forceStatus !== 'available').length + preview.blockedForces.length;
+
+  const applyForce = (candidate: ForceCandidate, mode: PlcForceEntry['mode']) => {
+    const nextEntries = upsertPlcForce(forceEntries, { address: candidate.address, mode, enabled: true, reason: 'Aplicado pela Force Table didática.' });
+    const result = applyPlcForces(state, nextEntries);
+    const applied = result.appliedForces.find((entry) => normalize(entry.address) === candidate.address);
+    const blocked = result.blockedForces.find((entry) => normalize(entry.address) === candidate.address);
+
+    if (blocked || !applied) {
+      const diagnostic = result.diagnostics.find((item) => normalize(item.address) === candidate.address);
+      setLastMessage(diagnostic?.message ?? `${candidate.address} bloqueado pela política de force.`);
+      setForceEntries(nextEntries);
+      return;
+    }
+
+    setForceEntries(nextEntries);
+    onSetValue?.(candidate.address, mode === 'force_on');
+    setLastMessage(`${candidate.address} forçado para ${mode === 'force_on' ? 'ON' : 'OFF'}.`);
+  };
+
+  const clearForce = (candidate: ForceCandidate) => {
+    setForceEntries((current) => clearPlcForce(current, candidate.address));
+    setLastMessage(`Force de ${candidate.address} removido da sessão.`);
+  };
 
   return (
     <View style={styles.card}>
@@ -126,31 +159,49 @@ export const PlcForceTableCard = memo(function PlcForceTableCard({ project, stat
         <Text style={styles.warningText}>Forçar sinais pode mascarar falhas de campo. Em bancada real, use somente com supervisão e remova todos os forces ao finalizar o teste.</Text>
       </View>
 
+      <View style={styles.messageBox}>
+        <Text style={styles.messageText}>{onSetValue ? lastMessage : 'Controles prontos. Esta tela precisa receber onSetValue para aplicar forces no estado da simulação.'}</Text>
+      </View>
+
       <View style={styles.rowStack}>
         {candidates.length === 0 ? (
           <Text style={styles.emptyText}>Nenhum sinal I/Q/M encontrado para preparar forçamento.</Text>
         ) : candidates.map((candidate) => {
           const active = isActive(candidate.currentValue);
           const warn = candidate.forceStatus !== 'available';
+          const activeForce = forceFor(candidate.address, forceEntries);
+          const blocked = preview.blockedForces.some((entry) => normalize(entry.address) === candidate.address);
           return (
-            <View key={candidate.address} style={[styles.forceRow, active && styles.forceRowActive, warn && styles.forceRowWarn]}>
+            <View key={candidate.address} style={[styles.forceRow, active && styles.forceRowActive, (warn || blocked) && styles.forceRowWarn]}>
               <View style={styles.signalCopy}>
                 <Text style={[styles.signalAddress, active && styles.signalAddressActive]}>{candidate.address}</Text>
                 <Text style={styles.signalLabel} numberOfLines={1}>{candidate.label} • {kindLabel(candidate.kind)}</Text>
+                {activeForce ? <Text style={styles.forceSessionText}>Sessão: {activeForce.mode === 'force_on' ? 'FORCE ON' : 'FORCE OFF'}</Text> : null}
               </View>
               <View style={styles.valueBox}>
                 <Text style={styles.valueLabel}>Atual</Text>
                 <Text style={[styles.valueText, active && styles.valueTextActive]}>{valueLabel(candidate.currentValue)}</Text>
               </View>
-              <View style={[styles.forceBadge, warn && styles.forceBadgeWarn]}>
-                <Text style={[styles.forceBadgeText, warn && styles.forceBadgeTextWarn]}>{statusLabel(candidate.forceStatus)}</Text>
+              <View style={[styles.forceBadge, (warn || blocked) && styles.forceBadgeWarn]}>
+                <Text style={[styles.forceBadgeText, (warn || blocked) && styles.forceBadgeTextWarn]}>{blocked ? 'Bloqueado' : statusLabel(candidate.forceStatus)}</Text>
+              </View>
+              <View style={styles.buttonColumn}>
+                <Pressable onPress={() => applyForce(candidate, 'force_on')} style={[styles.forceButton, styles.forceOnButton]}>
+                  <Text style={styles.forceOnText}>ON</Text>
+                </Pressable>
+                <Pressable onPress={() => applyForce(candidate, 'force_off')} style={[styles.forceButton, styles.forceOffButton]}>
+                  <Text style={styles.forceOffText}>OFF</Text>
+                </Pressable>
+                <Pressable onPress={() => clearForce(candidate)} style={styles.clearButton}>
+                  <Text style={styles.clearText}>Limpar</Text>
+                </Pressable>
               </View>
             </View>
           );
         })}
       </View>
 
-      <Text style={styles.explanation}>Nesta etapa o app prepara a visualização de forces. O próximo passo pode ser implementar forces reais com botão Aplicar/Remover e bloqueio de segurança.</Text>
+      <Text style={styles.explanation}>A política padrão permite force em entradas e memórias, bloqueia saídas por segurança e registra forces bloqueados para o aluno entender o risco.</Text>
     </View>
   );
 });
@@ -228,6 +279,19 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '700',
   },
+  messageBox: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  messageText: {
+    color: colors.text,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+  },
   rowStack: {
     gap: spacing.xs,
   },
@@ -267,6 +331,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 1,
   },
+  forceSessionText: {
+    color: colors.red,
+    fontSize: 9,
+    fontWeight: '900',
+    marginTop: 2,
+  },
   valueBox: {
     minWidth: 54,
     alignItems: 'center',
@@ -305,6 +375,49 @@ const styles = StyleSheet.create({
   },
   forceBadgeTextWarn: {
     color: colors.amber,
+  },
+  buttonColumn: {
+    gap: 3,
+  },
+  forceButton: {
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    alignItems: 'center',
+  },
+  forceOnButton: {
+    borderColor: colors.green,
+    borderWidth: 1,
+    backgroundColor: colors.greenSoft,
+  },
+  forceOffButton: {
+    borderColor: colors.red,
+    borderWidth: 1,
+    backgroundColor: colors.redSoft,
+  },
+  forceOnText: {
+    color: colors.green,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  forceOffText: {
+    color: colors.red,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  clearButton: {
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    alignItems: 'center',
+    backgroundColor: colors.surfaceElevated,
+  },
+  clearText: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
   },
   emptyText: {
     color: colors.textMuted,
