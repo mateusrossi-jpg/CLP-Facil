@@ -9,10 +9,12 @@ import {
   trainingProjects,
   type ProjectCatalogFilter,
   type ProjectDifficulty,
+  type TrainingProject,
 } from '../../projects/projectCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumMetric, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
+import { PremiumProjectDetailCard } from './PremiumProjectDetailCard';
 
 type ProjectFilter = ProjectCatalogFilter;
 
@@ -23,10 +25,11 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
 }
 
 export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
+  const featuredProject = getFeaturedTrainingProject();
   const [filter, setFilter] = useState<ProjectFilter>('all');
   const [search, setSearch] = useState('');
+  const [selectedProject, setSelectedProject] = useState<TrainingProject>(featuredProject);
   const filteredProjects = filterTrainingProjects({ filter, search });
-  const featuredProject = getFeaturedTrainingProject();
   const featuredLearning = getProjectLearningLinkSummary(featuredProject.id);
 
   return (
@@ -65,6 +68,8 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
         <PremiumMetric label="Filtrados" value={filteredProjects.length} hint="resultado" tone="green" />
       </View>
 
+      <PremiumProjectDetailCard project={selectedProject} />
+
       <PremiumSection title="Projeto em destaque" subtitle="Ideal para iniciar no pensamento Ladder" tone="green">
         <View style={styles.featuredCard}>
           <View style={styles.featuredTop}>
@@ -89,8 +94,8 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
             <Text style={styles.metaChip}>{featuredProject.estimatedMinutes} min</Text>
           </View>
           <View style={styles.actionsRow}>
-            <Pressable style={styles.primaryButton}><Text style={styles.primaryText}>Abrir projeto</Text></Pressable>
-            <Pressable style={styles.secondaryButton}><Text style={styles.secondaryText}>Simular</Text></Pressable>
+            <Pressable onPress={() => setSelectedProject(featuredProject)} style={styles.primaryButton}><Text style={styles.primaryText}>Abrir projeto</Text></Pressable>
+            <Pressable onPress={() => setSelectedProject(featuredProject)} style={styles.secondaryButton}><Text style={styles.secondaryText}>Simular</Text></Pressable>
           </View>
         </View>
       </PremiumSection>
@@ -105,8 +110,9 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
           ) : null}
           {filteredProjects.map((project) => {
             const learning = getProjectLearningLinkSummary(project.id);
+            const selected = selectedProject.id === project.id;
             return (
-              <View key={project.id} style={styles.projectCard}>
+              <View key={project.id} style={[styles.projectCard, selected && styles.projectCardSelected]}>
                 <View style={styles.cardTop}>
                   <View style={[styles.projectIcon, project.favorite && styles.projectIconFavorite]}>
                     <Text style={[styles.projectIconText, project.favorite && styles.projectIconTextFavorite]}>{project.title.slice(0, 1)}</Text>
@@ -121,6 +127,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
                   <PremiumBadge label={getProjectDifficultyLabel(project.difficulty)} tone={difficultyTone(project.difficulty)} />
                   <PremiumBadge label={getProjectCategoryLabel(project.category)} tone="cyan" />
                   {learning.teachingScore > 0 ? <PremiumBadge label={`${learning.linkedLessons.length} aulas`} tone="green" /> : null}
+                  {selected ? <PremiumBadge label="Aberto" tone="green" /> : null}
                 </View>
                 {learning.teachingScore > 0 ? (
                   <View style={styles.learningMiniBox}>
@@ -136,7 +143,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
                 <View style={styles.instructionRow}>
                   {project.instructions.slice(0, 4).map((instruction) => <Text key={instruction} style={styles.instructionChip}>{instruction}</Text>)}
                 </View>
-                <Pressable style={styles.openButton}><Text style={styles.openButtonText}>Abrir</Text></Pressable>
+                <Pressable onPress={() => setSelectedProject(project)} style={[styles.openButton, selected && styles.openButtonSelected]}><Text style={[styles.openButtonText, selected && styles.openButtonTextSelected]}>{selected ? 'Projeto aberto' : 'Abrir'}</Text></Pressable>
               </View>
             );
           })}
@@ -180,6 +187,7 @@ const styles = StyleSheet.create({
   secondaryText: { color: colors.cyan, fontSize: 12, fontWeight: '900' },
   projectGrid: { gap: spacing.sm },
   projectCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.sm },
+  projectCardSelected: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   projectIcon: { width: 42, height: 42, borderRadius: 15, borderColor: colors.borderStrong, borderWidth: 1, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   projectIconFavorite: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
@@ -194,5 +202,7 @@ const styles = StyleSheet.create({
   emptyTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   emptyText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
   openButton: { borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.surface },
+  openButtonSelected: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   openButtonText: { color: colors.text, fontSize: 12, fontWeight: '900' },
+  openButtonTextSelected: { color: colors.green },
 });
