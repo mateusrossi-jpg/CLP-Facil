@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { TrainingProject } from '../../projects/projectCatalog';
-import type { ProjectQuickActionKind } from '../../projects/projectQuickActions';
+import { getProjectQuickActionNavigation, type ProjectWorkspaceTab } from '../../projects/projectQuickActionNavigation';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import type { BottomNavKey } from '../navigationTypes';
@@ -10,24 +10,10 @@ import { PremiumProjectDetailCard } from './PremiumProjectDetailCard';
 import { PremiumProjectExportCodePreviews } from './PremiumProjectExportCodePreviews';
 import { PremiumProjectQuickSummary } from './PremiumProjectQuickSummary';
 
-type ProjectWorkspaceTab = 'summary' | 'technical' | 'code';
-
 type PremiumProjectWorkspaceProps = {
   project: TrainingProject;
   onNavigate?: (route: BottomNavKey) => void;
 };
-
-function getTabForQuickAction(kind: ProjectQuickActionKind): ProjectWorkspaceTab {
-  if (kind === 'code') return 'code';
-  if (kind === 'technical' || kind === 'bench') return 'technical';
-  return 'summary';
-}
-
-function getRouteForQuickAction(kind: ProjectQuickActionKind): BottomNavKey | undefined {
-  if (kind === 'study') return 'learn';
-  if (kind === 'simulate') return 'simulate';
-  return undefined;
-}
 
 export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ project, onNavigate }: PremiumProjectWorkspaceProps) {
   const [tab, setTab] = useState<ProjectWorkspaceTab>('summary');
@@ -56,12 +42,12 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
         <PremiumProjectQuickSummary
           project={project}
           onQuickAction={(kind) => {
-            const route = getRouteForQuickAction(kind);
-            if (route) {
-              onNavigate?.(route);
+            const target = getProjectQuickActionNavigation(kind);
+            if (target.route) {
+              onNavigate?.(target.route);
               return;
             }
-            setTab(getTabForQuickAction(kind));
+            setTab(target.tab);
           }}
         />
       ) : null}
