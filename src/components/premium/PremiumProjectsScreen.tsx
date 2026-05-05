@@ -15,6 +15,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumMetric, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 import { PremiumProjectDetailCard } from './PremiumProjectDetailCard';
+import { PremiumProjectExportCodePreviews } from './PremiumProjectExportCodePreviews';
 
 type ProjectFilter = ProjectCatalogFilter;
 
@@ -69,6 +70,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
       </View>
 
       <PremiumProjectDetailCard project={selectedProject} />
+      <PremiumProjectExportCodePreviews project={selectedProject} />
 
       <PremiumSection title="Projeto em destaque" subtitle="Ideal para iniciar no pensamento Ladder" tone="green">
         <View style={styles.featuredCard}>
