@@ -28,6 +28,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
 - `BottomNavigation` e `PremiumRouteContent` usam o tipo compartilhado, eliminando dependência cruzada entre navegação e renderer premium.
+- `BottomNavigation` reexporta `BottomNavKey` para manter compatibilidade com imports antigos após a extração do tipo.
 
 ## Concluído na interface
 
