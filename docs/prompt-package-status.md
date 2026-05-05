@@ -24,7 +24,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Paleta global recebeu aliases de compatibilidade (`primary`, `success`, `warning`, `danger`, `blue`, `orange`, `gray`, `white`) para reduzir risco de quebra em componentes antigos durante a migração visual.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
-- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição, quiz de lição, prática guiada e telas premium para facilitar a integração final no `App.tsx`.
+- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição, quiz de lição, prática guiada, detalhe de projeto e telas premium para facilitar a integração final no `App.tsx`.
 - `PremiumProgress` teve a largura percentual tipada para reduzir risco no TypeScript strict.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
@@ -75,6 +75,8 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - `PremiumProjectsScreen` agora consome `trainingProjects` de `src/projects/projectCatalog.ts`, removendo os dados fixos internos e exibindo objetivos, instruções e resumo de I/O.
 - `PremiumProjectsScreen` agora mostra vínculo didático com o modo Aprender: quantidade de lições, práticas guiadas e score didático por projeto.
 - `PremiumProjectsScreen` agora possui busca real com `TextInput`, filtro por termo, filtro por dificuldade/favoritos e estado vazio.
+- Novo `PremiumProjectDetailCard` criado para mostrar detalhe do projeto selecionado com objetivos, I/O, instruções, tags e vínculo com Aprender.
+- `PremiumProjectsScreen` agora permite abrir/selecionar um projeto e destacar o card selecionado com badge `Aberto`.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
 
@@ -107,7 +109,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
   - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo, detalhe de lição, prática guiada, quiz, progresso por lição e conquistas calculadas.
-  - Tocar em Projetos e conferir a `PremiumProjectsScreen` com catálogo reutilizável, metas de aprendizagem, instruções, resumo de I/O, vínculo didático com Aprender e busca real.
+  - Tocar em Projetos e conferir a `PremiumProjectsScreen` com catálogo reutilizável, metas de aprendizagem, instruções, resumo de I/O, vínculo didático com Aprender, busca real e detalhe do projeto aberto.
   - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
   - Conferir `PremiumTagsDiagnosticsScreen` na aba Ref.
