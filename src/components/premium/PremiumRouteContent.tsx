@@ -10,13 +10,14 @@ import { PremiumTagsDiagnosticsScreen } from './PremiumTagsDiagnosticsScreen';
 
 type PremiumRouteContentProps = {
   active: BottomNavKey;
+  onNavigate?: (route: BottomNavKey) => void;
 };
 
-export const PremiumRouteContent = memo(function PremiumRouteContent({ active }: PremiumRouteContentProps) {
+export const PremiumRouteContent = memo(function PremiumRouteContent({ active, onNavigate }: PremiumRouteContentProps) {
   if (active === 'home') return <PremiumHomeScreen />;
   if (active === 'learn') return <PremiumLearningScreen />;
   if (active === 'simulate') return <SimulationModeRouter />;
-  if (active === 'projects') return <PremiumProjectsScreen />;
+  if (active === 'projects') return <PremiumProjectsScreen onNavigate={onNavigate} />;
   if (active === 'pro') return <PremiumEditorExportScreen />;
   if (active === 'reference') {
     return (
