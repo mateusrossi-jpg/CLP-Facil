@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { getTrainingProjectById } from '../../projects/projectCatalog';
 import type { ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
-import { getIoPointsForProject, getProjectIoKindLabel, getSafetyCriticalIoPoints, type ProjectIoKind } from '../../projects/projectIoMaps';
-import { getRungTemplatesForProject } from '../../projects/projectLadderTemplates';
+import { getProjectIoKindLabel, type ProjectIoKind } from '../../projects/projectIoMaps';
+import { getProjectSimulationFocus } from '../../projects/projectSimulationFocus';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumSection } from './PremiumCards';
@@ -17,30 +16,31 @@ const visibleKinds: ProjectIoKind[] = ['input', 'output', 'memory', 'timer', 'co
 export const PremiumProjectSimulationFocus = memo(function PremiumProjectSimulationFocus({ intent }: PremiumProjectSimulationFocusProps) {
   if (!intent) return null;
 
-  const project = getTrainingProjectById(intent.projectId);
-  if (!project) return null;
-
-  const rungs = getRungTemplatesForProject(project.id);
-  const ioPoints = getIoPointsForProject(project.id);
-  const safetyPoints = getSafetyCriticalIoPoints(project.id);
+  const focus = getProjectSimulationFocus(intent.projectId);
+  if (!focus) return null;
 
   return (
     <PremiumSection title="Foco de simulação" subtitle="Rungs e I/Os do projeto selecionado" tone="cyan">
       <View style={styles.projectCard}>
         <View style={styles.projectCopy}>
           <Text style={styles.eyebrow}>Projeto para simular</Text>
-          <Text style={styles.title}>{project.title}</Text>
-          <Text style={styles.description}>{project.description}</Text>
+          <Text style={styles.title}>{focus.project.title}</Text>
+          <Text style={styles.description}>{focus.project.description}</Text>
         </View>
         <View style={styles.badgeRow}>
-          <PremiumBadge label={`${rungs.length} rungs`} tone="cyan" />
-          <PremiumBadge label={`${ioPoints.length} I/O`} tone="green" />
-          {safetyPoints.length > 0 ? <PremiumBadge label={`${safetyPoints.length} críticos`} tone="amber" /> : null}
+          <PremiumBadge label={`${focus.rungs.length} rungs`} tone="cyan" />
+          <PremiumBadge label={`${focus.ioPoints.length} I/O`} tone="green" />
+          {focus.safetyPoints.length > 0 ? <PremiumBadge label={`${focus.safetyPoints.length} críticos`} tone="amber" /> : null}
         </View>
       </View>
 
+      <View style={styles.diagnosticBox}>
+        <Text style={styles.diagnosticTitle}>Dica de diagnóstico</Text>
+        <Text style={styles.diagnosticText}>{focus.diagnosticHint}</Text>
+      </View>
+
       {visibleKinds.map((kind) => {
-        const points = ioPoints.filter((point) => point.kind === kind);
+        const points = focus.ioPoints.filter((point) => point.kind === kind);
         if (points.length === 0) return null;
         return (
           <View key={kind} style={styles.ioGroup}>
@@ -56,9 +56,9 @@ export const PremiumProjectSimulationFocus = memo(function PremiumProjectSimulat
         );
       })}
 
-      {rungs.length > 0 ? (
+      {focus.rungs.length > 0 ? (
         <View style={styles.rungList}>
-          {rungs.slice(0, 3).map((rung) => (
+          {focus.rungs.slice(0, 3).map((rung) => (
             <View key={rung.id} style={styles.rungCard}>
               <View style={styles.rungTop}>
                 <Text style={styles.rungNumber}>R{rung.rungNumber}</Text>
@@ -87,6 +87,9 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: '900' },
   description: { color: colors.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  diagnosticBox: { borderColor: colors.green, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.greenSoft, gap: 3 },
+  diagnosticTitle: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 },
+  diagnosticText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   ioGroup: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
   groupTitle: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
