@@ -1,5 +1,6 @@
 import { ComponentProps, memo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { PlcBenchTestPlanCard } from './PlcBenchTestPlanCard';
 import { PlcCommissioningChecklistCard } from './PlcCommissioningChecklistCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
@@ -123,10 +124,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <PlcSimulationSection
         title="Segurança"
-        subtitle="Comissionamento, intertravamentos, forces e alertas didáticos"
+        subtitle="Plano de bancada, comissionamento, intertravamentos e forces"
         tone="red"
       >
         <View style={styles.innerStack}>
+          <PlcBenchTestPlanCard
+            project={props.editorProject}
+            state={props.plcState}
+            evaluation={props.evaluation}
+          />
           <PlcCommissioningChecklistCard
             project={props.editorProject}
             state={props.plcState}
