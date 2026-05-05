@@ -149,6 +149,14 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           <Text style={[styles.missionFeedback, missionPassed && styles.missionFeedbackDone]}>
             {missionAttempt?.feedback ?? mission.story}
           </Text>
+          {!missionPassed ? (
+            <Text style={styles.missionStory}>{mission.story}</Text>
+          ) : null}
+          <View style={styles.componentRail}>
+            {mission.availableComponents.slice(0, 5).map((component) => (
+              <Text key={component} style={styles.componentChip}>{component}</Text>
+            ))}
+          </View>
           {missionPassed && onAdvanceMission ? (
             <Pressable onPress={onAdvanceMission} style={({ pressed }) => [styles.nextMissionButton, pressed && styles.pressed]}>
               <Text style={styles.nextMissionText}>Proxima missão</Text>
@@ -476,6 +484,28 @@ const styles = StyleSheet.create({
   },
   missionFeedbackDone: {
     color: colors.text,
+  },
+  missionStory: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+  },
+  componentRail: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  componentChip: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceElevated,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
   nextMissionButton: {
     minHeight: 38,
