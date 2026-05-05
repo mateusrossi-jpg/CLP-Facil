@@ -4,6 +4,8 @@ import { PremiumRouteContent } from './premium/PremiumRouteContent';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
+export type { BottomNavKey } from './navigationTypes';
+
 type BottomNavigationProps = {
   active: BottomNavKey;
   onChange: (key: BottomNavKey) => void;
