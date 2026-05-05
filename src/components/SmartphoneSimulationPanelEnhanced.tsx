@@ -9,6 +9,7 @@ import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcSafetyInterlockCard } from './PlcSafetyInterlockCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PlcScanHistoryCard } from './PlcScanHistoryCard';
+import { PlcSimulationOverviewCard } from './PlcSimulationOverviewCard';
 import { PlcSimulationSection } from './PlcSimulationSection';
 import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PlcWatchTableCard } from './PlcWatchTableCard';
@@ -24,6 +25,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
   return (
     <View style={styles.stack}>
+      <PlcSimulationOverviewCard
+        project={props.editorProject}
+        state={props.plcState}
+        evaluation={props.evaluation}
+        autoScan={props.autoScan}
+        onRunScan={props.onRunScan}
+        onToggleAutoScan={props.onToggleAutoScan}
+      />
+
       <PlcSimulationSection
         title="CPU"
         subtitle="Estado RUN/STOP, tempo de ciclo e watchdog"
