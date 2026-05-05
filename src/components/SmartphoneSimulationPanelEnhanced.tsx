@@ -22,11 +22,21 @@ import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { spacing } from '../theme/spacing';
 
-type SmartphoneSimulationPanelEnhancedProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
+type SmartphoneSimulationPanelEnhancedProps = ComponentProps<typeof SmartphoneSimulationPanelFixed> & {
+  autoScan?: boolean;
+  onRunScan?: () => void;
+  onToggleAutoScan?: () => void;
+  onSetValue?: (variable: string, value: boolean | number) => void;
+};
+
+const noop = () => undefined;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanelEnhanced(props: SmartphoneSimulationPanelEnhancedProps) {
   const scanNumber = props.evaluation.scanNumber || 0;
   const lastScanMs = props.evaluation.runtime?.scanStepMs ?? 100;
+  const autoScan = Boolean(props.autoScan);
+  const onRunScan = props.onRunScan ?? noop;
+  const onToggleAutoScan = props.onToggleAutoScan ?? noop;
 
   return (
     <View style={styles.stack}>
@@ -34,9 +44,9 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         project={props.editorProject}
         state={props.plcState}
         evaluation={props.evaluation}
-        autoScan={props.autoScan}
-        onRunScan={props.onRunScan}
-        onToggleAutoScan={props.onToggleAutoScan}
+        autoScan={autoScan}
+        onRunScan={onRunScan}
+        onToggleAutoScan={onToggleAutoScan}
       />
 
       <PlcSimulationSection
@@ -47,7 +57,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
       >
         <PlcCpuStatusCard
           isRunning
-          isAutoScan={props.autoScan}
+          isAutoScan={autoScan}
           scanCount={scanNumber}
           lastScanMs={lastScanMs}
           runtime={props.evaluation.runtime}
@@ -166,7 +176,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
             project={props.editorProject}
             state={props.plcState}
             evaluation={props.evaluation}
-            autoScan={props.autoScan}
+            autoScan={autoScan}
           />
           <PlcTeacherRubricCard
             project={props.editorProject}
