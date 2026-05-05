@@ -24,13 +24,14 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Paleta global recebeu aliases de compatibilidade (`primary`, `success`, `warning`, `danger`, `blue`, `orange`, `gray`, `white`) para reduzir risco de quebra em componentes antigos durante a migração visual.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
-- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição e telas premium para facilitar a integração final no `App.tsx`.
+- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição, quiz de lição e telas premium para facilitar a integração final no `App.tsx`.
 - `PremiumProgress` teve a largura percentual tipada para reduzir risco no TypeScript strict.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
 - `BottomNavigation` e `PremiumRouteContent` usam o tipo compartilhado, eliminando dependência cruzada entre navegação e renderer premium.
 - `BottomNavigation` reexporta `BottomNavKey` para manter compatibilidade com imports antigos após a extração do tipo.
 - Novo catálogo educativo `src/education/clpLessonCatalog.ts` criado com módulos e lições estruturadas para História do CLP, Como o CLP funciona, Pensamento Ladder, Instruções essenciais, Aplicações reais e Diagnóstico.
+- Novo catálogo de quizzes `src/education/clpLessonQuizzes.ts` criado com perguntas, alternativas, resposta correta e explicação por alternativa.
 
 ## Concluído na interface
 
@@ -55,6 +56,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Nova `PremiumHomeScreen` criada como conceito implementável da Home no padrão visual aprovado.
 - Nova `PremiumLearningScreen` conectada ao catálogo real `clpLessonCatalog`, usando módulos, progresso, próximas lições e desafios gerados da estrutura educativa.
 - Novo `PremiumLessonDetailCard` criado e exibido na tela Aprender para mostrar Conceito, Por que importa, Prática e Checagem de domínio da lição atual.
+- Novo `PremiumLessonQuizCard` criado e conectado ao detalhe da lição para exibir pergunta, alternativas, feedback e explicação da resposta.
 - Nova `PremiumProjectsScreen` criada para biblioteca premium de projetos/exemplos, com busca visual, filtros, projeto em destaque, cards de Partida direta, Selo, Reversão, Estrela-triângulo, Semáforo, Bomba alternada, Esteira e Portão.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
@@ -87,7 +89,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
 - Testar no celular real:
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
-  - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo e detalhe de lição.
+  - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo, detalhe de lição e quiz.
   - Tocar em Projetos e conferir a `PremiumProjectsScreen`.
   - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
