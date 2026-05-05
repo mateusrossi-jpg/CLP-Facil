@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
+import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
@@ -84,6 +85,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <PlcCpuStatusCard
+          isRunning={isRunning}
+          isAutoScan={isAutoScan}
+          scanCount={result.scanNumber || scanCount}
+          lastScanMs={lastScanMs}
+          runtime={result.runtime}
+        />
         <PlcScanCycleCard
           project={project}
           state={state}
@@ -129,6 +137,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <PlcCpuStatusCard
+          isRunning={isRunning}
+          isAutoScan={isAutoScan}
+          scanCount={result.scanNumber || scanCount}
+          lastScanMs={lastScanMs}
+          runtime={result.runtime}
+        />
         <PlcScanCycleCard
           project={project}
           state={state}
@@ -176,6 +191,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
     <View style={styles.stack}>
       <PremiumProjectIntentBanner intent={projectIntent} />
       <PremiumProjectSimulationFocus intent={projectIntent} />
+      <PlcCpuStatusCard
+        isRunning={isRunning}
+        isAutoScan={isAutoScan}
+        scanCount={result.scanNumber || scanCount}
+        lastScanMs={lastScanMs}
+        runtime={result.runtime}
+      />
       <PlcScanCycleCard
         project={project}
         state={state}
