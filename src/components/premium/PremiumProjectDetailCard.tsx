@@ -5,6 +5,7 @@ import {
   getProjectLearningLinkSummary,
 } from '../../education/projectLearningLinks';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
+import { getIoPointsForProject, getProjectIoKindLabel, getSafetyCriticalIoPoints, type ProjectIoKind, type ProjectIoPoint } from '../../projects/projectIoMaps';
 import { getRungTemplatesForProject } from '../../projects/projectLadderTemplates';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -14,16 +15,35 @@ type PremiumProjectDetailCardProps = {
   project: TrainingProject;
 };
 
+const ioKinds: ProjectIoKind[] = ['input', 'output', 'memory', 'timer', 'counter'];
+
 function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'purple' {
   if (difficulty === 'basic') return 'green';
   if (difficulty === 'intermediate') return 'amber';
   return 'purple';
 }
 
+function IoPointRow({ point }: { point: ProjectIoPoint }) {
+  return (
+    <View style={[styles.ioPoint, point.safetyCritical && styles.ioPointCritical]}>
+      <View style={styles.ioTagBox}>
+        <Text style={[styles.ioTag, point.safetyCritical && styles.ioTagCritical]}>{point.tag}</Text>
+      </View>
+      <View style={styles.ioCopy}>
+        <Text style={styles.ioLabel}>{point.label}{point.normallyClosed ? ' • NF' : ''}</Text>
+        <Text style={styles.ioDescription}>{point.description}</Text>
+      </View>
+      {point.safetyCritical ? <Text style={styles.safetyMark}>!</Text> : null}
+    </View>
+  );
+}
+
 export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({ project }: PremiumProjectDetailCardProps) {
   const learning = getProjectLearningLinkSummary(project.id);
   const linkedPractices = getGuidedPracticesLinkedToProject(project.id);
   const rungTemplates = getRungTemplatesForProject(project.id);
+  const ioPoints = getIoPointsForProject(project.id);
+  const safetyPoints = getSafetyCriticalIoPoints(project.id);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -56,6 +76,25 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
         <Text style={styles.learningText}>{learning.linkedLessons.length} lições vinculadas • {learning.linkedPracticeCount} práticas guiadas</Text>
         <PremiumProgress value={learning.teachingScore} label={`Score didático ${learning.teachingScore}%`} />
       </View>
+
+      {ioPoints.length > 0 ? (
+        <View style={styles.block}>
+          <View style={styles.blockHeaderRow}>
+            <Text style={styles.blockTitle}>Mapa de I/O do projeto</Text>
+            {safetyPoints.length > 0 ? <PremiumBadge label={`${safetyPoints.length} críticos`} tone="amber" /> : null}
+          </View>
+          {ioKinds.map((kind) => {
+            const points = ioPoints.filter((point) => point.kind === kind);
+            if (points.length === 0) return null;
+            return (
+              <View key={kind} style={styles.ioGroup}>
+                <Text style={styles.ioGroupTitle}>{getProjectIoKindLabel(kind)}</Text>
+                {points.map((point) => <IoPointRow key={point.id} point={point} />)}
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
 
       {rungTemplates.length > 0 ? (
         <View style={styles.block}>
@@ -169,8 +208,20 @@ const styles = StyleSheet.create({
   learningTitle: { color: colors.green, fontSize: 12, fontWeight: '900', textTransform: 'uppercase' },
   learningText: { color: colors.text, fontSize: 12, lineHeight: 18, fontWeight: '800' },
   block: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
+  blockHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   blockTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   blockText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  ioGroup: { gap: 5, marginTop: spacing.xs },
+  ioGroupTitle: { color: colors.cyan, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.6 },
+  ioPoint: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface },
+  ioPointCritical: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
+  ioTagBox: { minWidth: 48, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 10, paddingHorizontal: spacing.sm, paddingVertical: 5, alignItems: 'center', backgroundColor: colors.surfaceElevated },
+  ioTag: { color: colors.cyan, fontSize: 11, fontWeight: '900' },
+  ioTagCritical: { color: colors.amber },
+  ioCopy: { flex: 1, minWidth: 0 },
+  ioLabel: { color: colors.text, fontSize: 12, lineHeight: 16, fontWeight: '900' },
+  ioDescription: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: '700', marginTop: 2 },
+  safetyMark: { color: colors.amber, fontSize: 16, fontWeight: '900' },
   rungCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.surface, gap: spacing.sm },
   rungTop: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   rungNumber: { color: colors.cyan, fontSize: 11, fontWeight: '900', borderColor: colors.cyan, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: colors.cyanSoft },
