@@ -1,28 +1,23 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { clpLearningModules } from '../../education/clpLessonCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 
 type LearningTab = 'tracks' | 'modules' | 'challenges' | 'achievements';
+type BadgeTone = 'cyan' | 'green' | 'amber' | 'purple';
 
-const tracks = [
-  ['História do CLP', 'Antes do CLP, relés, contatores e origem industrial.', 15, 'cyan'],
-  ['Como o CLP funciona', 'CPU, memória, entradas, saídas e ciclo de scan.', 28, 'green'],
-  ['Pensamento Ladder', 'NA, NF, bobina, selo e intertravamento.', 46, 'amber'],
-  ['Instruções essenciais', 'SET, RESET, TON, TOF, CTU, CTD e bordas.', 18, 'purple'],
-  ['Aplicações reais', 'Motores, semáforo, reservatório, esteira e portão.', 8, 'cyan'],
-  ['Diagnóstico', 'Tags, força didática, scan e troubleshooting.', 4, 'green'],
-] as const;
-
-const nextLessons = [
-  ['Lição 01', 'Antes do CLP', 'Como painéis com relés resolviam automações antes do controlador programável.'],
-  ['Lição 02', 'Por que o CLP surgiu', 'Mudanças de lógica, manutenção e flexibilidade na indústria.'],
-  ['Lição 03', 'Ciclo de scan', 'Leitura das entradas, execução e atualização das saídas.'],
-];
+const trackTones: BadgeTone[] = ['cyan', 'green', 'amber', 'purple', 'cyan', 'green'];
 
 export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
   const [tab, setTab] = useState<LearningTab>('tracks');
+  const allLessons = useMemo(() => clpLearningModules.flatMap((module) => module.lessons), []);
+  const currentLesson = allLessons.find((lesson) => lesson.id === 'seal-in-circuit') ?? allLessons[0];
+  const nextLessons = allLessons.slice(0, 5);
+  const averageProgress = Math.round(
+    clpLearningModules.reduce((sum, module) => sum + module.progress, 0) / Math.max(1, clpLearningModules.length),
+  );
 
   return (
     <PremiumScreen>
@@ -31,9 +26,9 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
         <Text style={styles.title}>Trilhas, módulos e progresso</Text>
         <Text style={styles.subtitle}>Aprenda a história, o funcionamento e a prática do CLP com lições guiadas e simulação.</Text>
         <View style={styles.heroStats}>
-          <View style={styles.statBox}><Text style={styles.statValue}>6</Text><Text style={styles.statLabel}>trilhas</Text></View>
-          <View style={styles.statBox}><Text style={styles.statValue}>32</Text><Text style={styles.statLabel}>lições</Text></View>
-          <View style={styles.statBox}><Text style={styles.statValue}>42%</Text><Text style={styles.statLabel}>progresso</Text></View>
+          <View style={styles.statBox}><Text style={styles.statValue}>{clpLearningModules.length}</Text><Text style={styles.statLabel}>trilhas</Text></View>
+          <View style={styles.statBox}><Text style={styles.statValue}>{allLessons.length}</Text><Text style={styles.statLabel}>lições</Text></View>
+          <View style={styles.statBox}><Text style={styles.statValue}>{averageProgress}%</Text><Text style={styles.statLabel}>progresso</Text></View>
         </View>
       </View>
 
@@ -53,8 +48,8 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
           <View style={styles.lessonHeader}>
             <View style={styles.lessonIcon}><Text style={styles.lessonIconText}>03</Text></View>
             <View style={styles.lessonCopy}>
-              <Text style={styles.lessonTitle}>Lição 03 — Selo</Text>
-              <Text style={styles.lessonDescription}>Entenda como uma saída mantém o comando ativo e por que isso substitui lógica cabeada.</Text>
+              <Text style={styles.lessonTitle}>{currentLesson.title}</Text>
+              <Text style={styles.lessonDescription}>{currentLesson.whyItMatters}</Text>
             </View>
             <PremiumBadge label="Atual" tone="green" />
           </View>
@@ -65,29 +60,32 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
       {tab === 'tracks' ? (
         <PremiumSection title="Trilhas" subtitle="Do contexto histórico ao diagnóstico profissional" tone="cyan">
           <View style={styles.trackList}>
-            {tracks.map(([name, description, progress, tone]) => (
-              <View key={name} style={styles.trackCard}>
-                <View style={styles.trackTop}>
-                  <View style={styles.trackCopy}>
-                    <Text style={styles.trackTitle}>{name}</Text>
-                    <Text style={styles.trackDescription}>{description}</Text>
+            {clpLearningModules.map((module, index) => {
+              const tone = trackTones[index % trackTones.length];
+              return (
+                <View key={module.id} style={styles.trackCard}>
+                  <View style={styles.trackTop}>
+                    <View style={styles.trackCopy}>
+                      <Text style={styles.trackTitle}>{module.title}</Text>
+                      <Text style={styles.trackDescription}>{module.description}</Text>
+                    </View>
+                    <PremiumBadge label={`${module.progress}%`} tone={tone} />
                   </View>
-                  <PremiumBadge label={`${progress}%`} tone={tone} />
+                  <PremiumProgress value={module.progress} />
                 </View>
-                <PremiumProgress value={progress} />
-              </View>
-            ))}
+              );
+            })}
           </View>
         </PremiumSection>
       ) : tab === 'modules' ? (
         <PremiumSection title="Próximas aulas" subtitle="Conteúdo educativo estruturado" tone="amber">
           <View style={styles.trackList}>
-            {nextLessons.map(([code, title, description]) => (
-              <View key={code} style={styles.moduleCard}>
-                <Text style={styles.moduleCode}>{code}</Text>
+            {nextLessons.map((lesson, index) => (
+              <View key={lesson.id} style={styles.moduleCard}>
+                <Text style={styles.moduleCode}>Lição {String(index + 1).padStart(2, '0')}</Text>
                 <View style={styles.moduleCopy}>
-                  <Text style={styles.trackTitle}>{title}</Text>
-                  <Text style={styles.trackDescription}>{description}</Text>
+                  <Text style={styles.trackTitle}>{lesson.shortTitle}</Text>
+                  <Text style={styles.trackDescription}>{lesson.concept}</Text>
                 </View>
               </View>
             ))}
@@ -96,10 +94,10 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
       ) : tab === 'challenges' ? (
         <PremiumSection title="Desafios" subtitle="Pratique até dominar" tone="purple">
           <View style={styles.trackList}>
-            {['Montar uma partida direta', 'Criar selo com stop NF', 'Adicionar TON de segurança'].map((challenge, index) => (
-              <View key={challenge} style={styles.challengeCard}>
+            {allLessons.slice(0, 4).map((lesson, index) => (
+              <View key={lesson.id} style={styles.challengeCard}>
                 <Text style={styles.challengeNumber}>{index + 1}</Text>
-                <Text style={styles.challengeText}>{challenge}</Text>
+                <Text style={styles.challengeText}>{lesson.practice}</Text>
                 <PremiumBadge label={index === 0 ? 'Liberado' : 'Bloqueado'} tone={index === 0 ? 'green' : 'neutral'} />
               </View>
             ))}
@@ -144,7 +142,7 @@ const styles = StyleSheet.create({
   trackTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   trackDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
   moduleCard: { flexDirection: 'row', gap: spacing.sm, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated },
-  moduleCode: { color: colors.amber, fontSize: 12, fontWeight: '900', width: 54 },
+  moduleCode: { color: colors.amber, fontSize: 12, fontWeight: '900', width: 58 },
   moduleCopy: { flex: 1, minWidth: 0 },
   challengeCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated },
   challengeNumber: { color: colors.purple, fontSize: 18, fontWeight: '900', width: 26 },
