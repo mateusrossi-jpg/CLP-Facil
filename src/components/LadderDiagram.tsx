@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Animated } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { LadderProject, PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -15,9 +16,24 @@ function stateLabel(value: boolean): string {
 
 export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramProps) {
 
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 600, useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 600, useNativeDriver: false })
+      ])
+    ).start();
+  }, []);
+
   function getValue(variableId: string): boolean {
     return Boolean(state[variableId]);
   }
+
+  const glowStyle = {
+    shadowOpacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.9] })
+  };
 
   return (
     <View style={styles.container}>
@@ -34,21 +50,25 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
               <Text style={styles.rungLabel}>{rung.label}</Text>
 
               <View style={styles.seriesRow}>
-                {rung.seriesContacts.map((contact) => (
-                  <View
-                    key={contact.id}
-                    style={[
-                      styles.contact,
-                      getValue(contact.variableId) && styles.contactActive,
-                      active && styles.contactEnergized
-                    ]}
-                  >
-                    <Text style={styles.contactText}>{contact.label}</Text>
-                    <Text style={styles.contactState}>
-                      {stateLabel(getValue(contact.variableId))}
-                    </Text>
-                  </View>
-                ))}
+                {rung.seriesContacts.map((contact) => {
+                  const isOn = getValue(contact.variableId);
+
+                  return (
+                    <Animated.View
+                      key={contact.id}
+                      style={[
+                        styles.contact,
+                        isOn && styles.contactActive,
+                        isOn && glowStyle
+                      ]}
+                    >
+                      <Text style={styles.contactText}>{contact.label}</Text>
+                      <Text style={styles.contactState}>
+                        {stateLabel(isOn)}
+                      </Text>
+                    </Animated.View>
+                  );
+                })}
               </View>
 
               <Text style={styles.branchTitle}>Ramo paralelo de partida/selo</Text>
@@ -56,35 +76,40 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
               <View style={styles.parallelBox}>
                 {rung.parallelBranches.map((branch) => (
                   <View key={branch.id} style={styles.branchRow}>
-                    {branch.contacts.map((contact) => (
-                      <View
-                        key={contact.id}
-                        style={[
-                          styles.contact,
-                          getValue(contact.variableId) && styles.contactActive,
-                          active && styles.contactEnergized
-                        ]}
-                      >
-                        <Text style={styles.contactText}>{contact.label}</Text>
-                        <Text style={styles.contactState}>
-                          {stateLabel(getValue(contact.variableId))}
-                        </Text>
-                      </View>
-                    ))}
+                    {branch.contacts.map((contact) => {
+                      const isOn = getValue(contact.variableId);
+
+                      return (
+                        <Animated.View
+                          key={contact.id}
+                          style={[
+                            styles.contact,
+                            isOn && styles.contactActive,
+                            isOn && glowStyle
+                          ]}
+                        >
+                          <Text style={styles.contactText}>{contact.label}</Text>
+                          <Text style={styles.contactState}>
+                            {stateLabel(isOn)}
+                          </Text>
+                        </Animated.View>
+                      );
+                    })}
                   </View>
                 ))}
               </View>
 
-              <View
+              <Animated.View
                 style={[
                   styles.coil,
-                  getValue(rung.coilVariableId) && styles.coilActive
+                  getValue(rung.coilVariableId) && styles.coilActive,
+                  getValue(rung.coilVariableId) && glowStyle
                 ]}
               >
                 <Text style={styles.coilText}>
                   ( {rung.coilVariableId} / K1 )
                 </Text>
-              </View>
+              </Animated.View>
             </View>
 
             <View style={styles.rail} />
@@ -169,11 +194,6 @@ const styles = StyleSheet.create({
   contactActive: {
     borderColor: colors.cyan,
     backgroundColor: colors.cyanSoft,
-  },
-  contactEnergized: {
-    shadowColor: "#00FFFF",
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
   },
   contactText: {
     color: colors.text,
