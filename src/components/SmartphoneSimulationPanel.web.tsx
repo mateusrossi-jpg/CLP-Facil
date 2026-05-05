@@ -1,1 +1,1 @@
-export { SmartphoneSimulationPanel } from './SmartphoneSimulationPanelFixed';
+export { SmartphoneSimulationPanel } from './SmartphoneSimulationPanelEnhanced';
