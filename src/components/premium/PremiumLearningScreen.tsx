@@ -1,6 +1,13 @@
 import { memo, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { clpLearningModules } from '../../education/clpLessonCatalog';
+import {
+  getAllModuleProgressSummaries,
+  getCurrentLesson,
+  getLessonProgress,
+  getLessonStatusLabel,
+  getOverallLearningProgress,
+} from '../../education/clpLearningProgress';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
@@ -11,14 +18,21 @@ type BadgeTone = 'cyan' | 'green' | 'amber' | 'purple';
 
 const trackTones: BadgeTone[] = ['cyan', 'green', 'amber', 'purple', 'cyan', 'green'];
 
+function statusTone(status: ReturnType<typeof getLessonProgress>['status']): 'green' | 'amber' | 'cyan' | 'neutral' {
+  if (status === 'completed') return 'green';
+  if (status === 'in_progress') return 'amber';
+  if (status === 'available') return 'cyan';
+  return 'neutral';
+}
+
 export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
   const [tab, setTab] = useState<LearningTab>('tracks');
   const allLessons = useMemo(() => clpLearningModules.flatMap((module) => module.lessons), []);
-  const currentLesson = allLessons.find((lesson) => lesson.id === 'seal-in-circuit') ?? allLessons[0];
-  const nextLessons = allLessons.slice(0, 5);
-  const averageProgress = Math.round(
-    clpLearningModules.reduce((sum, module) => sum + module.progress, 0) / Math.max(1, clpLearningModules.length),
-  );
+  const moduleProgress = useMemo(() => getAllModuleProgressSummaries(), []);
+  const currentLesson = useMemo(() => getCurrentLesson(), []);
+  const currentProgress = getLessonProgress(currentLesson.id);
+  const nextLessons = allLessons.filter((lesson) => getLessonProgress(lesson.id).status !== 'locked').slice(0, 5);
+  const averageProgress = getOverallLearningProgress();
 
   return (
     <PremiumScreen>
@@ -47,14 +61,14 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
       <PremiumSection title="Trilha atual" subtitle="Continue de onde parou" tone="green">
         <View style={styles.currentLesson}>
           <View style={styles.lessonHeader}>
-            <View style={styles.lessonIcon}><Text style={styles.lessonIconText}>03</Text></View>
+            <View style={styles.lessonIcon}><Text style={styles.lessonIconText}>{currentProgress.progress}%</Text></View>
             <View style={styles.lessonCopy}>
               <Text style={styles.lessonTitle}>{currentLesson.title}</Text>
               <Text style={styles.lessonDescription}>{currentLesson.whyItMatters}</Text>
             </View>
-            <PremiumBadge label="Atual" tone="green" />
+            <PremiumBadge label={getLessonStatusLabel(currentProgress.status)} tone={statusTone(currentProgress.status)} />
           </View>
-          <PremiumProgress value={58} label="58% concluído" />
+          <PremiumProgress value={currentProgress.progress} label={`${currentProgress.progress}% concluído`} />
         </View>
       </PremiumSection>
 
@@ -65,16 +79,19 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
           <View style={styles.trackList}>
             {clpLearningModules.map((module, index) => {
               const tone = trackTones[index % trackTones.length];
+              const summary = moduleProgress.find((item) => item.moduleId === module.id);
+              const progress = summary?.progress ?? module.progress;
               return (
                 <View key={module.id} style={styles.trackCard}>
                   <View style={styles.trackTop}>
                     <View style={styles.trackCopy}>
                       <Text style={styles.trackTitle}>{module.title}</Text>
                       <Text style={styles.trackDescription}>{module.description}</Text>
+                      {summary ? <Text style={styles.trackMeta}>{summary.completedCount}/{summary.lessonCount} lições concluídas • {summary.availableCount} liberadas</Text> : null}
                     </View>
-                    <PremiumBadge label={`${module.progress}%`} tone={tone} />
+                    <PremiumBadge label={`${progress}%`} tone={tone} />
                   </View>
-                  <PremiumProgress value={module.progress} />
+                  <PremiumProgress value={progress} />
                 </View>
               );
             })}
@@ -83,27 +100,34 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
       ) : tab === 'modules' ? (
         <PremiumSection title="Próximas aulas" subtitle="Conteúdo educativo estruturado" tone="amber">
           <View style={styles.trackList}>
-            {nextLessons.map((lesson, index) => (
-              <View key={lesson.id} style={styles.moduleCard}>
-                <Text style={styles.moduleCode}>Lição {String(index + 1).padStart(2, '0')}</Text>
-                <View style={styles.moduleCopy}>
-                  <Text style={styles.trackTitle}>{lesson.shortTitle}</Text>
-                  <Text style={styles.trackDescription}>{lesson.concept}</Text>
+            {nextLessons.map((lesson, index) => {
+              const progress = getLessonProgress(lesson.id);
+              return (
+                <View key={lesson.id} style={styles.moduleCard}>
+                  <Text style={styles.moduleCode}>Lição {String(index + 1).padStart(2, '0')}</Text>
+                  <View style={styles.moduleCopy}>
+                    <Text style={styles.trackTitle}>{lesson.shortTitle}</Text>
+                    <Text style={styles.trackDescription}>{lesson.concept}</Text>
+                    <Text style={styles.trackMeta}>{progress.progress}% • {getLessonStatusLabel(progress.status)}</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </PremiumSection>
       ) : tab === 'challenges' ? (
         <PremiumSection title="Desafios" subtitle="Pratique até dominar" tone="purple">
           <View style={styles.trackList}>
-            {allLessons.slice(0, 4).map((lesson, index) => (
-              <View key={lesson.id} style={styles.challengeCard}>
-                <Text style={styles.challengeNumber}>{index + 1}</Text>
-                <Text style={styles.challengeText}>{lesson.practice}</Text>
-                <PremiumBadge label={index === 0 ? 'Liberado' : 'Bloqueado'} tone={index === 0 ? 'green' : 'neutral'} />
-              </View>
-            ))}
+            {allLessons.slice(0, 4).map((lesson, index) => {
+              const progress = getLessonProgress(lesson.id);
+              return (
+                <View key={lesson.id} style={styles.challengeCard}>
+                  <Text style={styles.challengeNumber}>{index + 1}</Text>
+                  <Text style={styles.challengeText}>{lesson.practice}</Text>
+                  <PremiumBadge label={getLessonStatusLabel(progress.status)} tone={statusTone(progress.status)} />
+                </View>
+              );
+            })}
           </View>
         </PremiumSection>
       ) : (
@@ -134,7 +158,7 @@ const styles = StyleSheet.create({
   currentLesson: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.md },
   lessonHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   lessonIcon: { width: 44, height: 44, borderRadius: 15, borderColor: colors.green, borderWidth: 1, backgroundColor: colors.greenSoft, alignItems: 'center', justifyContent: 'center' },
-  lessonIconText: { color: colors.green, fontSize: 15, fontWeight: '900' },
+  lessonIconText: { color: colors.green, fontSize: 13, fontWeight: '900' },
   lessonCopy: { flex: 1, minWidth: 0 },
   lessonTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
   lessonDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 2 },
@@ -144,6 +168,7 @@ const styles = StyleSheet.create({
   trackCopy: { flex: 1, minWidth: 0 },
   trackTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   trackDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  trackMeta: { color: colors.textDim, fontSize: 10, lineHeight: 15, marginTop: 4, fontWeight: '800' },
   moduleCard: { flexDirection: 'row', gap: spacing.sm, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated },
   moduleCode: { color: colors.amber, fontSize: 12, fontWeight: '900', width: 58 },
   moduleCopy: { flex: 1, minWidth: 0 },
