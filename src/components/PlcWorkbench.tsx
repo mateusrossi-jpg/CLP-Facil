@@ -1433,31 +1433,27 @@ export function PlcWorkbench({
               <View>
                 <Text style={styles.ladderListTitle}>Programa Ladder</Text>
                 <Text style={styles.ladderListSubtitle}>
-                  {isMobile
-                    ? `${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linha ${selectedRungIndex + 1} de ${editor.rungs.length}.`
-                    : 'Use dois dedos para ampliar e arraste para navegar pelo rung.'}
+                  {`${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linha ${selectedRungIndex + 1} de ${editor.rungs.length}.`}
                 </Text>
               </View>
               <View style={styles.ladderHeaderTools}>
-                {isMobile ? (
-                  <View style={styles.mobileRungNavigator}>
-                    <Pressable
-                      onPress={() => selectAdjacentRung(-1)}
-                      disabled={selectedRungIndex === 0}
-                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex === 0 && styles.disabled, pressed && selectedRungIndex > 0 && styles.pressed]}
-                    >
-                      <Text style={styles.mobileRungNavText}>Anterior</Text>
-                    </Pressable>
-                    <Text style={styles.mobileRungCounter}>Linha {selectedRungIndex + 1}/{editor.rungs.length}</Text>
-                    <Pressable
-                      onPress={() => selectAdjacentRung(1)}
-                      disabled={selectedRungIndex >= editor.rungs.length - 1}
-                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex >= editor.rungs.length - 1 && styles.disabled, pressed && selectedRungIndex < editor.rungs.length - 1 && styles.pressed]}
-                    >
-                      <Text style={styles.mobileRungNavText}>Próxima</Text>
-                    </Pressable>
-                  </View>
-                ) : null}
+                <View style={styles.mobileRungNavigator}>
+                  <Pressable
+                    onPress={() => selectAdjacentRung(-1)}
+                    disabled={selectedRungIndex === 0}
+                    style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex === 0 && styles.disabled, pressed && selectedRungIndex > 0 && styles.pressed]}
+                  >
+                    <Text style={styles.mobileRungNavText}>Anterior</Text>
+                  </Pressable>
+                  <Text style={styles.mobileRungCounter}>Linha {selectedRungIndex + 1}/{editor.rungs.length}</Text>
+                  <Pressable
+                    onPress={() => selectAdjacentRung(1)}
+                    disabled={selectedRungIndex >= editor.rungs.length - 1}
+                    style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex >= editor.rungs.length - 1 && styles.disabled, pressed && selectedRungIndex < editor.rungs.length - 1 && styles.pressed]}
+                  >
+                    <Text style={styles.mobileRungNavText}>Próxima</Text>
+                  </Pressable>
+                </View>
                 <View style={styles.zoomControls}>
                   <Pressable onPress={() => changeCanvasZoom(-0.1)} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
                     <Text style={styles.zoomButtonText}>-</Text>
@@ -1479,7 +1475,7 @@ export function PlcWorkbench({
                 </View>
               </View>
             </View>
-            {isMobile ? renderRungCanvas(rung, selectedRungIndex) : editor.rungs.map((item, index) => renderRungCanvas(item, index))}
+            {renderRungCanvas(rung, selectedRungIndex)}
           </View>
 
           <View style={[styles.fieldBench, isMobile && mobileTab !== 'execution' && styles.mobileHidden]}>
