@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PlcMission, PlcMissionTrack } from '../lessons/missionTypes';
 import { colors } from '../theme/colors';
@@ -17,6 +17,7 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
   completedMissionIds = {},
   onOpenMission,
 }: PlcMissionPathPanelProps) {
+  const [expandedTracks, setExpandedTracks] = useState<Record<string, boolean>>({});
   const totalMissions = tracks.reduce((total, track) => total + track.missions.length, 0);
   const completedCount = tracks.reduce(
     (total, track) => total + track.missions.filter((mission) => completedMissionIds[mission.id]).length,
@@ -37,20 +38,25 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
       </View>
 
       <View style={styles.trackStack}>
-        {tracks.map((track, trackIndex) => (
-          <View key={track.id} style={styles.trackCard}>
-            <View style={styles.trackHeader}>
-              <View style={styles.trackIndex}>
-                <Text style={styles.trackIndexText}>{trackIndex + 1}</Text>
-              </View>
-              <View style={styles.trackCopy}>
-                <Text style={styles.trackTitle}>{track.title.replace(/^Trilha \d+\s+[—-]\s+/, '')}</Text>
-                <Text style={styles.trackDescription}>{track.description}</Text>
-              </View>
-            </View>
+        {tracks.map((track, trackIndex) => {
+          const expanded = Boolean(expandedTracks[track.id]);
+          const visibleMissions = expanded ? track.missions : track.missions.slice(0, 3);
+          const hiddenCount = Math.max(track.missions.length - visibleMissions.length, 0);
 
-            <View style={styles.missionStack}>
-              {track.missions.slice(0, 3).map((mission, missionIndex) => {
+          return (
+            <View key={track.id} style={styles.trackCard}>
+              <View style={styles.trackHeader}>
+                <View style={styles.trackIndex}>
+                  <Text style={styles.trackIndexText}>{trackIndex + 1}</Text>
+                </View>
+                <View style={styles.trackCopy}>
+                  <Text style={styles.trackTitle}>{track.title.replace(/^Trilha \d+\s+[—-]\s+/, '')}</Text>
+                  <Text style={styles.trackDescription}>{track.description}</Text>
+                </View>
+              </View>
+
+              <View style={styles.missionStack}>
+                {visibleMissions.map((mission, missionIndex) => {
                 const active = activeMissionId === mission.id;
                 const completed = Boolean(completedMissionIds[mission.id]);
                 return (
@@ -72,9 +78,19 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
                   </Pressable>
                 );
               })}
+              </View>
+
+              {track.missions.length > 3 ? (
+                <Pressable
+                  onPress={() => setExpandedTracks((current) => ({ ...current, [track.id]: !expanded }))}
+                  style={({ pressed }) => [styles.expandButton, pressed && styles.pressed]}
+                >
+                  <Text style={styles.expandText}>{expanded ? 'Ver menos' : `Ver mais ${hiddenCount}`}</Text>
+                </Pressable>
+              ) : null}
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     </View>
   );
@@ -251,6 +267,22 @@ const styles = StyleSheet.create({
   },
   openTextDone: {
     color: colors.green,
+  },
+  expandButton: {
+    minHeight: 34,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+  },
+  expandText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   pressed: {
     opacity: 0.72,
