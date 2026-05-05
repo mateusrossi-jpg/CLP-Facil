@@ -13,6 +13,7 @@ import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
+import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 
 type SimulationMode = 'choice' | 'mobile' | 'classic';
 
@@ -78,6 +79,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <ScanTraceDiagnosticCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          focusedRungId={project.selectedRungId}
+        />
         <MobileExecutionCockpit
           editorProject={project}
           plcState={state}
@@ -97,6 +104,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <ScanTraceDiagnosticCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          focusedRungId={project.selectedRungId}
+        />
         {compactDevice ? (
           <View style={styles.mobileHint}>
             <Text style={styles.mobileHintTitle}>Modo clássico ativo</Text>
@@ -118,6 +131,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
     <View style={styles.stack}>
       <PremiumProjectIntentBanner intent={projectIntent} />
       <PremiumProjectSimulationFocus intent={projectIntent} />
+      <ScanTraceDiagnosticCard
+        project={project}
+        state={state}
+        runtime={result.runtime}
+        focusedRungId={project.selectedRungId}
+      />
       <MobileSimulationEntryCard
         onOpenMobileExecution={() => setMode('mobile')}
         onContinueClassic={() => setMode('classic')}
