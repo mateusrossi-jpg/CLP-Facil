@@ -1,10 +1,18 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { projects } from '../data/projects';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { createInitialEditorProject } from '../engine/editorTypes';
+import { createInitialEditorState } from '../engine/editorEvaluator';
+import { createInitialRuntimeState } from '../engine/runtimeTypes';
+
+// 🔥 Projeto integrado diretamente ao editor (sem duplicação)
+function createDirectStartEditorProject() {
+  const project = createInitialEditorProject();
+  return project;
+}
 
 type Props = {
-  onOpenProject: (project: any) => void;
+  onOpenProject: (project: any, state: any, runtime: any) => void;
 };
 
 export function ProjectsScreen({ onOpenProject }: Props) {
@@ -12,15 +20,19 @@ export function ProjectsScreen({ onOpenProject }: Props) {
     <View style={styles.container}>
       <Text style={styles.title}>Projetos</Text>
 
-      {projects.map((p) => (
-        <Pressable
-          key={p.id}
-          style={styles.card}
-          onPress={() => onOpenProject(p)}
-        >
-          <Text style={styles.name}>{p.name}</Text>
-        </Pressable>
-      ))}
+      <Pressable
+        style={styles.card}
+        onPress={() => {
+          const project = createDirectStartEditorProject();
+          const state = createInitialEditorState();
+          const runtime = createInitialRuntimeState();
+
+          onOpenProject(project, state, runtime);
+        }}
+      >
+        <Text style={styles.name}>Partida Direta</Text>
+      </Pressable>
+
     </View>
   );
 }
