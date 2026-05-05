@@ -5,6 +5,7 @@ import {
   getProjectLearningLinkSummary,
 } from '../../education/projectLearningLinks';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
+import { getRungTemplatesForProject } from '../../projects/projectLadderTemplates';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumSection } from './PremiumCards';
@@ -22,6 +23,7 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
 export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({ project }: PremiumProjectDetailCardProps) {
   const learning = getProjectLearningLinkSummary(project.id);
   const linkedPractices = getGuidedPracticesLinkedToProject(project.id);
+  const rungTemplates = getRungTemplatesForProject(project.id);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -54,6 +56,33 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
         <Text style={styles.learningText}>{learning.linkedLessons.length} lições vinculadas • {learning.linkedPracticeCount} práticas guiadas</Text>
         <PremiumProgress value={learning.teachingScore} label={`Score didático ${learning.teachingScore}%`} />
       </View>
+
+      {rungTemplates.length > 0 ? (
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>Prévia Ladder compacta</Text>
+          {rungTemplates.map((rung) => (
+            <View key={rung.id} style={styles.rungCard}>
+              <View style={styles.rungTop}>
+                <Text style={styles.rungNumber}>R{rung.rungNumber}</Text>
+                <View style={styles.rungCopy}>
+                  <Text style={styles.rungTitle}>{rung.title}</Text>
+                  <Text style={styles.rungDescription}>{rung.description}</Text>
+                </View>
+              </View>
+              <View style={styles.rungLogicRow}>
+                <View style={styles.conditionStack}>
+                  {rung.conditions.map((condition) => <Text key={condition} style={styles.conditionChip}>{condition}</Text>)}
+                </View>
+                <Text style={styles.rungArrow}>→</Text>
+                <View style={styles.outputBox}>
+                  <Text style={styles.outputText}>{rung.output}</Text>
+                  <Text style={styles.outputDescription}>{rung.outputDescription}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {learning.linkedLessons.length > 0 || linkedPractices.length > 0 ? (
         <View style={styles.block}>
@@ -142,6 +171,19 @@ const styles = StyleSheet.create({
   block: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
   blockTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   blockText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  rungCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.surface, gap: spacing.sm },
+  rungTop: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
+  rungNumber: { color: colors.cyan, fontSize: 11, fontWeight: '900', borderColor: colors.cyan, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: colors.cyanSoft },
+  rungCopy: { flex: 1, minWidth: 0 },
+  rungTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: '900' },
+  rungDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '700', marginTop: 2 },
+  rungLogicRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  conditionStack: { flex: 1, gap: 4 },
+  conditionChip: { color: colors.textMuted, borderColor: colors.border, borderWidth: 1, borderRadius: 10, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '800', backgroundColor: colors.surfaceElevated },
+  rungArrow: { color: colors.green, fontSize: 17, fontWeight: '900' },
+  outputBox: { width: 100, borderColor: colors.green, borderWidth: 1, borderRadius: 12, padding: spacing.sm, backgroundColor: colors.greenSoft },
+  outputText: { color: colors.green, fontSize: 11, lineHeight: 15, fontWeight: '900' },
+  outputDescription: { color: colors.text, fontSize: 9, lineHeight: 13, fontWeight: '700', marginTop: 2 },
   linkedItem: { borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface, gap: 3 },
   linkedLabel: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   linkedTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: '900' },
