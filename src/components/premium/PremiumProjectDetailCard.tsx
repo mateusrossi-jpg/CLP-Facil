@@ -4,6 +4,7 @@ import {
   getGuidedPracticesLinkedToProject,
   getProjectLearningLinkSummary,
 } from '../../education/projectLearningLinks';
+import { getBenchBoardTargetLabel, getBenchMappingForProject, getBenchPinRiskLabel, type BenchPinRisk } from '../../projects/projectBenchMappings';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
 import { getIoPointsForProject, getProjectIoKindLabel, getSafetyCriticalIoPoints, type ProjectIoKind, type ProjectIoPoint } from '../../projects/projectIoMaps';
 import { getRungTemplatesForProject } from '../../projects/projectLadderTemplates';
@@ -21,6 +22,12 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
   if (difficulty === 'basic') return 'green';
   if (difficulty === 'intermediate') return 'amber';
   return 'purple';
+}
+
+function riskTone(risk: BenchPinRisk): 'green' | 'amber' | 'neutral' {
+  if (risk === 'safe') return 'green';
+  if (risk === 'attention') return 'amber';
+  return 'neutral';
 }
 
 function IoPointRow({ point }: { point: ProjectIoPoint }) {
@@ -44,6 +51,7 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
   const rungTemplates = getRungTemplatesForProject(project.id);
   const ioPoints = getIoPointsForProject(project.id);
   const safetyPoints = getSafetyCriticalIoPoints(project.id);
+  const benchMapping = getBenchMappingForProject(project.id);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -76,6 +84,34 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
         <Text style={styles.learningText}>{learning.linkedLessons.length} lições vinculadas • {learning.linkedPracticeCount} práticas guiadas</Text>
         <PremiumProgress value={learning.teachingScore} label={`Score didático ${learning.teachingScore}%`} />
       </View>
+
+      {benchMapping ? (
+        <View style={styles.block}>
+          <View style={styles.blockHeaderRow}>
+            <Text style={styles.blockTitle}>Bancada sugerida</Text>
+            <PremiumBadge label={getBenchBoardTargetLabel(benchMapping.recommendedTarget)} tone="cyan" />
+          </View>
+          <Text style={styles.blockText}>{benchMapping.summary}</Text>
+          {benchMapping.pins.map((pin) => (
+            <View key={`${pin.tag}-${pin.arduinoPin}-${pin.esp32Pin}`} style={[styles.benchPin, pin.risk === 'attention' && styles.benchPinAttention]}>
+              <View style={styles.benchTagBox}>
+                <Text style={styles.benchTag}>{pin.tag}</Text>
+                <Text style={styles.benchDirection}>{pin.direction === 'input' ? 'Entrada' : 'Saída'}</Text>
+              </View>
+              <View style={styles.benchCopy}>
+                <Text style={styles.benchLabel}>{pin.label}</Text>
+                <Text style={styles.benchPins}>Arduino {pin.arduinoPin} • ESP32 {pin.esp32Pin}</Text>
+                <Text style={styles.benchNote}>{pin.note}</Text>
+              </View>
+              <PremiumBadge label={getBenchPinRiskLabel(pin.risk)} tone={riskTone(pin.risk)} />
+            </View>
+          ))}
+          <View style={styles.safetyNoteBox}>
+            <Text style={styles.safetyNoteTitle}>Notas de segurança</Text>
+            {benchMapping.safetyNotes.map((note) => <Text key={note} style={styles.safetyNoteText}>• {note}</Text>)}
+          </View>
+        </View>
+      ) : null}
 
       {ioPoints.length > 0 ? (
         <View style={styles.block}>
@@ -211,6 +247,18 @@ const styles = StyleSheet.create({
   blockHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   blockTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   blockText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  benchPin: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface },
+  benchPinAttention: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
+  benchTagBox: { minWidth: 56, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 10, paddingHorizontal: spacing.sm, paddingVertical: 5, alignItems: 'center', backgroundColor: colors.surfaceElevated },
+  benchTag: { color: colors.cyan, fontSize: 11, fontWeight: '900' },
+  benchDirection: { color: colors.textDim, fontSize: 9, fontWeight: '900', marginTop: 2 },
+  benchCopy: { flex: 1, minWidth: 0 },
+  benchLabel: { color: colors.text, fontSize: 12, fontWeight: '900' },
+  benchPins: { color: colors.cyan, fontSize: 10, lineHeight: 14, fontWeight: '900', marginTop: 2 },
+  benchNote: { color: colors.textMuted, fontSize: 10, lineHeight: 14, fontWeight: '700', marginTop: 2 },
+  safetyNoteBox: { borderColor: colors.amber, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.amberSoft, gap: 3 },
+  safetyNoteTitle: { color: colors.amber, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  safetyNoteText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   ioGroup: { gap: 5, marginTop: spacing.xs },
   ioGroupTitle: { color: colors.cyan, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.6 },
   ioPoint: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface },
