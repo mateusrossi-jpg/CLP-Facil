@@ -39,6 +39,7 @@ type SimulationModeRouterProps = {
   lastScanMs?: number;
   classicContent?: ReactNode;
   projectIntent?: ProjectNavigationIntent;
+  onSetValue?: (variable: string, value: boolean | number) => void;
 };
 
 function makeFallbackState(project: EditorProjectState): PlcState {
@@ -72,6 +73,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   lastScanMs = 12,
   classicContent,
   projectIntent,
+  onSetValue,
 }: SimulationModeRouterProps) {
   const { width } = useWindowDimensions();
   const compactDevice = width < 760;
@@ -126,7 +128,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
         <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
-        <PlcForceTableCard project={project} state={state} />
+        <PlcForceTableCard project={project} state={state} onSetValue={onSetValue} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -189,7 +191,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
         <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
-        <PlcForceTableCard project={project} state={state} />
+        <PlcForceTableCard project={project} state={state} onSetValue={onSetValue} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -254,7 +256,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
       <PlcMemoryMapCard project={project} />
       <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
-      <PlcForceTableCard project={project} state={state} />
+      <PlcForceTableCard project={project} state={state} onSetValue={onSetValue} />
       <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
       <ScanTraceDiagnosticCard
         project={project}
