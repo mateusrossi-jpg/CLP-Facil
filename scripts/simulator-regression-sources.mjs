@@ -31,4 +31,5 @@ export const simulatorRegressionSources = [
   'src/projects/projectNavigationIntentRegression.ts',
   'src/projects/projectSimulationFocusRegression.ts',
   'src/projects/projectLearningFocusRegression.ts',
+  'src/projects/projectEditorAdapterRegression.ts',
 ];
