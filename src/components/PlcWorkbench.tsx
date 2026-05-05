@@ -481,6 +481,8 @@ export function PlcWorkbench({
   const pinchStartZoom = useRef(1);
   const isMobile = width < 980;
   const rung = editor.rungs.find((item) => item.id === editor.selectedRungId) ?? editor.rungs[0];
+  const selectedRungIndex = Math.max(0, editor.rungs.findIndex((item) => item.id === rung.id));
+  const energizedRungCount = editor.rungs.filter((item) => evaluation.rungResults[item.id]).length;
   const selectedZone = editor.selectedZone;
   const selectedSeriesIndex = editor.selectedSeriesIndex ?? 0;
   const components = useMemo(() => simulatorComponents.filter((component) => component.category === category), [category]);
@@ -658,6 +660,12 @@ export function PlcWorkbench({
 
   function changeCanvasZoom(delta: number) {
     setCanvasZoom((current) => clampCanvasZoom(Number((current + delta).toFixed(2))));
+  }
+
+  function selectAdjacentRung(delta: number) {
+    const nextIndex = Math.min(Math.max(selectedRungIndex + delta, 0), editor.rungs.length - 1);
+    const nextRung = editor.rungs[nextIndex];
+    if (nextRung) onSelectRung(nextRung.id);
   }
 
   function renderRungCanvas(targetRung: typeof rung, rungIndex: number) {
@@ -1424,9 +1432,32 @@ export function PlcWorkbench({
             <View style={[styles.ladderListHeader, isMobile && styles.mobileLadderListHeader]}>
               <View>
                 <Text style={styles.ladderListTitle}>Programa Ladder</Text>
-                <Text style={styles.ladderListSubtitle}>Use dois dedos para ampliar e arraste para navegar pelo rung.</Text>
+                <Text style={styles.ladderListSubtitle}>
+                  {isMobile
+                    ? `${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linha ${selectedRungIndex + 1} de ${editor.rungs.length}.`
+                    : 'Use dois dedos para ampliar e arraste para navegar pelo rung.'}
+                </Text>
               </View>
               <View style={styles.ladderHeaderTools}>
+                {isMobile ? (
+                  <View style={styles.mobileRungNavigator}>
+                    <Pressable
+                      onPress={() => selectAdjacentRung(-1)}
+                      disabled={selectedRungIndex === 0}
+                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex === 0 && styles.disabled, pressed && selectedRungIndex > 0 && styles.pressed]}
+                    >
+                      <Text style={styles.mobileRungNavText}>Anterior</Text>
+                    </Pressable>
+                    <Text style={styles.mobileRungCounter}>Linha {selectedRungIndex + 1}/{editor.rungs.length}</Text>
+                    <Pressable
+                      onPress={() => selectAdjacentRung(1)}
+                      disabled={selectedRungIndex >= editor.rungs.length - 1}
+                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex >= editor.rungs.length - 1 && styles.disabled, pressed && selectedRungIndex < editor.rungs.length - 1 && styles.pressed]}
+                    >
+                      <Text style={styles.mobileRungNavText}>Próxima</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
                 <View style={styles.zoomControls}>
                   <Pressable onPress={() => changeCanvasZoom(-0.1)} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
                     <Text style={styles.zoomButtonText}>-</Text>
@@ -1448,7 +1479,7 @@ export function PlcWorkbench({
                 </View>
               </View>
             </View>
-            {editor.rungs.map((item, index) => renderRungCanvas(item, index))}
+            {isMobile ? renderRungCanvas(rung, selectedRungIndex) : editor.rungs.map((item, index) => renderRungCanvas(item, index))}
           </View>
 
           <View style={[styles.fieldBench, isMobile && mobileTab !== 'execution' && styles.mobileHidden]}>
@@ -2820,6 +2851,36 @@ const styles = StyleSheet.create({
   ladderActions: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  mobileRungNavigator: {
+    width: '100%',
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  mobileRungNavButton: {
+    flex: 1,
+    minHeight: 36,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  mobileRungNavText: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  mobileRungCounter: {
+    color: colors.cyan,
+    fontSize: 11,
+    fontWeight: '900',
+    minWidth: 78,
+    textAlign: 'center',
   },
   zoomControls: {
     flexDirection: 'row',
