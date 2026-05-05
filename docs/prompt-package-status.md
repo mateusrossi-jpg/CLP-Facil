@@ -36,6 +36,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Novo modelo de conquistas `src/education/clpAchievements.ts` criado com conquistas liberadas/bloqueadas calculadas pelo progresso das lições.
 - Novo catálogo de práticas guiadas `src/education/clpGuidedPractice.ts` criado com objetivo, projeto vinculado, passos, instruções e observações esperadas por lição.
 - Nova regressão educativa `src/education/educationRegression.ts` criada para proteger catálogo de lições, quizzes, progresso, conquistas e práticas guiadas.
+- Regressão educativa agora valida que `exampleProjectId` das lições e `projectId` das práticas guiadas apontam para projetos existentes em `projectCatalog`.
 - Novo catálogo de projetos `src/projects/projectCatalog.ts` criado com exemplos de bancada, metadados técnicos, objetivos de aprendizagem, instruções e resumo de I/O.
 - Nova regressão `src/projects/projectCatalogRegression.ts` criada para proteger exemplos obrigatórios, objetivos de aprendizagem, instruções, categorias e níveis.
 - `test:simulator` agora compila `src/education/educationRegression.ts`, `src/projects/projectCatalogRegression.ts` e `src/theme/codeContrastRegression.ts`.
