@@ -1,9 +1,11 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { ClpLesson } from '../../education/clpLessonCatalog';
+import { getQuizForLesson } from '../../education/clpLessonQuizzes';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumSection } from './index';
+import { PremiumLessonQuizCard } from './PremiumLessonQuizCard';
 
 type PremiumLessonDetailCardProps = {
   lesson: ClpLesson;
@@ -24,43 +26,48 @@ function difficultyTone(difficulty: ClpLesson['difficulty']): 'cyan' | 'green' |
 }
 
 export const PremiumLessonDetailCard = memo(function PremiumLessonDetailCard({ lesson }: PremiumLessonDetailCardProps) {
-  return (
-    <PremiumSection title="Detalhe da lição" subtitle="Conceito, prática e domínio" tone="green">
-      <View style={styles.lessonHero}>
-        <View style={styles.lessonTop}>
-          <View style={styles.lessonCopy}>
-            <Text style={styles.lessonEyebrow}>Lição guiada</Text>
-            <Text style={styles.lessonTitle}>{lesson.title}</Text>
-            <Text style={styles.lessonMeta}>{lesson.durationMinutes} min • {lesson.moduleId}</Text>
-          </View>
-          <PremiumBadge label={difficultyLabel(lesson.difficulty)} tone={difficultyTone(lesson.difficulty)} />
-        </View>
-        {lesson.exampleProjectId ? (
-          <View style={styles.projectPill}>
-            <Text style={styles.projectPillText}>Exemplo vinculado: {lesson.exampleProjectId}</Text>
-          </View>
-        ) : null}
-      </View>
+  const quiz = getQuizForLesson(lesson.id);
 
-      <View style={styles.blockList}>
-        <View style={styles.infoBlock}>
-          <Text style={styles.blockLabel}>Conceito</Text>
-          <Text style={styles.blockText}>{lesson.concept}</Text>
+  return (
+    <>
+      <PremiumSection title="Detalhe da lição" subtitle="Conceito, prática e domínio" tone="green">
+        <View style={styles.lessonHero}>
+          <View style={styles.lessonTop}>
+            <View style={styles.lessonCopy}>
+              <Text style={styles.lessonEyebrow}>Lição guiada</Text>
+              <Text style={styles.lessonTitle}>{lesson.title}</Text>
+              <Text style={styles.lessonMeta}>{lesson.durationMinutes} min • {lesson.moduleId}</Text>
+            </View>
+            <PremiumBadge label={difficultyLabel(lesson.difficulty)} tone={difficultyTone(lesson.difficulty)} />
+          </View>
+          {lesson.exampleProjectId ? (
+            <View style={styles.projectPill}>
+              <Text style={styles.projectPillText}>Exemplo vinculado: {lesson.exampleProjectId}</Text>
+            </View>
+          ) : null}
         </View>
-        <View style={styles.infoBlock}>
-          <Text style={styles.blockLabel}>Por que importa</Text>
-          <Text style={styles.blockText}>{lesson.whyItMatters}</Text>
+
+        <View style={styles.blockList}>
+          <View style={styles.infoBlock}>
+            <Text style={styles.blockLabel}>Conceito</Text>
+            <Text style={styles.blockText}>{lesson.concept}</Text>
+          </View>
+          <View style={styles.infoBlock}>
+            <Text style={styles.blockLabel}>Por que importa</Text>
+            <Text style={styles.blockText}>{lesson.whyItMatters}</Text>
+          </View>
+          <View style={styles.infoBlock}>
+            <Text style={styles.blockLabel}>Prática</Text>
+            <Text style={styles.blockText}>{lesson.practice}</Text>
+          </View>
+          <View style={[styles.infoBlock, styles.masteryBlock]}>
+            <Text style={styles.masteryLabel}>Checagem de domínio</Text>
+            <Text style={styles.masteryText}>{lesson.masteryCheck}</Text>
+          </View>
         </View>
-        <View style={styles.infoBlock}>
-          <Text style={styles.blockLabel}>Prática</Text>
-          <Text style={styles.blockText}>{lesson.practice}</Text>
-        </View>
-        <View style={[styles.infoBlock, styles.masteryBlock]}>
-          <Text style={styles.masteryLabel}>Checagem de domínio</Text>
-          <Text style={styles.masteryText}>{lesson.masteryCheck}</Text>
-        </View>
-      </View>
-    </PremiumSection>
+      </PremiumSection>
+      {quiz ? <PremiumLessonQuizCard quiz={quiz} /> : null}
+    </>
   );
 });
 
