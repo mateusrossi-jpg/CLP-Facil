@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { getGuidedPracticesLinkedToProject, getLessonsLinkedToProject } from '../../education/projectLearningLinks';
+import { getProjectLearningFocus } from '../../projects/projectLearningFocus';
 import type { ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -13,15 +13,15 @@ type PremiumProjectLearningFocusProps = {
 export const PremiumProjectLearningFocus = memo(function PremiumProjectLearningFocus({ intent }: PremiumProjectLearningFocusProps) {
   if (!intent) return null;
 
-  const lessons = getLessonsLinkedToProject(intent.projectId);
-  const practices = getGuidedPracticesLinkedToProject(intent.projectId);
+  const focus = getProjectLearningFocus(intent.projectId);
+  if (!focus) return null;
 
-  if (lessons.length === 0 && practices.length === 0) {
+  if (!focus.hasLearningPath) {
     return (
       <PremiumSection title="Aprendizado do projeto" subtitle="Ainda sem lições vinculadas" tone="amber">
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>Sem trilha dedicada para este projeto</Text>
-          <Text style={styles.emptyText}>O projeto foi aberto corretamente, mas ainda precisa de lições e práticas guiadas vinculadas.</Text>
+          <Text style={styles.emptyText}>{focus.focusHint}</Text>
         </View>
       </PremiumSection>
     );
@@ -30,11 +30,16 @@ export const PremiumProjectLearningFocus = memo(function PremiumProjectLearningF
   return (
     <PremiumSection title="Aprendizado do projeto" subtitle="Lições e práticas ligadas ao projeto selecionado" tone="green">
       <View style={styles.summaryRow}>
-        <PremiumBadge label={`${lessons.length} lições`} tone="green" />
-        <PremiumBadge label={`${practices.length} práticas`} tone="cyan" />
+        <PremiumBadge label={`${focus.lessonCount} lições`} tone="green" />
+        <PremiumBadge label={`${focus.practiceCount} práticas`} tone="cyan" />
       </View>
 
-      {lessons.map((lesson) => (
+      <View style={styles.hintBox}>
+        <Text style={styles.hintTitle}>Sequência sugerida</Text>
+        <Text style={styles.hintText}>{focus.focusHint}</Text>
+      </View>
+
+      {focus.lessons.map((lesson) => (
         <View key={lesson.id} style={styles.lessonCard}>
           <Text style={styles.lessonEyebrow}>Lição vinculada</Text>
           <Text style={styles.lessonTitle}>{lesson.title}</Text>
@@ -43,7 +48,7 @@ export const PremiumProjectLearningFocus = memo(function PremiumProjectLearningF
         </View>
       ))}
 
-      {practices.map((practice) => (
+      {focus.practices.map((practice) => (
         <View key={`${practice.lessonId}-${practice.title}`} style={styles.practiceCard}>
           <Text style={styles.practiceEyebrow}>Prática guiada</Text>
           <Text style={styles.lessonTitle}>{practice.title}</Text>
@@ -60,6 +65,9 @@ const styles = StyleSheet.create({
   emptyCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
   emptyTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   emptyText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  hintBox: { borderColor: colors.green, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.greenSoft, gap: 3 },
+  hintTitle: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 },
+  hintText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   lessonCard: { borderColor: colors.green, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.greenSoft, gap: spacing.xs },
   practiceCard: { borderColor: colors.cyan, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.cyanSoft, gap: spacing.xs },
   lessonEyebrow: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 },
