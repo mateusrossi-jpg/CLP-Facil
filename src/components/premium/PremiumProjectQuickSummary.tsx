@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { getProjectQuickActions } from '../../projects/projectQuickActions';
+import { getProjectQuickActions, type ProjectQuickActionKind } from '../../projects/projectQuickActions';
 import { getProjectWorkspaceSummary } from '../../projects/projectWorkspaceSummary';
 import type { TrainingProject } from '../../projects/projectCatalog';
 import { colors } from '../../theme/colors';
@@ -10,6 +10,7 @@ import { PremiumActionTile } from './PremiumControls';
 
 type PremiumProjectQuickSummaryProps = {
   project: TrainingProject;
+  onQuickAction?: (kind: ProjectQuickActionKind) => void;
 };
 
 function difficultyLabel(difficulty: TrainingProject['difficulty']): string {
@@ -24,7 +25,7 @@ function difficultyTone(difficulty: TrainingProject['difficulty']): 'green' | 'a
   return 'purple';
 }
 
-export const PremiumProjectQuickSummary = memo(function PremiumProjectQuickSummary({ project }: PremiumProjectQuickSummaryProps) {
+export const PremiumProjectQuickSummary = memo(function PremiumProjectQuickSummary({ project, onQuickAction }: PremiumProjectQuickSummaryProps) {
   const summary = getProjectWorkspaceSummary(project);
   const quickActions = getProjectQuickActions(project);
 
@@ -71,6 +72,7 @@ export const PremiumProjectQuickSummary = memo(function PremiumProjectQuickSumma
                 description={action.description}
                 icon={action.icon}
                 tone={action.enabled ? action.tone : 'neutral'}
+                onPress={action.enabled && onQuickAction ? () => onQuickAction(action.kind) : undefined}
               />
             </View>
           ))}
