@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 const { runEditorEvaluatorRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorEvaluatorRegression.js');
+const { runEditorScanTraceRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorScanTraceRegression.js');
 const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/edgeRegression.js');
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
 const { runPlcProfileRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/plcProfileRegression.js');
@@ -38,6 +39,7 @@ const { runProjectEditorAdapterRegressionSuite } = require('/tmp/easy-clp-sim-te
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
+  ...runEditorScanTraceRegressionSuite(),
   ...runEdgeContactRegressionSuite(),
   ...runHardwareRegressionSuite(),
   ...runPlcProfileRegressionSuite(),
