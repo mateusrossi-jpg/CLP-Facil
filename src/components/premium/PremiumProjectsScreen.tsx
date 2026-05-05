@@ -10,6 +10,8 @@ import {
   type ProjectDifficulty,
   type TrainingProject,
 } from '../../projects/projectCatalog';
+import type { ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
+import { createProjectNavigationIntent } from '../../projects/projectNavigationIntent';
 import { searchTrainingProjects } from '../../projects/projectSearch';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -20,7 +22,7 @@ import { PremiumProjectWorkspace } from './PremiumProjectWorkspace';
 type ProjectFilter = ProjectCatalogFilter;
 
 type PremiumProjectsScreenProps = {
-  onNavigate?: (route: BottomNavKey) => void;
+  onNavigate?: (route: BottomNavKey, intent?: ProjectNavigationIntent) => void;
 };
 
 function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'purple' {
@@ -100,7 +102,15 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen({ onNav
           </View>
           <View style={styles.actionsRow}>
             <Pressable onPress={() => setSelectedProject(featuredProject)} style={styles.primaryButton}><Text style={styles.primaryText}>Abrir projeto</Text></Pressable>
-            <Pressable onPress={() => { setSelectedProject(featuredProject); onNavigate?.('simulate'); }} style={styles.secondaryButton}><Text style={styles.secondaryText}>Simular</Text></Pressable>
+            <Pressable
+              onPress={() => {
+                setSelectedProject(featuredProject);
+                onNavigate?.('simulate', createProjectNavigationIntent(featuredProject, 'simulate', 'simulate'));
+              }}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryText}>Simular</Text>
+            </Pressable>
           </View>
         </View>
       </PremiumSection>
