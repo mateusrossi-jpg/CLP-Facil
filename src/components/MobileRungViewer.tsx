@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorBlock, EditorProjectState, EditorRung } from '../engine/editorTypes';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
+import { EditorRungTrace, traceEditorRung } from '../engine/editorScanTrace';
 import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -52,6 +53,48 @@ function blockActive(block: EditorBlock, state: PlcState, rungActive: boolean): 
   return block.contactMode === 'NC' ? !raw : raw;
 }
 
+function traceContactClosed(block: EditorBlock, trace: EditorRungTrace | null): boolean {
+  if (block.role !== 'contact') return false;
+  const contacts = [
+    ...(trace?.seriesContacts ?? []),
+    ...(trace?.branchTraces ?? []).flatMap((branch) => branch.contacts),
+  ];
+  return Boolean(contacts.find((contact) => contact.blockId === block.id)?.energized);
+}
+
+function conductiveBlockIds(rung: EditorRung, trace: EditorRungTrace | null): Set<string> {
+  const conducting = new Set<string>();
+  if (!trace) return conducting;
+  const seriesBlocks = rung.seriesBlocks.filter((block) => block.role === 'contact');
+  const reachable = new Set<number>([0]);
+
+  if (seriesBlocks.length === 0) {
+    for (const branch of trace.branchTraces) {
+      if (!branch.energized) continue;
+      branch.contacts.forEach((contact) => conducting.add(contact.blockId));
+    }
+    return conducting;
+  }
+
+  for (let nodeIndex = 0; nodeIndex < seriesBlocks.length; nodeIndex += 1) {
+    if (!reachable.has(nodeIndex)) continue;
+
+    const seriesContact = trace.seriesContacts[nodeIndex];
+    if (seriesContact?.energized) {
+      conducting.add(seriesContact.blockId);
+      reachable.add(nodeIndex + 1);
+    }
+
+    for (const branch of trace.branchTraces) {
+      if (branch.seriesIndex !== nodeIndex || !branch.energized) continue;
+      branch.contacts.forEach((contact) => conducting.add(contact.blockId));
+      reachable.add(branch.endIndex);
+    }
+  }
+
+  return conducting;
+}
+
 function flattenRung(rung: EditorRung): EditorBlock[] {
   return [
     ...rung.seriesBlocks,
@@ -99,6 +142,8 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   const safeIndex = Math.min(Math.max(rungIndex, 0), Math.max(editorProject.rungs.length - 1, 0));
   const rung = editorProject.rungs[safeIndex];
   const rungActive = Boolean(rung && evaluation.rungResults?.[rung.id]);
+  const rungTrace = useMemo(() => rung ? traceEditorRung(rung, plcState, evaluation.runtime) : null, [evaluation.runtime, plcState, rung]);
+  const conductingBlocks = useMemo(() => rung ? conductiveBlockIds(rung, rungTrace) : new Set<string>(), [rung, rungTrace]);
   const blocks = useMemo(() => rung ? flattenRung(rung) : [], [rung]);
   const branches = rung?.parallelBranches ?? [];
   const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
@@ -172,7 +217,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.ladderRail}>
           <Text style={[styles.railText, { fontSize: Math.round(34 * ladderZoom) }, rungActive && styles.railTextOn]}>|</Text>
           {rung.seriesBlocks.map((block) => (
-            <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
+            <BlockChip key={block.id} block={block} active={conductingBlocks.has(block.id)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
           ))}
           {branches.length > 0 ? (
             <View style={styles.branchBox}>
@@ -180,7 +225,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
               {branches.map((branch) => (
                 <View key={branch.id} style={styles.branchRow}>
                   {branch.blocks.map((block) => (
-                    <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
+                    <BlockChip key={block.id} block={block} active={conductingBlocks.has(block.id)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
                   ))}
                 </View>
               ))}
@@ -197,7 +242,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
           {blocks.map((block, index) => (
             <View key={`${block.id}-${index}`} style={styles.flowRow}>
               <Text style={styles.flowIndex}>{index + 1}</Text>
-              <BlockChip block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
+              <BlockChip block={block} active={block.role === 'contact' ? conductingBlocks.has(block.id) : blockActive(block, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
             </View>
           ))}
         </View>
@@ -206,15 +251,19 @@ export const MobileRungViewer = memo(function MobileRungViewer({
       {viewMode === 'list' ? (
         <View style={styles.flowStack}>
           {blocks.map((block, index) => {
-            const active = blockActive(block, plcState, rungActive);
+            const closed = traceContactClosed(block, rungTrace);
+            const active = block.role === 'contact' ? conductingBlocks.has(block.id) : blockActive(block, plcState, rungActive);
+            const stateLabel = block.role === 'contact'
+              ? active ? 'CONDUZ' : closed ? 'FECHADO' : 'ABERTO'
+              : active ? 'ON' : 'OFF';
             return (
-              <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, active && styles.listRowOn]}>
+              <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, closed && !active && styles.listRowClosed, active && styles.listRowOn]}>
                 <Text style={styles.flowIndex}>{index + 1}</Text>
                 <View style={styles.listCopy}>
                   <Text style={[styles.listTitle, active && styles.blockAddressOn]}>{blockAddress(block)} • {block.name}</Text>
                   <Text style={styles.listMeta}>{block.role} {block.contactMode ?? block.coilMode ?? block.timerMode ?? block.counterMode ?? ''}</Text>
                 </View>
-                <Text style={[styles.listState, active && styles.blockAddressOn]}>{active ? 'ON' : 'OFF'}</Text>
+                <Text style={[styles.listState, closed && !active && styles.listStateClosed, active && styles.blockAddressOn]}>{stateLabel}</Text>
               </Pressable>
             );
           })}
@@ -513,6 +562,10 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
     backgroundColor: colors.surface,
   },
+  listRowClosed: {
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
+  },
   listCopy: {
     flex: 1,
     minWidth: 0,
@@ -532,6 +585,9 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 10,
     fontWeight: '900',
+  },
+  listStateClosed: {
+    color: colors.textMuted,
   },
   emptyText: {
     color: colors.textMuted,
