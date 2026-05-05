@@ -6,6 +6,7 @@ export * from './PremiumAppShell';
 export * from './PremiumRouteContent';
 export * from './PremiumHomeScreen';
 export * from './PremiumLearningScreen';
+export * from './PremiumLessonDetailCard';
 export * from './PremiumProjectsScreen';
 export * from './PremiumEditorExportScreen';
 export * from './PremiumTagsDiagnosticsScreen';
