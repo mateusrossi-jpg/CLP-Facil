@@ -11,6 +11,7 @@ import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
+import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
 
 type SimulationMode = 'choice' | 'mobile' | 'classic';
 
@@ -71,6 +72,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
     return (
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
+        <PremiumProjectSimulationFocus intent={projectIntent} />
         <MobileExecutionCockpit
           editorProject={project}
           plcState={state}
@@ -89,6 +91,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
     return (
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
+        <PremiumProjectSimulationFocus intent={projectIntent} />
         {compactDevice ? (
           <View style={styles.mobileHint}>
             <Text style={styles.mobileHintTitle}>Modo clássico ativo</Text>
@@ -109,6 +112,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   return (
     <View style={styles.stack}>
       <PremiumProjectIntentBanner intent={projectIntent} />
+      <PremiumProjectSimulationFocus intent={projectIntent} />
       <MobileSimulationEntryCard
         onOpenMobileExecution={() => setMode('mobile')}
         onContinueClassic={() => setMode('classic')}
