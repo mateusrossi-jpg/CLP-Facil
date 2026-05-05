@@ -21,6 +21,8 @@ import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PlcWatchTableCard } from './PlcWatchTableCard';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
+import { MobilePlcWorkspace } from './MobilePlcWorkspace';
+import { getFirstPlcMissionTrack } from '../lessons/plcMissions';
 import { spacing } from '../theme/spacing';
 
 type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
@@ -42,6 +44,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onRunScan = props.onRunScan ?? noop;
   const onToggleAutoScan = props.onToggleAutoScan ?? noop;
   const onSetValue = props.onSetValue ?? noop;
+  const starterMission = getFirstPlcMissionTrack().missions[2];
   const fixedPanelProps: FixedPanelProps = {
     ...props,
     autoScan,
@@ -52,27 +55,39 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
   return (
     <View style={styles.stack}>
-      <PlcSimulationOverviewCard
-        project={props.editorProject}
-        state={props.plcState}
+      <MobilePlcWorkspace
+        editorProject={props.editorProject}
+        plcState={props.plcState}
         evaluation={props.evaluation}
         autoScan={autoScan}
+        missionTitle={starterMission?.title ?? 'Bancada guiada'}
+        onSetValue={onSetValue}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}
       />
 
       <PlcSimulationSection
         title="CPU"
-        subtitle="Estado RUN/STOP, tempo de ciclo e watchdog"
+        subtitle="Resumo técnico, estado RUN/STOP, tempo de ciclo e watchdog"
         tone="green"
       >
-        <PlcCpuStatusCard
-          isRunning
-          isAutoScan={autoScan}
-          scanCount={scanNumber}
-          lastScanMs={lastScanMs}
-          runtime={props.evaluation.runtime}
-        />
+        <View style={styles.innerStack}>
+          <PlcSimulationOverviewCard
+            project={props.editorProject}
+            state={props.plcState}
+            evaluation={props.evaluation}
+            autoScan={autoScan}
+            onRunScan={onRunScan}
+            onToggleAutoScan={onToggleAutoScan}
+          />
+          <PlcCpuStatusCard
+            isRunning
+            isAutoScan={autoScan}
+            scanCount={scanNumber}
+            lastScanMs={lastScanMs}
+            runtime={props.evaluation.runtime}
+          />
+        </View>
       </PlcSimulationSection>
 
       <PlcSimulationSection
