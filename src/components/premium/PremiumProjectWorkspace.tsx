@@ -6,8 +6,9 @@ import { spacing } from '../../theme/spacing';
 import { PremiumSegmented } from './PremiumControls';
 import { PremiumProjectDetailCard } from './PremiumProjectDetailCard';
 import { PremiumProjectExportCodePreviews } from './PremiumProjectExportCodePreviews';
+import { PremiumProjectQuickSummary } from './PremiumProjectQuickSummary';
 
-type ProjectWorkspaceTab = 'summary' | 'code';
+type ProjectWorkspaceTab = 'summary' | 'technical' | 'code';
 
 type PremiumProjectWorkspaceProps = {
   project: TrainingProject;
@@ -22,7 +23,7 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>Projeto aberto</Text>
           <Text style={styles.title}>{project.title}</Text>
-          <Text style={styles.subtitle}>Resumo técnico, bancada e exportação organizados para uso no celular.</Text>
+          <Text style={styles.subtitle}>Resumo, dados técnicos e exportação organizados para uso no celular.</Text>
         </View>
       </View>
 
@@ -31,11 +32,13 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
         onChange={setTab}
         options={[
           { value: 'summary', label: 'Resumo' },
+          { value: 'technical', label: 'Técnico' },
           { value: 'code', label: 'Código' },
         ]}
       />
 
-      {tab === 'summary' ? <PremiumProjectDetailCard project={project} /> : null}
+      {tab === 'summary' ? <PremiumProjectQuickSummary project={project} /> : null}
+      {tab === 'technical' ? <PremiumProjectDetailCard project={project} /> : null}
       {tab === 'code' ? <PremiumProjectExportCodePreviews project={project} /> : null}
     </View>
   );
