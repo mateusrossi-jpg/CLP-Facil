@@ -1,0 +1,1 @@
+export { SmartphoneSimulationPanel } from './SmartphoneSimulationPanelFixed';
