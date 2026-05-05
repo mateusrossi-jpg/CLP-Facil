@@ -4,6 +4,7 @@ import {
   getGuidedPracticesLinkedToProject,
   getProjectLearningLinkSummary,
 } from '../../education/projectLearningLinks';
+import { getProjectActionPlan, type ProjectActionStatus } from '../../projects/projectActionPlans';
 import { getBenchBoardTargetLabel, getBenchMappingForProject, getBenchPinRiskLabel, type BenchPinRisk } from '../../projects/projectBenchMappings';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
 import { getIoPointsForProject, getProjectIoKindLabel, getSafetyCriticalIoPoints, type ProjectIoKind, type ProjectIoPoint } from '../../projects/projectIoMaps';
@@ -30,6 +31,19 @@ function riskTone(risk: BenchPinRisk): 'green' | 'amber' | 'neutral' {
   return 'neutral';
 }
 
+function statusTone(status: ProjectActionStatus): 'green' | 'amber' | 'neutral' {
+  if (status === 'ready' || status === 'recommended') return 'green';
+  if (status === 'attention') return 'amber';
+  return 'neutral';
+}
+
+function statusLabel(status: ProjectActionStatus): string {
+  if (status === 'ready') return 'Pronto';
+  if (status === 'recommended') return 'Recomendado';
+  if (status === 'attention') return 'Atenção';
+  return 'Pendente';
+}
+
 function IoPointRow({ point }: { point: ProjectIoPoint }) {
   return (
     <View style={[styles.ioPoint, point.safetyCritical && styles.ioPointCritical]}>
@@ -52,6 +66,7 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
   const ioPoints = getIoPointsForProject(project.id);
   const safetyPoints = getSafetyCriticalIoPoints(project.id);
   const benchMapping = getBenchMappingForProject(project.id);
+  const actionPlan = getProjectActionPlan(project);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -83,6 +98,33 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
         <Text style={styles.learningTitle}>Ligação com Aprender</Text>
         <Text style={styles.learningText}>{learning.linkedLessons.length} lições vinculadas • {learning.linkedPracticeCount} práticas guiadas</Text>
         <PremiumProgress value={learning.teachingScore} label={`Score didático ${learning.teachingScore}%`} />
+      </View>
+
+      <View style={styles.block}>
+        <View style={styles.blockHeaderRow}>
+          <Text style={styles.blockTitle}>Plano de ação</Text>
+          <PremiumBadge label={`${actionPlan.readinessScore}% pronto`} tone={actionPlan.readinessScore >= 80 ? 'green' : 'amber'} />
+        </View>
+        <PremiumProgress value={actionPlan.readinessScore} label="Prontidão do projeto" />
+        {actionPlan.warnings.map((warning) => (
+          <View key={warning} style={styles.actionWarning}>
+            <Text style={styles.actionWarningText}>{warning}</Text>
+          </View>
+        ))}
+        {actionPlan.items.map((item) => (
+          <View key={item.kind} style={styles.actionItem}>
+            <View style={styles.actionHeader}>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>{item.title}</Text>
+                <Text style={styles.actionDescription}>{item.description}</Text>
+              </View>
+              <PremiumBadge label={statusLabel(item.status)} tone={statusTone(item.status)} />
+            </View>
+            <View style={styles.actionChecklist}>
+              {item.checklist.map((check) => <Text key={check} style={styles.actionCheck}>• {check}</Text>)}
+            </View>
+          </View>
+        ))}
       </View>
 
       {benchMapping ? (
@@ -247,6 +289,15 @@ const styles = StyleSheet.create({
   blockHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   blockTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   blockText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  actionItem: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.sm, backgroundColor: colors.surface, gap: spacing.xs },
+  actionHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  actionCopy: { flex: 1, minWidth: 0 },
+  actionTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: '900' },
+  actionDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '700', marginTop: 2 },
+  actionChecklist: { gap: 2, paddingTop: 2 },
+  actionCheck: { color: colors.textMuted, fontSize: 10, lineHeight: 15, fontWeight: '800' },
+  actionWarning: { borderColor: colors.amber, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.amberSoft },
+  actionWarningText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800' },
   benchPin: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface },
   benchPinAttention: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
   benchTagBox: { minWidth: 56, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 10, paddingHorizontal: spacing.sm, paddingVertical: 5, alignItems: 'center', backgroundColor: colors.surfaceElevated },
