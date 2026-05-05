@@ -13,10 +13,15 @@ import {
 import { searchTrainingProjects } from '../../projects/projectSearch';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import type { BottomNavKey } from '../navigationTypes';
 import { PremiumBadge, PremiumMetric, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 import { PremiumProjectWorkspace } from './PremiumProjectWorkspace';
 
 type ProjectFilter = ProjectCatalogFilter;
+
+type PremiumProjectsScreenProps = {
+  onNavigate?: (route: BottomNavKey) => void;
+};
 
 function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'purple' {
   if (difficulty === 'basic') return 'green';
@@ -24,7 +29,7 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
   return 'purple';
 }
 
-export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
+export const PremiumProjectsScreen = memo(function PremiumProjectsScreen({ onNavigate }: PremiumProjectsScreenProps) {
   const featuredProject = getFeaturedTrainingProject();
   const [filter, setFilter] = useState<ProjectFilter>('all');
   const [search, setSearch] = useState('');
@@ -68,7 +73,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
         <PremiumMetric label="Filtrados" value={filteredProjects.length} hint="resultado" tone="green" />
       </View>
 
-      <PremiumProjectWorkspace project={selectedProject} />
+      <PremiumProjectWorkspace project={selectedProject} onNavigate={onNavigate} />
 
       <PremiumSection title="Projeto em destaque" subtitle="Ideal para iniciar no pensamento Ladder" tone="green">
         <View style={styles.featuredCard}>
@@ -95,7 +100,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
           </View>
           <View style={styles.actionsRow}>
             <Pressable onPress={() => setSelectedProject(featuredProject)} style={styles.primaryButton}><Text style={styles.primaryText}>Abrir projeto</Text></Pressable>
-            <Pressable onPress={() => setSelectedProject(featuredProject)} style={styles.secondaryButton}><Text style={styles.secondaryText}>Simular</Text></Pressable>
+            <Pressable onPress={() => { setSelectedProject(featuredProject); onNavigate?.('simulate'); }} style={styles.secondaryButton}><Text style={styles.secondaryText}>Simular</Text></Pressable>
           </View>
         </View>
       </PremiumSection>
