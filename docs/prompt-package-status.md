@@ -76,6 +76,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - `PremiumProjectsScreen` agora mostra vínculo didático com o modo Aprender: quantidade de lições, práticas guiadas e score didático por projeto.
 - `PremiumProjectsScreen` agora possui busca real com `TextInput`, filtro por termo, filtro por dificuldade/favoritos e estado vazio.
 - Novo `PremiumProjectDetailCard` criado para mostrar detalhe do projeto selecionado com objetivos, I/O, instruções, tags e vínculo com Aprender.
+- `PremiumProjectDetailCard` agora lista as lições e práticas guiadas vinculadas ao projeto aberto.
 - `PremiumProjectsScreen` agora permite abrir/selecionar um projeto e destacar o card selecionado com badge `Aberto`.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
