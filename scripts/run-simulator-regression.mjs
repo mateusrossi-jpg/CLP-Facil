@@ -2,18 +2,6 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 
-function loadSuite(path, exportName) {
-  try {
-    return require(path)[exportName];
-  } catch (error) {
-    return () => [{
-      name: `suite opcional nao compilada: ${exportName}`,
-      passed: true,
-      details: error instanceof Error ? error.message : String(error),
-    }];
-  }
-}
-
 const { runEditorEvaluatorRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorEvaluatorRegression.js');
 const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/edgeRegression.js');
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
@@ -45,10 +33,7 @@ const { runProjectQuickActionsRegressionSuite } = require('/tmp/easy-clp-sim-tes
 const { runProjectQuickActionNavigationRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectQuickActionNavigationRegression.js');
 const { runProjectNavigationIntentRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectNavigationIntentRegression.js');
 const { runProjectSimulationFocusRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectSimulationFocusRegression.js');
-const runProjectLearningFocusRegressionSuite = loadSuite(
-  '/tmp/easy-clp-sim-test/projects/projectLearningFocusRegression.js',
-  'runProjectLearningFocusRegressionSuite',
-);
+const { runProjectLearningFocusRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectLearningFocusRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
