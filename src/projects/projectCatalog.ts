@@ -26,6 +26,13 @@ export type TrainingProject = {
   };
 };
 
+export type ProjectCatalogFilter = 'all' | ProjectDifficulty | 'favorites';
+
+export type ProjectCatalogQuery = {
+  filter?: ProjectCatalogFilter;
+  search?: string;
+};
+
 export const trainingProjects: TrainingProject[] = [
   {
     id: 'partida-direta',
@@ -172,6 +179,38 @@ export const trainingProjects: TrainingProject[] = [
     ioSummary: { inputs: 3, outputs: 1, memories: 1, timers: 1, counters: 0 },
   },
 ];
+
+function normalizeText(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function projectMatchesSearch(project: TrainingProject, search: string): boolean {
+  const query = normalizeText(search);
+  if (!query) return true;
+
+  const searchable = [
+    project.id,
+    project.title,
+    project.description,
+    project.category,
+    project.difficulty,
+    ...project.instructions,
+    ...project.tags,
+    ...project.learningGoals,
+  ].map((item) => normalizeText(item));
+
+  return searchable.some((item) => item.includes(query));
+}
+
+export function filterTrainingProjects(query: ProjectCatalogQuery = {}): TrainingProject[] {
+  const filter = query.filter ?? 'all';
+  return trainingProjects.filter((project) => {
+    const filterMatch =
+      filter === 'all' ||
+      (filter === 'favorites' ? project.favorite : project.difficulty === filter);
+    return filterMatch && projectMatchesSearch(project, query.search ?? '');
+  });
+}
 
 export function getTrainingProjectById(id: string): TrainingProject | undefined {
   return trainingProjects.find((project) => project.id === id);
