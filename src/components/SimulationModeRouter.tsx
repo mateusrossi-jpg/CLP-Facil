@@ -5,6 +5,7 @@ import { createInitialEditorProject, EditorProjectState } from '../engine/editor
 import { PlcState } from '../engine/projectTypes';
 import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
+import { createEditorProjectFromTrainingProjectId } from '../projects/projectEditorAdapter';
 import type { ProjectNavigationIntent } from '../projects/projectNavigationIntent';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -64,7 +65,11 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   const compactDevice = width < 760;
   const [mode, setMode] = useState<SimulationMode>(compactDevice ? 'choice' : 'classic');
   const fallbackProject = useMemo(() => createInitialEditorProject(), []);
-  const project = editorProject ?? fallbackProject;
+  const projectFromIntent = useMemo(
+    () => projectIntent ? createEditorProjectFromTrainingProjectId(projectIntent.projectId) : undefined,
+    [projectIntent?.projectId],
+  );
+  const project = editorProject ?? projectFromIntent ?? fallbackProject;
   const state = plcState ?? makeFallbackState(project);
   const result = evaluation ?? fallbackEvaluation(project, state);
 
