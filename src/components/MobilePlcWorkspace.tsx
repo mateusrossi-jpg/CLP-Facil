@@ -41,6 +41,7 @@ type MobilePlcWorkspaceProps = {
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onRemoveBlock?: () => void;
   onAdvanceMission?: () => void;
 };
 
@@ -115,6 +116,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onAddCoil,
   onAddTimer,
   onAddBranch,
+  onRemoveBlock,
   onAdvanceMission,
 }: MobilePlcWorkspaceProps) {
   const [rungIndex, setRungIndex] = useState(0);
@@ -463,6 +465,18 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
               </Pressable>
             ))}
           </View>
+          {selectedBlock && onRemoveBlock ? (
+            <Pressable
+              onPress={() => {
+                onRemoveBlock();
+                setSelectedBlockId(null);
+                setEditing(false);
+              }}
+              style={({ pressed }) => [styles.removeBlockButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.removeBlockText}>Remover bloco selecionado</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 
@@ -829,6 +843,22 @@ const styles = StyleSheet.create({
   },
   paletteTextAction: {
     color: colors.cyan,
+  },
+  removeBlockButton: {
+    minHeight: 40,
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.redSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  removeBlockText: {
+    color: colors.red,
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   pressed: {
     opacity: 0.72,

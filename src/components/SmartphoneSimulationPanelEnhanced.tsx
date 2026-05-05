@@ -1,5 +1,5 @@
-import { ComponentProps, memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ComponentProps, memo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PlcBenchTestPlanCard } from './PlcBenchTestPlanCard';
 import { PlcCommissioningChecklistCard } from './PlcCommissioningChecklistCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
@@ -24,6 +24,7 @@ import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './S
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
 import { PlcMission } from '../lessons/missionTypes';
 import { EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorTimerMode } from '../engine/editorTypes';
+import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
@@ -56,12 +57,14 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onRemoveBlock?: () => void;
   onAdvanceMission?: () => void;
 };
 
 const noop = () => undefined;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanelEnhanced(props: SmartphoneSimulationPanelEnhancedProps) {
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const scanNumber = props.evaluation.scanNumber || 0;
   const lastScanMs = props.evaluation.runtime?.scanStepMs ?? 100;
   const autoScan = Boolean(props.autoScan);
@@ -69,7 +72,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onToggleAutoScan = props.onToggleAutoScan ?? noop;
   const onSetValue = props.onSetValue ?? noop;
   const activeMission = props.mission ?? undefined;
-  const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics);
+  const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics || advancedOpen);
   const fixedPanelProps: FixedPanelProps = {
     ...props,
     autoScan,
@@ -110,8 +113,17 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onAddCoil={props.onAddCoil}
         onAddTimer={props.onAddTimer}
         onAddBranch={props.onAddBranch}
+        onRemoveBlock={props.onRemoveBlock}
         onAdvanceMission={props.onAdvanceMission}
       />
+
+      <Pressable onPress={() => setAdvancedOpen((current) => !current)} style={({ pressed }) => [styles.analysisButton, advancedOpen && styles.analysisButtonOn, pressed && styles.pressed]}>
+        <View style={styles.analysisCopy}>
+          <Text style={[styles.analysisTitle, advancedOpen && styles.analysisTitleOn]}>{advancedOpen ? 'Ocultar analises' : 'Analises sob demanda'}</Text>
+          <Text style={styles.analysisText}>CPU, scan, memória, force, segurança, relatório, rubrica e trace.</Text>
+        </View>
+        <Text style={[styles.analysisPill, advancedOpen && styles.analysisPillOn]}>{advancedOpen ? 'Fechar' : 'Abrir'}</Text>
+      </Pressable>
 
       {showAdvancedDiagnostics ? (
         <>
@@ -287,5 +299,58 @@ const styles = StyleSheet.create({
   },
   innerStack: {
     gap: spacing.md,
+  },
+  analysisButton: {
+    minHeight: 58,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  analysisButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  analysisCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  analysisTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  analysisTitleOn: {
+    color: colors.cyan,
+  },
+  analysisText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  analysisPill: {
+    color: colors.cyan,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  analysisPillOn: {
+    color: colors.background,
+    backgroundColor: colors.cyan,
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });

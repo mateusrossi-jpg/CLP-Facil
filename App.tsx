@@ -821,8 +821,8 @@ export default function App() {
     });
   }
 
-  function removeSelectedEditorBlock() {
-    if (editingLocked) return;
+  function removeSelectedEditorBlock(allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -1160,6 +1160,7 @@ export default function App() {
                 onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
                 onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
                 onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
+                onRemoveBlock={() => removeSelectedEditorBlock(true)}
                 onAdvanceMission={nextPlcMission(activePlcMission) ? openNextPlcMission : undefined}
               />
             ) : null}
