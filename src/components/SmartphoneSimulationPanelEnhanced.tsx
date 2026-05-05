@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { ComponentProps, memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
@@ -15,7 +15,7 @@ import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { spacing } from '../theme/spacing';
 
-type SmartphoneSimulationPanelEnhancedProps = React.ComponentProps<typeof SmartphoneSimulationPanelFixed>;
+type SmartphoneSimulationPanelEnhancedProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanelEnhanced(props: SmartphoneSimulationPanelEnhancedProps) {
   const scanNumber = props.evaluation.scanNumber || 0;
