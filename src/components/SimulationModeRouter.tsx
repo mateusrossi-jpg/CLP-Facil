@@ -16,6 +16,7 @@ import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
 import { PlcMemoryMapCard } from './PlcMemoryMapCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
+import { PlcSafetyInterlockCard } from './PlcSafetyInterlockCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PlcScanHistoryCard } from './PlcScanHistoryCard';
 import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
@@ -123,6 +124,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
+        <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -184,6 +186,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
+        <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -247,6 +250,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
       <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
       <PlcMemoryMapCard project={project} />
+      <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
       <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
       <ScanTraceDiagnosticCard
         project={project}
