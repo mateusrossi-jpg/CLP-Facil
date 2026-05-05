@@ -23,6 +23,9 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
     (total, track) => total + track.missions.filter((mission) => completedMissionIds[mission.id]).length,
     0,
   );
+  const nextMission = tracks
+    .flatMap((track) => track.missions)
+    .find((mission) => !completedMissionIds[mission.id]);
 
   return (
     <View style={styles.card}>
@@ -36,6 +39,22 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
           <Text style={styles.badgeText}>{completedCount}/{totalMissions}</Text>
         </View>
       </View>
+
+      {nextMission ? (
+        <Pressable onPress={() => onOpenMission?.(nextMission)} style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}>
+          <View style={styles.continueCopy}>
+            <Text style={styles.continueLabel}>Continuar agora</Text>
+            <Text style={styles.continueTitle}>{nextMission.title}</Text>
+            <Text style={styles.continueText} numberOfLines={2}>{nextMission.objective}</Text>
+          </View>
+          <Text style={styles.continueAction}>Iniciar</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.continueCardDone}>
+          <Text style={styles.continueLabelDone}>Trilha concluída</Text>
+          <Text style={styles.continueTextDone}>Todas as missões disponíveis foram concluídas nesta sessão.</Text>
+        </View>
+      )}
 
       <View style={styles.trackStack}>
         {tracks.map((track, trackIndex) => {
@@ -57,27 +76,27 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
 
               <View style={styles.missionStack}>
                 {visibleMissions.map((mission, missionIndex) => {
-                const active = activeMissionId === mission.id;
-                const completed = Boolean(completedMissionIds[mission.id]);
-                return (
-                  <Pressable
-                    key={mission.id}
-                    onPress={() => onOpenMission?.(mission)}
-                    style={({ pressed }) => [styles.missionRow, completed && styles.missionRowDone, active && styles.missionRowActive, pressed && styles.pressed]}
-                  >
-                    <View style={[styles.missionDot, completed && styles.missionDotDone, active && styles.missionDotActive]}>
-                      <Text style={[styles.missionDotText, (completed || active) && styles.missionDotTextActive]}>{completed ? '✓' : missionIndex + 1}</Text>
-                    </View>
-                    <View style={styles.missionCopy}>
-                      <Text style={styles.missionTitle}>{mission.title}</Text>
-                      <Text style={styles.missionObjective} numberOfLines={2}>{mission.objective}</Text>
-                    </View>
-                    <Text style={[styles.openText, completed && styles.openTextDone, active && styles.openTextActive]}>
-                      {active ? 'Ativa' : completed ? 'Feita' : 'Abrir'}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                  const active = activeMissionId === mission.id;
+                  const completed = Boolean(completedMissionIds[mission.id]);
+                  return (
+                    <Pressable
+                      key={mission.id}
+                      onPress={() => onOpenMission?.(mission)}
+                      style={({ pressed }) => [styles.missionRow, completed && styles.missionRowDone, active && styles.missionRowActive, pressed && styles.pressed]}
+                    >
+                      <View style={[styles.missionDot, completed && styles.missionDotDone, active && styles.missionDotActive]}>
+                        <Text style={[styles.missionDotText, (completed || active) && styles.missionDotTextActive]}>{completed ? '✓' : missionIndex + 1}</Text>
+                      </View>
+                      <View style={styles.missionCopy}>
+                        <Text style={styles.missionTitle}>{mission.title}</Text>
+                        <Text style={styles.missionObjective} numberOfLines={2}>{mission.objective}</Text>
+                      </View>
+                      <Text style={[styles.openText, completed && styles.openTextDone, active && styles.openTextActive]}>
+                        {active ? 'Ativa' : completed ? 'Feita' : 'Abrir'}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
 
               {track.missions.length > 3 ? (
@@ -147,6 +166,65 @@ const styles = StyleSheet.create({
     color: colors.green,
     fontSize: 10,
     fontWeight: '900',
+  },
+  continueCard: {
+    minHeight: 74,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.greenSoft,
+    padding: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  continueCardDone: {
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.greenSoft,
+    padding: spacing.sm,
+    gap: 2,
+  },
+  continueCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  continueLabel: {
+    color: colors.green,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  continueLabelDone: {
+    color: colors.green,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  continueTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  continueText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  continueTextDone: {
+    color: colors.text,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '800',
+  },
+  continueAction: {
+    color: colors.green,
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   trackStack: {
     gap: spacing.sm,
