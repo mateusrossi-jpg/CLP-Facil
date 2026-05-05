@@ -9,6 +9,7 @@ import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcSafetyInterlockCard } from './PlcSafetyInterlockCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PlcScanHistoryCard } from './PlcScanHistoryCard';
+import { PlcSimulationSection } from './PlcSimulationSection';
 import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PlcWatchTableCard } from './PlcWatchTableCard';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
@@ -23,76 +24,138 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
   return (
     <View style={styles.stack}>
-      <PlcCpuStatusCard
-        isRunning
-        isAutoScan={props.autoScan}
-        scanCount={scanNumber}
-        lastScanMs={lastScanMs}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcScanHistoryCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-        scanNumber={scanNumber}
-        lastScanMs={lastScanMs}
-      />
-      <PlcScanCycleCard
-        project={props.editorProject}
-        state={props.plcState}
-        scanNumber={scanNumber}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcProcessImageCard
-        project={props.editorProject}
-        state={props.plcState}
-        scanNumber={scanNumber}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcRungPowerFlowCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-        focusedRungId={props.editorProject.selectedRungId}
-      />
-      <PlcTimerCounterMonitorCard
-        project={props.editorProject}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcWatchTableCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcMemoryMapCard project={props.editorProject} />
-      <PlcSafetyInterlockCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-      />
-      <PlcForceTableCard
-        project={props.editorProject}
-        state={props.plcState}
-        onSetValue={props.onSetValue}
-      />
-      <PlcEdgePulseMonitorCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-      />
-      <ScanTraceDiagnosticCard
-        project={props.editorProject}
-        state={props.plcState}
-        runtime={props.evaluation.runtime}
-        focusedRungId={props.editorProject.selectedRungId}
-      />
-      <SmartphoneSimulationPanelFixed {...props} />
+      <PlcSimulationSection
+        title="CPU"
+        subtitle="Estado RUN/STOP, tempo de ciclo e watchdog"
+        tone="green"
+        defaultOpen
+      >
+        <PlcCpuStatusCard
+          isRunning
+          isAutoScan={props.autoScan}
+          scanCount={scanNumber}
+          lastScanMs={lastScanMs}
+          runtime={props.evaluation.runtime}
+        />
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Scan"
+        subtitle="Histórico, ciclo de varredura e imagem de processo"
+        tone="cyan"
+        defaultOpen
+      >
+        <View style={styles.innerStack}>
+          <PlcScanHistoryCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+            scanNumber={scanNumber}
+            lastScanMs={lastScanMs}
+          />
+          <PlcScanCycleCard
+            project={props.editorProject}
+            state={props.plcState}
+            scanNumber={scanNumber}
+            runtime={props.evaluation.runtime}
+          />
+          <PlcProcessImageCard
+            project={props.editorProject}
+            state={props.plcState}
+            scanNumber={scanNumber}
+            runtime={props.evaluation.runtime}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Ladder"
+        subtitle="Fluxo de energia, timers, contadores e bordas"
+        tone="amber"
+      >
+        <View style={styles.innerStack}>
+          <PlcRungPowerFlowCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+            focusedRungId={props.editorProject.selectedRungId}
+          />
+          <PlcTimerCounterMonitorCard
+            project={props.editorProject}
+            runtime={props.evaluation.runtime}
+          />
+          <PlcEdgePulseMonitorCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Memória"
+        subtitle="Watch Table e mapa de endereços do programa"
+        tone="purple"
+      >
+        <View style={styles.innerStack}>
+          <PlcWatchTableCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+          />
+          <PlcMemoryMapCard project={props.editorProject} />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Segurança"
+        subtitle="Intertravamentos, forces e alertas didáticos"
+        tone="red"
+      >
+        <View style={styles.innerStack}>
+          <PlcSafetyInterlockCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+          />
+          <PlcForceTableCard
+            project={props.editorProject}
+            state={props.plcState}
+            onSetValue={props.onSetValue}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Diagnóstico"
+        subtitle="Trace textual do scan e linha selecionada"
+        tone="neutral"
+      >
+        <ScanTraceDiagnosticCard
+          project={props.editorProject}
+          state={props.plcState}
+          runtime={props.evaluation.runtime}
+          focusedRungId={props.editorProject.selectedRungId}
+        />
+      </PlcSimulationSection>
+
+      <PlcSimulationSection
+        title="Painel compacto"
+        subtitle="Controles principais de simulação no smartphone"
+        tone="green"
+        defaultOpen
+      >
+        <SmartphoneSimulationPanelFixed {...props} />
+      </PlcSimulationSection>
     </View>
   );
 });
 
 const styles = StyleSheet.create({
   stack: {
+    gap: spacing.md,
+  },
+  innerStack: {
     gap: spacing.md,
   },
 });
