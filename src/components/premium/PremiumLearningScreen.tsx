@@ -15,6 +15,7 @@ import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 import { PremiumLessonDetailCard } from './PremiumLessonDetailCard';
 import { PremiumProjectIntentBanner } from './PremiumProjectIntentBanner';
+import { PremiumProjectLearningFocus } from './PremiumProjectLearningFocus';
 
 type LearningTab = 'tracks' | 'modules' | 'challenges' | 'achievements';
 type BadgeTone = 'cyan' | 'green' | 'amber' | 'purple';
@@ -45,6 +46,7 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen({ proje
   return (
     <PremiumScreen>
       <PremiumProjectIntentBanner intent={projectIntent} />
+      <PremiumProjectLearningFocus intent={projectIntent} />
 
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>Aprender</Text>
