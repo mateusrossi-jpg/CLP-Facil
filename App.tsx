@@ -511,8 +511,8 @@ export default function App() {
     setEditorMessage(null);
   }
 
-  function selectEditorBlock(blockId: string) {
-    if (editingLocked) return;
+  function selectEditorBlock(blockId: string, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => ({ ...current, selectedBlockId: blockId }));
     setEditorMessage(null);
   }
@@ -652,8 +652,8 @@ export default function App() {
     setEditorMessage(`${component.name} inserido em ${insertionZone}.`);
   }
 
-  function updateSelectedBlockVariable(variable: string) {
-    if (editingLocked) return;
+  function updateSelectedBlockVariable(variable: string, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     const normalizedVariable = variable.trim().toUpperCase();
     if (!normalizedVariable) return;
     setEditorProject((current) => {
@@ -664,8 +664,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockText(field: 'name' | 'description', value: string) {
-    if (editingLocked) return;
+  function updateSelectedBlockText(field: 'name' | 'description', value: string, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return mapProjectBlocks(current, (block) =>
@@ -674,8 +674,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockContactMode(contactMode: EditorContactMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockContactMode(contactMode: EditorContactMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return mapProjectBlocks(current, (block) =>
@@ -684,8 +684,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockCoilMode(coilMode: EditorCoilMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockCoilMode(coilMode: EditorCoilMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -698,8 +698,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockTimerMode(timerMode: EditorTimerMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockTimerMode(timerMode: EditorTimerMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -712,8 +712,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockCounterMode(counterMode: EditorCounterMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockCounterMode(counterMode: EditorCounterMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -757,8 +757,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockPresetMs(presetMs: number) {
-    if (editingLocked) return;
+  function updateSelectedBlockPresetMs(presetMs: number, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -771,8 +771,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockPreset(preset: number) {
-    if (editingLocked) return;
+  function updateSelectedBlockPreset(preset: number, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return {
@@ -1096,6 +1096,15 @@ export default function App() {
                 onRunScan={runEditorScan}
                 onToggleAutoScan={() => setAutoScan((current) => !current)}
                 onSetValue={setEditorValue}
+                onSelectBlockId={(blockId) => selectEditorBlock(blockId, true)}
+                onChangeBlockVariable={(variable) => updateSelectedBlockVariable(variable, true)}
+                onChangeBlockName={(name) => updateSelectedBlockText('name', name, true)}
+                onChangeContactMode={(mode) => updateSelectedBlockContactMode(mode, true)}
+                onChangeCoilMode={(mode) => updateSelectedBlockCoilMode(mode, true)}
+                onChangeTimerMode={(mode) => updateSelectedBlockTimerMode(mode, true)}
+                onChangeCounterMode={(mode) => updateSelectedBlockCounterMode(mode, true)}
+                onChangePresetMs={(presetMs) => updateSelectedBlockPresetMs(presetMs, true)}
+                onChangePreset={(preset) => updateSelectedBlockPreset(preset, true)}
               />
             ) : null}
             {!(compactSimulator && editorMode === 'simulate') ? (

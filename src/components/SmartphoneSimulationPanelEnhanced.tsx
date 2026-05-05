@@ -24,6 +24,7 @@ import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './S
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
 import { getFirstPlcMissionTrack } from '../lessons/plcMissions';
 import { PlcMission } from '../lessons/missionTypes';
+import { EditorCoilMode, EditorContactMode, EditorCounterMode, EditorTimerMode } from '../engine/editorTypes';
 import { spacing } from '../theme/spacing';
 
 type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
@@ -35,6 +36,15 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
   onSetValue?: (variable: string, value: boolean | number) => void;
+  onSelectBlockId?: (blockId: string) => void;
+  onChangeBlockVariable?: (variable: string) => void;
+  onChangeBlockName?: (name: string) => void;
+  onChangeContactMode?: (mode: EditorContactMode) => void;
+  onChangeCoilMode?: (mode: EditorCoilMode) => void;
+  onChangeTimerMode?: (mode: EditorTimerMode) => void;
+  onChangeCounterMode?: (mode: EditorCounterMode) => void;
+  onChangePresetMs?: (presetMs: number) => void;
+  onChangePreset?: (preset: number) => void;
 };
 
 const noop = () => undefined;
@@ -67,6 +77,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onSetValue={onSetValue}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}
+        onSelectBlockId={props.onSelectBlockId}
+        onChangeBlockVariable={props.onChangeBlockVariable}
+        onChangeBlockName={props.onChangeBlockName}
+        onChangeContactMode={props.onChangeContactMode}
+        onChangeCoilMode={props.onChangeCoilMode}
+        onChangeTimerMode={props.onChangeTimerMode}
+        onChangeCounterMode={props.onChangeCounterMode}
+        onChangePresetMs={props.onChangePresetMs}
+        onChangePreset={props.onChangePreset}
       />
 
       <PlcSimulationSection

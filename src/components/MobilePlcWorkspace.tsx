@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
-import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
+import { EditorBlock, EditorCoilMode, EditorContactMode, EditorCounterMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { PlcMission } from '../lessons/missionTypes';
 import { evaluateMissionAttempt } from '../lessons/missionValidation';
@@ -21,6 +21,15 @@ type MobilePlcWorkspaceProps = {
   onSetValue?: (variable: string, value: boolean | number) => void;
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
+  onSelectBlockId?: (blockId: string) => void;
+  onChangeBlockVariable?: (variable: string) => void;
+  onChangeBlockName?: (name: string) => void;
+  onChangeContactMode?: (mode: EditorContactMode) => void;
+  onChangeCoilMode?: (mode: EditorCoilMode) => void;
+  onChangeTimerMode?: (mode: EditorTimerMode) => void;
+  onChangeCounterMode?: (mode: EditorCounterMode) => void;
+  onChangePresetMs?: (presetMs: number) => void;
+  onChangePreset?: (preset: number) => void;
 };
 
 const noop = () => undefined;
@@ -43,6 +52,19 @@ function blockMode(block: EditorBlock): string {
   return block.contactMode ?? block.coilMode ?? block.timerMode ?? block.counterMode ?? block.role;
 }
 
+function projectBlocks(project: EditorProjectState): EditorBlock[] {
+  return project.rungs.flatMap((rung) => [
+    ...rung.seriesBlocks,
+    ...rung.parallelBlocks,
+    ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
+    ...(rung.coilBlock ? [rung.coilBlock] : []),
+  ]);
+}
+
+function normalizeVariableInput(value: string): string {
+  return value.toUpperCase().replace(/\s/g, '');
+}
+
 export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   editorProject,
   plcState,
@@ -53,11 +75,24 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onSetValue = noop,
   onRunScan = noop,
   onToggleAutoScan = noop,
+  onSelectBlockId,
+  onChangeBlockVariable,
+  onChangeBlockName,
+  onChangeContactMode,
+  onChangeCoilMode,
+  onChangeTimerMode,
+  onChangeCounterMode,
+  onChangePresetMs,
+  onChangePreset,
 }: MobilePlcWorkspaceProps) {
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<EditorBlock | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const selectedBlock = useMemo(
+    () => projectBlocks(editorProject).find((block) => block.id === selectedBlockId) ?? null,
+    [editorProject, selectedBlockId],
+  );
   const activeOutputs = useMemo(() => activeOutputCount(plcState), [plcState]);
   const missionAttempt = useMemo(
     () => mission ? evaluateMissionAttempt(mission, plcState, evaluation) : null,
@@ -116,7 +151,8 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         rungIndex={rungIndex}
         onSelectRungIndex={setRungIndex}
         onSelectBlock={(block) => {
-          setSelectedBlock(block);
+          setSelectedBlockId(block.id);
+          onSelectBlockId?.(block.id);
           if (!editing) setEditing(true);
         }}
       />
@@ -140,16 +176,111 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
             </Pressable>
           </View>
           {selectedBlock ? (
-            <View style={styles.fieldGrid}>
-              <Text style={styles.fieldText}>Tipo: {selectedBlock.role}</Text>
-              <Text style={styles.fieldText}>Modo: {blockMode(selectedBlock)}</Text>
-              <Text style={styles.fieldText}>Endereco: {selectedBlock.variable || selectedBlock.destination || '-'}</Text>
-              <Text style={styles.fieldText}>Nome: {selectedBlock.name}</Text>
-              {selectedBlock.presetMs !== undefined ? <Text style={styles.fieldText}>Preset: {selectedBlock.presetMs} ms</Text> : null}
-              {selectedBlock.preset !== undefined ? <Text style={styles.fieldText}>Preset: {selectedBlock.preset}</Text> : null}
+            <View style={styles.editorFields}>
+              <View style={styles.fieldGrid}>
+                <Text style={styles.fieldText}>Tipo: {selectedBlock.role}</Text>
+                <Text style={styles.fieldText}>Modo: {blockMode(selectedBlock)}</Text>
+              </View>
+
+              <Text style={styles.inputLabel}>Nome</Text>
+              <TextInput
+                value={selectedBlock.name}
+                onChangeText={(value) => onChangeBlockName?.(value)}
+                placeholder="Nome do componente"
+                placeholderTextColor={colors.textDim}
+                style={styles.editorInput}
+              />
+
+              <Text style={styles.inputLabel}>Endereco / tag</Text>
+              <TextInput
+                value={selectedBlock.variable || selectedBlock.destination || ''}
+                onChangeText={(value) => onChangeBlockVariable?.(normalizeVariableInput(value))}
+                placeholder="I0.0, Q0.0, M0.0, T0 ou C0"
+                placeholderTextColor={colors.textDim}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                style={styles.editorInput}
+              />
+
+              {selectedBlock.role === 'contact' ? (
+                <>
+                  <Text style={styles.inputLabel}>Contato</Text>
+                  <View style={styles.paletteRow}>
+                    {([
+                      ['NO', 'NA'],
+                      ['NC', 'NF'],
+                      ['RISING', 'Pulso ↑'],
+                      ['FALLING', 'Pulso ↓'],
+                    ] as [EditorContactMode, string][]).map(([mode, label]) => (
+                      <Pressable
+                        key={mode}
+                        onPress={() => onChangeContactMode?.(mode)}
+                        style={[styles.paletteChip, selectedBlock.contactMode === mode && styles.paletteChipOn]}
+                      >
+                        <Text style={[styles.paletteText, selectedBlock.contactMode === mode && styles.paletteTextOn]}>{label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
+              {selectedBlock.role === 'coil' ? (
+                <>
+                  <Text style={styles.inputLabel}>Bobina</Text>
+                  <View style={styles.paletteRow}>
+                    {(['NORMAL', 'SET', 'RESET', 'PULSE'] as EditorCoilMode[]).map((mode) => (
+                      <Pressable key={mode} onPress={() => onChangeCoilMode?.(mode)} style={[styles.paletteChip, selectedBlock.coilMode === mode && styles.paletteChipOn]}>
+                        <Text style={[styles.paletteText, selectedBlock.coilMode === mode && styles.paletteTextOn]}>{mode}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
+              {selectedBlock.role === 'timer' ? (
+                <>
+                  <Text style={styles.inputLabel}>Temporizador</Text>
+                  <View style={styles.paletteRow}>
+                    {(['TON', 'TOF', 'TP'] as EditorTimerMode[]).map((mode) => (
+                      <Pressable key={mode} onPress={() => onChangeTimerMode?.(mode)} style={[styles.paletteChip, selectedBlock.timerMode === mode && styles.paletteChipOn]}>
+                        <Text style={[styles.paletteText, selectedBlock.timerMode === mode && styles.paletteTextOn]}>{mode}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <TextInput
+                    value={String(selectedBlock.presetMs ?? '')}
+                    onChangeText={(value) => onChangePresetMs?.(Number(value.replace(/\D/g, '')) || 0)}
+                    placeholder="Preset em ms"
+                    placeholderTextColor={colors.textDim}
+                    keyboardType="numeric"
+                    style={styles.editorInput}
+                  />
+                </>
+              ) : null}
+
+              {selectedBlock.role === 'counter' ? (
+                <>
+                  <Text style={styles.inputLabel}>Contador</Text>
+                  <View style={styles.paletteRow}>
+                    {(['CTU', 'CTD', 'CTUD'] as EditorCounterMode[]).map((mode) => (
+                      <Pressable key={mode} onPress={() => onChangeCounterMode?.(mode)} style={[styles.paletteChip, selectedBlock.counterMode === mode && styles.paletteChipOn]}>
+                        <Text style={[styles.paletteText, selectedBlock.counterMode === mode && styles.paletteTextOn]}>{mode}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <TextInput
+                    value={String(selectedBlock.preset ?? '')}
+                    onChangeText={(value) => onChangePreset?.(Number(value.replace(/\D/g, '')) || 0)}
+                    placeholder="Preset de contagem"
+                    placeholderTextColor={colors.textDim}
+                    keyboardType="numeric"
+                    style={styles.editorInput}
+                  />
+                </>
+              ) : null}
             </View>
           ) : (
-            <Text style={styles.hintText}>Toque em contato, bobina, timer ou contador para editar. A conexao de escrita sera ligada ao editor completo na proxima etapa.</Text>
+            <Text style={styles.hintText}>Toque em contato, bobina, timer ou contador para editar.</Text>
           )}
           <View style={styles.paletteRow}>
             {['+ Contato', '+ Bobina', '+ Timer', '+ Branch'].map((item) => (
@@ -380,13 +511,41 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   fieldGrid: {
-    gap: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  editorFields: {
+    gap: spacing.xs,
   },
   fieldText: {
     color: colors.text,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '800',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  inputLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    marginTop: spacing.xs,
+  },
+  editorInput: {
+    minHeight: 42,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+    paddingHorizontal: spacing.sm,
   },
   paletteRow: {
     flexDirection: 'row',
@@ -394,16 +553,23 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   paletteChip: {
-    borderColor: colors.cyan,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.cyanSoft,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
+  paletteChipOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
   paletteText: {
-    color: colors.cyan,
+    color: colors.textMuted,
     fontSize: 10,
     fontWeight: '900',
+  },
+  paletteTextOn: {
+    color: colors.cyan,
   },
 });
