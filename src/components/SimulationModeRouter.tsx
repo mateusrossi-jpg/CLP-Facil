@@ -12,6 +12,7 @@ import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
+import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
@@ -93,6 +94,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           scanNumber={result.scanNumber || scanCount}
           runtime={result.runtime}
         />
+        <PlcRungPowerFlowCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          focusedRungId={project.selectedRungId}
+        />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -129,6 +136,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           state={state}
           scanNumber={result.scanNumber || scanCount}
           runtime={result.runtime}
+        />
+        <PlcRungPowerFlowCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          focusedRungId={project.selectedRungId}
         />
         <ScanTraceDiagnosticCard
           project={project}
@@ -168,6 +181,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         state={state}
         scanNumber={result.scanNumber || scanCount}
         runtime={result.runtime}
+      />
+      <PlcRungPowerFlowCard
+        project={project}
+        state={state}
+        runtime={result.runtime}
+        focusedRungId={project.selectedRungId}
       />
       <ScanTraceDiagnosticCard
         project={project}
