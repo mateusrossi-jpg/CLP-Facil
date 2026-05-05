@@ -1,11 +1,22 @@
 import { memo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 
 type EditorTab = 'editor' | 'export';
 type ExportTarget = 'arduino' | 'esp32' | 'esphome';
+type LadderComponentType = 'contact_no' | 'contact_nc' | 'coil' | 'timer';
+
+type LadderComponentDraft = {
+  id: string;
+  rung: number;
+  type: LadderComponentType;
+  tag: string;
+  label: string;
+  comment: string;
+  preset?: string;
+};
 
 const instructionTools = [
   ['NA', 'Contato NA', 'cyan'],
@@ -15,6 +26,15 @@ const instructionTools = [
   ['CTU', 'Contador', 'purple'],
   ['+', 'Mais', 'cyan'],
 ] as const;
+
+const initialComponents: LadderComponentDraft[] = [
+  { id: 'r1-i00', rung: 1, type: 'contact_no', tag: 'I0.0', label: 'Start', comment: 'Condição de partida' },
+  { id: 'r1-i01', rung: 1, type: 'contact_nc', tag: 'I0.1', label: 'Stop', comment: 'Parada normalmente fechada' },
+  { id: 'r1-q00', rung: 1, type: 'coil', tag: 'Q0.0', label: 'Motor', comment: 'Bobina principal do motor' },
+  { id: 'r2-q00-seal', rung: 2, type: 'contact_no', tag: 'Q0.0', label: 'Selo', comment: 'Contato auxiliar de retenção' },
+  { id: 'r2-q00', rung: 2, type: 'coil', tag: 'Q0.0', label: 'Motor', comment: 'Mantém motor ligado' },
+  { id: 'r3-t1', rung: 3, type: 'timer', tag: 'T1', label: 'Tempo didático', comment: 'Temporização de demonstração', preset: '5s' },
+];
 
 const codeSamples: Record<ExportTarget, string[]> = {
   arduino: ['// Easy-PLC: Partida com selo', 'bool I00 = digitalRead(2);', 'bool STOP = digitalRead(3);', 'Q00 = (I00 || Q00) && !STOP;', 'digitalWrite(8, Q00);'],
@@ -28,9 +48,51 @@ function targetLabel(target: ExportTarget): string {
   return 'ESPHome';
 }
 
+function componentTypeLabel(type: LadderComponentType): string {
+  if (type === 'contact_no') return 'Contato NA';
+  if (type === 'contact_nc') return 'Contato NF';
+  if (type === 'coil') return 'Bobina';
+  return 'Timer TON';
+}
+
+function componentCode(type: LadderComponentType): string {
+  if (type === 'contact_no') return 'NA';
+  if (type === 'contact_nc') return 'NF';
+  if (type === 'coil') return 'COIL';
+  return 'TON';
+}
+
+function componentTone(type: LadderComponentType): 'cyan' | 'green' | 'amber' {
+  if (type === 'coil') return 'green';
+  if (type === 'timer') return 'amber';
+  return 'cyan';
+}
+
+function makeRungLabel(line: number): string {
+  if (line === 1) return 'Condições de partida e parada';
+  if (line === 2) return 'Partida com selo do motor';
+  return 'Temporização didática';
+}
+
 export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen() {
   const [tab, setTab] = useState<EditorTab>('editor');
   const [target, setTarget] = useState<ExportTarget>('esp32');
+  const [components, setComponents] = useState<LadderComponentDraft[]>(initialComponents);
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>('r2-q00-seal');
+  const [editingComponent, setEditingComponent] = useState<LadderComponentDraft | null>(null);
+  const selectedComponent = components.find((component) => component.id === selectedComponentId) ?? null;
+
+  function openEditor(component: LadderComponentDraft) {
+    setSelectedComponentId(component.id);
+    setEditingComponent({ ...component });
+  }
+
+  function saveEditingComponent() {
+    if (!editingComponent) return;
+    setComponents((current) => current.map((component) => component.id === editingComponent.id ? editingComponent : component));
+    setSelectedComponentId(editingComponent.id);
+    setEditingComponent(null);
+  }
 
   return (
     <PremiumScreen>
@@ -45,7 +107,7 @@ export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen
         </View>
         <View style={styles.statusRow}>
           <PremiumBadge label="3 rungs" tone="green" />
-          <PremiumBadge label="5 tags" tone="cyan" />
+          <PremiumBadge label={`${components.length} blocos`} tone="cyan" />
           <PremiumBadge label="Sem erros" tone="green" />
         </View>
       </View>
@@ -72,42 +134,119 @@ export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen
             </View>
           </PremiumSection>
 
-          <PremiumSection title="Área Ladder" subtitle="Rungs compactos com saída sempre visível" tone="green">
-            <View style={styles.ladderStage}>
-              {[1, 2, 3].map((line) => {
-                const active = line === 2;
-                return (
-                  <View key={line} style={[styles.rungCard, active && styles.rungActive]}>
-                    <Text style={styles.rungNumber}>{line}</Text>
-                    <View style={styles.rungLogic}>
-                      <Text style={[styles.rungCode, active && styles.rungCodeActive]} numberOfLines={1}>
-                        {line === 1 ? 'NA I0.0  •  NF I0.1' : line === 2 ? 'NA Q0.0  •  Selo' : 'TON T1  •  5s'}
-                      </Text>
-                      <Text style={styles.rungComment} numberOfLines={1}>
-                        {line === 1 ? 'Condições de partida e parada' : line === 2 ? 'Partida com selo do motor' : 'Temporização didática'}
-                      </Text>
+          <PremiumSection title="Área Ladder" subtitle="Toque em qualquer componente para editar sem sair do rung" tone="green">
+            <View style={styles.editorHintBox}>
+              <Text style={styles.editorHintTitle}>Interação mobile</Text>
+              <Text style={styles.editorHintText}>Toque seleciona, toque novamente abre edição. Próximo bloco: arraste do canvas e mover componentes com toque longo.</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.ladderCanvas}>
+              <View style={styles.ladderStage}>
+                {[1, 2, 3].map((line) => {
+                  const active = line === 2;
+                  const rungComponents = components.filter((component) => component.rung === line);
+                  const output = rungComponents.find((component) => component.type === 'coil' || component.type === 'timer');
+                  return (
+                    <View key={line} style={[styles.rungCard, active && styles.rungActive]}>
+                      <Text style={styles.rungNumber}>{line}</Text>
+                      <View style={styles.rungLogic}>
+                        <View style={styles.componentRail}>
+                          {rungComponents.filter((component) => component.id !== output?.id).map((component) => {
+                            const selected = component.id === selectedComponentId;
+                            const tone = componentTone(component.type);
+                            return (
+                              <Pressable
+                                key={component.id}
+                                onPress={() => selected ? openEditor(component) : setSelectedComponentId(component.id)}
+                                onLongPress={() => openEditor(component)}
+                                style={[
+                                  styles.ladderBlock,
+                                  tone === 'green' && styles.ladderBlockGreen,
+                                  tone === 'amber' && styles.ladderBlockAmber,
+                                  selected && styles.ladderBlockSelected,
+                                ]}
+                              >
+                                <Text style={[styles.blockCode, selected && styles.blockCodeSelected]}>{componentCode(component.type)}</Text>
+                                <Text style={styles.blockTag}>{component.tag}</Text>
+                                <Text style={styles.blockLabel} numberOfLines={1}>{component.label}</Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                        <Text style={styles.rungComment} numberOfLines={1}>{makeRungLabel(line)}</Text>
+                      </View>
+                      <Pressable
+                        onPress={() => output ? (output.id === selectedComponentId ? openEditor(output) : setSelectedComponentId(output.id)) : undefined}
+                        onLongPress={() => output ? openEditor(output) : undefined}
+                        style={[styles.outputBox, active && styles.outputBoxActive, output?.id === selectedComponentId && styles.outputBoxSelected]}
+                      >
+                        <Text style={styles.outputLabel}>Saída</Text>
+                        <Text style={[styles.outputValue, active && styles.outputValueActive]}>{output?.tag ?? '—'}</Text>
+                        <Text style={styles.outputSmall}>{output ? componentCode(output.type) : 'Vazio'}</Text>
+                      </Pressable>
                     </View>
-                    <View style={[styles.outputBox, active && styles.outputBoxActive]}>
-                      <Text style={styles.outputLabel}>Saída</Text>
-                      <Text style={[styles.outputValue, active && styles.outputValueActive]}>{line === 3 ? 'T1' : 'Q0.0'}</Text>
-                    </View>
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </PremiumSection>
+
+          <PremiumSection title="Componente selecionado" subtitle="Preparado para edição rápida no smartphone" tone="amber">
+            <View style={styles.commentBox}>
+              <Text style={styles.commentTitle}>{selectedComponent ? `${componentTypeLabel(selectedComponent.type)} — ${selectedComponent.tag}` : 'Nenhum componente selecionado'}</Text>
+              <Text style={styles.commentText}>{selectedComponent?.comment ?? 'Toque em um contato, bobina ou timer para selecionar.'}</Text>
+            </View>
+            <View style={styles.actionRow}>
+              <Pressable disabled={!selectedComponent} onPress={() => selectedComponent ? openEditor(selectedComponent) : undefined} style={styles.primaryAction}><Text style={styles.primaryActionText}>Editar componente</Text></Pressable>
+              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Desfazer</Text></Pressable>
+              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Refazer</Text></Pressable>
             </View>
           </PremiumSection>
 
-          <PremiumSection title="Comentário do rung" subtitle="Explicação didática para estudo e revisão" tone="amber">
-            <View style={styles.commentBox}>
-              <Text style={styles.commentTitle}>Linha 2 — Selo</Text>
-              <Text style={styles.commentText}>Quando I0.0 liga a bobina Q0.0, o contato auxiliar Q0.0 mantém o motor acionado até o STOP abrir o circuito.</Text>
+          {editingComponent ? (
+            <View style={styles.bottomSheetBackdrop}>
+              <View style={styles.bottomSheet}>
+                <View style={styles.sheetHandle} />
+                <View style={styles.sheetHeader}>
+                  <View>
+                    <Text style={styles.sheetEyebrow}>Editar componente</Text>
+                    <Text style={styles.sheetTitle}>{componentTypeLabel(editingComponent.type)}</Text>
+                  </View>
+                  <PremiumBadge label={editingComponent.tag} tone={componentTone(editingComponent.type)} />
+                </View>
+
+                <View style={styles.diffBox}>
+                  <Text style={styles.diffLabel}>Valor anterior</Text>
+                  <Text style={styles.diffValue}>{components.find((component) => component.id === editingComponent.id)?.tag ?? editingComponent.tag}</Text>
+                  <Text style={styles.diffLabel}>Novo valor</Text>
+                  <Text style={styles.diffValueNew}>{editingComponent.tag}</Text>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Tag / endereço</Text>
+                  <TextInput value={editingComponent.tag} onChangeText={(tag) => setEditingComponent({ ...editingComponent, tag })} style={styles.input} placeholderTextColor={colors.textDim} />
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Nome / descrição curta</Text>
+                  <TextInput value={editingComponent.label} onChangeText={(label) => setEditingComponent({ ...editingComponent, label })} style={styles.input} placeholderTextColor={colors.textDim} />
+                </View>
+                {editingComponent.type === 'timer' ? (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Preset</Text>
+                    <TextInput value={editingComponent.preset} onChangeText={(preset) => setEditingComponent({ ...editingComponent, preset })} style={styles.input} placeholderTextColor={colors.textDim} />
+                  </View>
+                ) : null}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Comentário</Text>
+                  <TextInput value={editingComponent.comment} onChangeText={(comment) => setEditingComponent({ ...editingComponent, comment })} style={[styles.input, styles.inputMultiline]} multiline placeholderTextColor={colors.textDim} />
+                </View>
+
+                <View style={styles.actionRow}>
+                  <Pressable onPress={() => setEditingComponent(null)} style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Cancelar</Text></Pressable>
+                  <Pressable onPress={saveEditingComponent} style={styles.primaryAction}><Text style={styles.primaryActionText}>Salvar</Text></Pressable>
+                </View>
+              </View>
             </View>
-            <View style={styles.actionRow}>
-              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Desfazer</Text></Pressable>
-              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Refazer</Text></Pressable>
-              <Pressable style={styles.dangerAction}><Text style={styles.dangerActionText}>Excluir rung</Text></Pressable>
-            </View>
-          </PremiumSection>
+          ) : null}
         </>
       ) : (
         <>
@@ -167,27 +306,56 @@ const styles = StyleSheet.create({
   toolPurple: { borderColor: colors.purple, backgroundColor: colors.purpleSoft },
   toolCode: { color: colors.text, fontSize: 15, fontWeight: '900' },
   toolLabel: { color: colors.textMuted, fontSize: 10, marginTop: 2, fontWeight: '800' },
-  ladderStage: { borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.sm, backgroundColor: colors.codeBackground, gap: spacing.sm },
-  rungCard: { flexDirection: 'row', alignItems: 'stretch', borderColor: colors.border, borderWidth: 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surfaceElevated },
+  editorHintBox: { borderColor: colors.cyan, borderWidth: 1, borderRadius: 16, padding: spacing.md, backgroundColor: colors.cyanSoft },
+  editorHintTitle: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
+  editorHintText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800', marginTop: 3 },
+  ladderCanvas: { paddingBottom: 4, minWidth: 520 },
+  ladderStage: { minWidth: 520, borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.sm, backgroundColor: colors.codeBackground, gap: spacing.sm },
+  rungCard: { flexDirection: 'row', alignItems: 'stretch', borderColor: colors.border, borderWidth: 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surfaceElevated, minHeight: 96 },
   rungActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   rungNumber: { width: 34, color: colors.cyan, fontSize: 14, fontWeight: '900', textAlign: 'center', paddingTop: spacing.md },
-  rungLogic: { flex: 1, minWidth: 0, padding: spacing.md, borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1 },
-  rungCode: { color: colors.text, fontFamily: 'monospace', fontSize: 12, fontWeight: '900' },
-  rungCodeActive: { color: colors.green },
+  rungLogic: { flex: 1, minWidth: 0, padding: spacing.md, borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1, gap: spacing.sm },
+  componentRail: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  ladderBlock: { minWidth: 96, borderColor: colors.cyan, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.cyanSoft },
+  ladderBlockGreen: { borderColor: colors.green, backgroundColor: colors.greenSoft },
+  ladderBlockAmber: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
+  ladderBlockSelected: { borderColor: colors.text, borderWidth: 2 },
+  blockCode: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  blockCodeSelected: { color: colors.text },
+  blockTag: { color: colors.text, fontFamily: 'monospace', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  blockLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '800', marginTop: 2 },
   rungComment: { color: colors.textMuted, fontSize: 10, marginTop: 3 },
-  outputBox: { width: 86, padding: spacing.sm, backgroundColor: colors.amberSoft, justifyContent: 'center' },
+  outputBox: { width: 96, padding: spacing.sm, backgroundColor: colors.amberSoft, justifyContent: 'center' },
   outputBoxActive: { backgroundColor: colors.greenSoft },
+  outputBoxSelected: { borderColor: colors.text, borderWidth: 2 },
   outputLabel: { color: colors.amber, fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
   outputValue: { color: colors.text, fontFamily: 'monospace', fontSize: 12, fontWeight: '900', marginTop: 2 },
   outputValueActive: { color: colors.green },
+  outputSmall: { color: colors.textMuted, fontSize: 10, fontWeight: '800', marginTop: 2 },
   commentBox: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.md, backgroundColor: colors.surfaceElevated },
   commentTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   commentText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 4 },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  secondaryAction: { flexGrow: 1, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.md, alignItems: 'center', backgroundColor: colors.surfaceElevated },
+  secondaryAction: { flexGrow: 1, borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.md, paddingHorizontal: spacing.md, alignItems: 'center', backgroundColor: colors.surfaceElevated },
   secondaryActionText: { color: colors.text, fontSize: 12, fontWeight: '900' },
   dangerAction: { flexGrow: 1, borderColor: colors.red, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.md, alignItems: 'center', backgroundColor: colors.redSoft },
   dangerActionText: { color: colors.red, fontSize: 12, fontWeight: '900' },
+  primaryAction: { flexGrow: 1, borderColor: colors.green, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.md, paddingHorizontal: spacing.md, alignItems: 'center', backgroundColor: colors.greenSoft },
+  primaryActionText: { color: colors.green, fontSize: 12, fontWeight: '900' },
+  bottomSheetBackdrop: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: spacing.md, backgroundColor: 'rgba(2, 8, 23, 0.58)' },
+  bottomSheet: { borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 26, padding: spacing.lg, backgroundColor: colors.surface, gap: spacing.md },
+  sheetHandle: { width: 46, height: 4, borderRadius: 999, backgroundColor: colors.borderStrong, alignSelf: 'center' },
+  sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
+  sheetEyebrow: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
+  sheetTitle: { color: colors.text, fontSize: 18, lineHeight: 23, fontWeight: '900', marginTop: 2 },
+  diffBox: { borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: 3 },
+  diffLabel: { color: colors.textDim, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  diffValue: { color: colors.textMuted, fontSize: 12, fontFamily: 'monospace', fontWeight: '900' },
+  diffValueNew: { color: colors.green, fontSize: 12, fontFamily: 'monospace', fontWeight: '900' },
+  inputGroup: { gap: spacing.xs },
+  inputLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  input: { borderColor: colors.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surfaceElevated, color: colors.text, fontSize: 13, fontWeight: '800' },
+  inputMultiline: { minHeight: 76, textAlignVertical: 'top' },
   exportSummary: { flexDirection: 'row', gap: spacing.sm },
   exportMetric: { flex: 1, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: spacing.md, backgroundColor: colors.surfaceElevated },
   exportMetricValue: { color: colors.green, fontSize: 16, fontWeight: '900' },
@@ -197,6 +365,4 @@ const styles = StyleSheet.create({
   pinWarn: { color: colors.amber, fontSize: 12, lineHeight: 18, fontWeight: '800' },
   codeBlock: { borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.codeBackground, gap: 3 },
   codeLine: { color: colors.codeText, fontFamily: 'monospace', fontSize: 11, lineHeight: 16 },
-  primaryAction: { flexGrow: 1, borderColor: colors.green, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.md, alignItems: 'center', backgroundColor: colors.greenSoft },
-  primaryActionText: { color: colors.green, fontSize: 12, fontWeight: '900' },
 });
