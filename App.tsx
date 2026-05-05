@@ -47,7 +47,7 @@ import { colors } from './src/theme/colors';
 import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
 
-type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'reference' | 'projects' | 'pro';
+type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'reference' | 'projects' | 'hardware' | 'pro';
 
 export default function App() {
   const { width } = useWindowDimensions();
@@ -95,6 +95,8 @@ export default function App() {
         ? 'reference'
         : mode === 'projects'
           ? 'projects'
+        : mode === 'hardware'
+          ? 'hardware'
         : mode === 'pro'
           ? 'pro'
           : 'home';
@@ -211,6 +213,11 @@ export default function App() {
 
     if (key === 'projects') {
       setMode('projects');
+      return;
+    }
+
+    if (key === 'hardware') {
+      setMode('hardware');
       return;
     }
 
@@ -862,7 +869,7 @@ export default function App() {
               onOpenExample={(example) => openEducationalExample(example, true)}
               onOpenLearn={() => setMode('learn')}
               onOpenReference={() => setMode('reference')}
-              onOpenHardware={() => setMode('projects')}
+              onOpenHardware={() => setMode('hardware')}
             />
             <LearningPathPanel />
             <AppCard
@@ -986,6 +993,13 @@ export default function App() {
                 ))}
               </View>
             </View>
+          </>
+        ) : null}
+
+        {mode === 'hardware' ? (
+          <>
+            <AppHeader title="Hardware" subtitle="Exportação e pinagem ficam separadas da simulação. Abra um projeto salvo/carregado e depois escolha placa, pinos e código." />
+            <HardwareExportPanel editorProject={editorProject} />
           </>
         ) : null}
 
@@ -1167,7 +1181,6 @@ export default function App() {
                 onRemoveVariable={removeEditorVariable}
               />
             ) : null}
-              <HardwareExportPanel editorProject={editorProject} />
               {!editingLocked ? (
                 <SelectedBlockEditor
                   block={selectedEditorBlock}
@@ -1577,6 +1590,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   simulatorStageCompact: {
+    minHeight: '100%',
     borderRadius: 0,
     borderWidth: 0,
     padding: 0,

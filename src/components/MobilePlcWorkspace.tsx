@@ -37,6 +37,8 @@ type MobilePlcWorkspaceProps = {
   onAdvanceMission?: () => void;
 };
 
+type MobileWorkspaceTab = 'mission' | 'io' | 'program' | 'edit' | 'coach';
+
 const noop = () => undefined;
 
 function cycleStatus(evaluation: EditorEvaluationResult): string {
@@ -98,6 +100,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [activeTab, setActiveTab] = useState<MobileWorkspaceTab>('io');
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const selectedBlock = useMemo(
     () => projectBlocks(editorProject).find((block) => block.id === selectedBlockId) ?? null,
@@ -112,6 +115,16 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const missionPassed = Boolean(missionAttempt?.passed);
   const shouldShowMissionStory = Boolean(mission && !missionPassed && missionAttempt?.feedback && missionAttempt.feedback !== mission.story);
   const visibleMissionComponents = mission?.availableComponents.slice(0, 5) ?? [];
+  const tabs = useMemo(
+    () => [
+      ...(mission ? [{ id: 'mission' as const, label: 'Missao' }] : []),
+      { id: 'io' as const, label: 'I/O' },
+      { id: 'program' as const, label: 'Rung' },
+      { id: 'edit' as const, label: 'Editor' },
+      { id: 'coach' as const, label: 'Dica' },
+    ],
+    [mission],
+  );
 
   return (
     <View style={styles.workspace}>
@@ -135,7 +148,26 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         <Text style={[styles.scanText, diagnostics > 0 && styles.warningText]}>{cycleStatus(evaluation)}</Text>
       </View>
 
-      {mission ? (
+      <View style={styles.workspaceTabs}>
+        {tabs.map((tab) => {
+          const selected = activeTab === tab.id;
+          return (
+            <Pressable
+              key={tab.id}
+              onPress={() => {
+                setActiveTab(tab.id);
+                setEditing(tab.id === 'edit');
+                if (tab.id === 'coach') setShowHint(true);
+              }}
+              style={[styles.workspaceTab, selected && styles.workspaceTabOn]}
+            >
+              <Text style={[styles.workspaceTabText, selected && styles.workspaceTabTextOn]}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {mission && activeTab === 'mission' ? (
         <View style={[styles.missionBox, missionPassed && styles.missionBoxDone]}>
           <View style={styles.missionHeader}>
             <View style={styles.missionCopy}>
@@ -172,36 +204,45 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       ) : null}
 
-      <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
+      {activeTab === 'io' ? (
+        <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
+      ) : null}
 
-      <MobileRungViewer
-        editorProject={editorProject}
-        plcState={plcState}
-        evaluation={evaluation}
-        rungIndex={rungIndex}
-        onSelectRungIndex={setRungIndex}
-        onSelectBlock={(block) => {
-          setSelectedBlockId(block.id);
-          onSelectBlockId?.(block.id);
-          if (!editing) setEditing(true);
-        }}
-      />
+      {activeTab === 'program' ? (
+        <MobileRungViewer
+          editorProject={editorProject}
+          plcState={plcState}
+          evaluation={evaluation}
+          rungIndex={rungIndex}
+          onSelectRungIndex={setRungIndex}
+          onSelectBlock={(block) => {
+            setSelectedBlockId(block.id);
+            onSelectBlockId?.(block.id);
+          }}
+        />
+      ) : null}
 
-      {showHint ? (
+      {activeTab === 'coach' && showHint ? (
         <View style={styles.hintBox}>
           <Text style={styles.hintTitle}>{diagnostics > 0 ? 'Revise antes de avancar' : 'Dica rapida'}</Text>
           <Text style={styles.hintText}>{diagnostics > 0 ? evaluation.diagnostics[0]?.message : evaluation.explanation || 'Acione uma entrada, execute Scan e observe se o rung conduz ate a saida.'}</Text>
         </View>
       ) : null}
 
-      {editing ? (
+      {activeTab === 'edit' && editing ? (
         <View style={styles.editorSheet}>
           <View style={styles.sheetHeader}>
             <View style={styles.sheetCopy}>
               <Text style={styles.eyebrow}>Editor simples</Text>
               <Text style={styles.sheetTitle}>{selectedBlock ? selectedBlock.name : 'Escolha um componente'}</Text>
             </View>
-            <Pressable onPress={() => setEditing(false)} style={styles.closeButton}>
+            <Pressable
+              onPress={() => {
+                setEditing(false);
+                setActiveTab('program');
+              }}
+              style={styles.closeButton}
+            >
               <Text style={styles.closeText}>Fechar</Text>
             </Pressable>
           </View>
@@ -337,8 +378,15 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         editing={editing}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}
-        onToggleEdit={() => setEditing((current) => !current)}
-        onToggleHint={() => setShowHint((current) => !current)}
+        onToggleEdit={() => {
+          const nextEditing = activeTab !== 'edit' || !editing;
+          setEditing(nextEditing);
+          setActiveTab(nextEditing ? 'edit' : 'program');
+        }}
+        onToggleHint={() => {
+          setShowHint(true);
+          setActiveTab('coach');
+        }}
       />
     </View>
   );
@@ -424,6 +472,34 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 11,
     fontWeight: '900',
+  },
+  workspaceTabs: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  workspaceTab: {
+    flexGrow: 1,
+    minHeight: 36,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  workspaceTabOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  workspaceTabText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  workspaceTabTextOn: {
+    color: colors.cyan,
   },
   warningText: {
     color: colors.amber,

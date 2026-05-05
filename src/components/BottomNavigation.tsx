@@ -18,8 +18,8 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
   { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
   { key: 'projects', label: 'Projetos', shortLabel: 'Proj' },
-  { key: 'pro', label: 'Editor', shortLabel: 'Edit' },
-  { key: 'reference', label: 'Ref', shortLabel: 'Ref' },
+  { key: 'hardware', label: 'Hardware', shortLabel: 'HW' },
+  { key: 'pro', label: 'Mais', shortLabel: 'Mais' },
 ];
 
 export function BottomNavigation({ active, onChange, compact, renderContent = true }: BottomNavigationProps) {

@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   cardOn: {
     borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   },
   blockChipOn: {
     borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    backgroundColor: colors.surface,
   },
   blockAddress: {
     color: colors.text,
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   listRowOn: {
     borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    backgroundColor: colors.surface,
   },
   listCopy: {
     flex: 1,
