@@ -2,6 +2,7 @@ export const simulatorRegressionSources = [
   'src/engine/editorEvaluatorRegression.ts',
   'src/engine/editorScanTraceRegression.ts',
   'src/engine/plcScanCycleRegression.ts',
+  'src/engine/plcForceTableRegression.ts',
   'src/engine/edgeRegression.ts',
   'src/hardware/hardwareRegression.ts',
   'src/plcProfiles/plcProfileRegression.ts',
