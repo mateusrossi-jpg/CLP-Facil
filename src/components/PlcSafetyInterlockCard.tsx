@@ -26,6 +26,11 @@ function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
 
+function blockText(block: EditorBlock): string {
+  const extra = block as EditorBlock & { description?: string };
+  return `${block.name ?? ''} ${extra.description ?? ''} ${block.variable ?? ''}`.toLowerCase();
+}
+
 function isOutputAddress(address: string): boolean {
   const normalized = normalize(address);
   return normalized.startsWith('Q') || normalized.startsWith('O');
@@ -48,10 +53,9 @@ function outputStateCount(state: PlcState): number {
 }
 
 function hasStopLikeContact(project: EditorProjectState): boolean {
-  return collectBlocks(project).some((block) => {
-    const text = `${block.name ?? ''} ${block.description ?? ''} ${block.variable ?? ''}`.toLowerCase();
-    return block.role === 'contact' && (text.includes('stop') || text.includes('emerg') || text.includes('parada'));
-  });
+  return collectBlocks(project).some((block) => (
+    block.role === 'contact' && (blockText(block).includes('stop') || blockText(block).includes('emerg') || blockText(block).includes('parada'))
+  ));
 }
 
 function duplicateCoilItems(project: EditorProjectState): SafetyItem[] {
