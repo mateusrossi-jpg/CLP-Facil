@@ -33,6 +33,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 
 - BottomNavigation finalizado com rótulos premium: Início, Aprender, Simular, Projetos, Editor e Ref.
 - BottomNavigation agora renderiza rotas premium por meio de `PremiumRouteContent`, centralizando o mapeamento visual das abas e reduzindo duplicidade.
+- BottomNavigation recebeu prop opcional `renderContent`, mantendo comportamento atual por padrão e permitindo, no futuro, usar a barra separada do conteúdo premium no `App.tsx`.
 - `PremiumRouteContent` renderiza `PremiumHomeScreen`, `PremiumLearningScreen`, `SimulationModeRouter`, `PremiumProjectsScreen`, `PremiumEditorExportScreen`, `ReferenceHubPanel` e `PremiumTagsDiagnosticsScreen` conforme aba ativa.
 - Aba Referência com Dialetos, Mobile, Tags, Rotinas, Protocolos, Segurança, Divulgação e Loja.
 - Aba Referência > Mobile com controle Compacto / Enquadrar / Amplo e orientação de Fluxo para rung grande.
@@ -114,7 +115,7 @@ Quando o `App.tsx` puder ser editado com leitura completa, substituir o bloco cl
 - `editorScanNumber`;
 - conteúdo clássico como `classicContent`.
 
-Depois disso, mover `PremiumRouteContent` para o bloco principal do `App.tsx` e deixar `BottomNavigation` somente como navegação.
+Depois disso, mover `PremiumRouteContent` para o bloco principal do `App.tsx`, usar `BottomNavigation renderContent={false}` e deixar `BottomNavigation` somente como barra de navegação.
 
 ## Critério de aceite
 
