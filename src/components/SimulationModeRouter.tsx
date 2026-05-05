@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
+import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
@@ -79,6 +80,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <PlcScanCycleCard
+          project={project}
+          state={state}
+          scanNumber={result.scanNumber || scanCount}
+          runtime={result.runtime}
+        />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -104,6 +111,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <View style={styles.stack}>
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
+        <PlcScanCycleCard
+          project={project}
+          state={state}
+          scanNumber={result.scanNumber || scanCount}
+          runtime={result.runtime}
+        />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -131,6 +144,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
     <View style={styles.stack}>
       <PremiumProjectIntentBanner intent={projectIntent} />
       <PremiumProjectSimulationFocus intent={projectIntent} />
+      <PlcScanCycleCard
+        project={project}
+        state={state}
+        scanNumber={result.scanNumber || scanCount}
+        runtime={result.runtime}
+      />
       <ScanTraceDiagnosticCard
         project={project}
         state={state}
