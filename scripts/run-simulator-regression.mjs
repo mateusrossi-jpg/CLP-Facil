@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 const { runEditorEvaluatorRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorEvaluatorRegression.js');
 const { runEditorScanTraceRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/editorScanTraceRegression.js');
 const { runPlcScanCycleRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/plcScanCycleRegression.js');
+const { runPlcForceTableRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/plcForceTableRegression.js');
 const { runEdgeContactRegressionSuite } = require('/tmp/easy-clp-sim-test/engine/edgeRegression.js');
 const { runHardwareRegressionSuite } = require('/tmp/easy-clp-sim-test/hardware/hardwareRegression.js');
 const { runPlcProfileRegressionSuite } = require('/tmp/easy-clp-sim-test/plcProfiles/plcProfileRegression.js');
@@ -43,6 +44,7 @@ const results = [
   ...runEditorEvaluatorRegressionSuite(),
   ...runEditorScanTraceRegressionSuite(),
   ...runPlcScanCycleRegressionSuite(),
+  ...runPlcForceTableRegressionSuite(),
   ...runEdgeContactRegressionSuite(),
   ...runHardwareRegressionSuite(),
   ...runPlcProfileRegressionSuite(),
