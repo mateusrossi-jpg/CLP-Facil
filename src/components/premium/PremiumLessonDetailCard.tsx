@@ -1,10 +1,12 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { getGuidedPracticeForLesson } from '../../education/clpGuidedPractice';
 import type { ClpLesson } from '../../education/clpLessonCatalog';
 import { getQuizForLesson } from '../../education/clpLessonQuizzes';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumSection } from './index';
+import { PremiumGuidedPracticeCard } from './PremiumGuidedPracticeCard';
 import { PremiumLessonQuizCard } from './PremiumLessonQuizCard';
 
 type PremiumLessonDetailCardProps = {
@@ -26,6 +28,7 @@ function difficultyTone(difficulty: ClpLesson['difficulty']): 'cyan' | 'green' |
 }
 
 export const PremiumLessonDetailCard = memo(function PremiumLessonDetailCard({ lesson }: PremiumLessonDetailCardProps) {
+  const practice = getGuidedPracticeForLesson(lesson.id);
   const quiz = getQuizForLesson(lesson.id);
 
   return (
@@ -66,6 +69,7 @@ export const PremiumLessonDetailCard = memo(function PremiumLessonDetailCard({ l
           </View>
         </View>
       </PremiumSection>
+      {practice ? <PremiumGuidedPracticeCard practice={practice} /> : null}
       {quiz ? <PremiumLessonQuizCard quiz={quiz} /> : null}
     </>
   );
