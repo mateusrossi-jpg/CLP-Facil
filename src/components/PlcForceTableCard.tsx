@@ -22,6 +22,8 @@ type ForceCandidate = {
   forceStatus: 'available' | 'blocked_output_on' | 'numeric_not_supported';
 };
 
+type OriginalForceValues = Record<string, boolean | number | undefined>;
+
 function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
@@ -112,8 +114,14 @@ function forceFor(address: string, entries: PlcForceEntry[]): PlcForceEntry | un
   return entries.find((entry) => normalize(entry.address) === normalized);
 }
 
+function restoreValue(value: boolean | number | undefined): boolean | number {
+  if (typeof value === 'number') return value;
+  return Boolean(value);
+}
+
 export const PlcForceTableCard = memo(function PlcForceTableCard({ project, state, onSetValue }: PlcForceTableCardProps) {
   const [forceEntries, setForceEntries] = useState<PlcForceEntry[]>([]);
+  const [originalValues, setOriginalValues] = useState<OriginalForceValues>({});
   const [lastMessage, setLastMessage] = useState('Nenhum force aplicado nesta sessão.');
   const candidates = useMemo(() => collectForceCandidates(project, state), [project, state]);
   const preview = useMemo(() => applyPlcForces(state, forceEntries), [forceEntries, state]);
@@ -132,14 +140,24 @@ export const PlcForceTableCard = memo(function PlcForceTableCard({ project, stat
       return;
     }
 
+    setOriginalValues((current) => {
+      if (Object.prototype.hasOwnProperty.call(current, candidate.address)) return current;
+      return { ...current, [candidate.address]: candidate.currentValue };
+    });
     setForceEntries(nextEntries);
     onSetValue?.(candidate.address, mode === 'force_on');
     setLastMessage(`${candidate.address} forçado para ${mode === 'force_on' ? 'ON' : 'OFF'}.`);
   };
 
   const clearForce = (candidate: ForceCandidate) => {
+    const restored = restoreValue(originalValues[candidate.address]);
     setForceEntries((current) => clearPlcForce(current, candidate.address));
-    setLastMessage(`Force de ${candidate.address} removido da sessão.`);
+    setOriginalValues((current) => {
+      const { [candidate.address]: _removed, ...next } = current;
+      return next;
+    });
+    onSetValue?.(candidate.address, restored);
+    setLastMessage(`Force de ${candidate.address} removido. Valor restaurado para ${valueLabel(restored)}.`);
   };
 
   return (
