@@ -8,6 +8,7 @@ export * from './PremiumHomeScreen';
 export * from './PremiumLearningScreen';
 export * from './PremiumLessonDetailCard';
 export * from './PremiumLessonQuizCard';
+export * from './PremiumGuidedPracticeCard';
 export * from './PremiumProjectsScreen';
 export * from './PremiumEditorExportScreen';
 export * from './PremiumTagsDiagnosticsScreen';
