@@ -3155,7 +3155,7 @@ const styles = StyleSheet.create({
   },
   circuitBlockActive: {
     borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    backgroundColor: colors.surface,
   },
   circuitBlockSelected: {
     borderColor: colors.cyan,

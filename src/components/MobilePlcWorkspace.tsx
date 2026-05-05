@@ -1,7 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
-import { EditorBlock, EditorCoilMode, EditorContactMode, EditorCounterMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
+import { EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { PlcMission } from '../lessons/missionTypes';
 import { evaluateMissionAttempt } from '../lessons/missionValidation';
@@ -28,6 +28,13 @@ type MobilePlcWorkspaceProps = {
   onChangeCoilMode?: (mode: EditorCoilMode) => void;
   onChangeTimerMode?: (mode: EditorTimerMode) => void;
   onChangeCounterMode?: (mode: EditorCounterMode) => void;
+  onChangeCompareMode?: (mode: EditorCompareMode) => void;
+  onChangeMathMode?: (mode: EditorMathMode) => void;
+  onChangeSourceA?: (value: string) => void;
+  onChangeSourceB?: (value: string) => void;
+  onChangeDestination?: (value: string) => void;
+  onChangeDownSource?: (value: string) => void;
+  onChangeResetSource?: (value: string) => void;
   onChangePresetMs?: (presetMs: number) => void;
   onChangePreset?: (preset: number) => void;
   onAddContact?: () => void;
@@ -70,6 +77,14 @@ function normalizeVariableInput(value: string): string {
   return value.toUpperCase().replace(/\s/g, '');
 }
 
+function readBlockValue(block: EditorBlock, state: PlcState): string {
+  const address = normalizeVariableInput(block.destination || block.variable || block.sourceA || '');
+  if (!address) return 'sem tag';
+  const value = state[address];
+  if (typeof value === 'number') return `${address} = ${value}`;
+  return `${address} ${value ? 'ON' : 'OFF'}`;
+}
+
 export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   editorProject,
   plcState,
@@ -87,6 +102,13 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onChangeCoilMode,
   onChangeTimerMode,
   onChangeCounterMode,
+  onChangeCompareMode,
+  onChangeMathMode,
+  onChangeSourceA,
+  onChangeSourceB,
+  onChangeDestination,
+  onChangeDownSource,
+  onChangeResetSource,
   onChangePresetMs,
   onChangePreset,
   onAddContact,
@@ -196,6 +218,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         onSelectBlock={(block) => {
           setSelectedBlockId(block.id);
           onSelectBlockId?.(block.id);
+          setEditing(true);
         }}
       />
 
@@ -225,6 +248,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
               <View style={styles.fieldGrid}>
                 <Text style={styles.fieldText}>Tipo: {selectedBlock.role}</Text>
                 <Text style={styles.fieldText}>Modo: {blockMode(selectedBlock)}</Text>
+                <Text style={styles.fieldText}>Estado: {readBlockValue(selectedBlock, plcState)}</Text>
               </View>
 
               <Text style={styles.inputLabel}>Nome</Text>
@@ -269,6 +293,39 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                 </>
               ) : null}
 
+              {selectedBlock.compareMode ? (
+                <>
+                  <Text style={styles.inputLabel}>Comparador</Text>
+                  <View style={styles.paletteRow}>
+                    {(['EQU', 'NEQ', 'GRT', 'LES', 'GEQ', 'LEQ'] as EditorCompareMode[]).map((mode) => (
+                      <Pressable key={mode} onPress={() => onChangeCompareMode?.(mode)} style={[styles.paletteChip, selectedBlock.compareMode === mode && styles.paletteChipOn]}>
+                        <Text style={[styles.paletteText, selectedBlock.compareMode === mode && styles.paletteTextOn]}>{mode}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <View style={styles.inlineEditorFields}>
+                    <TextInput
+                      value={selectedBlock.sourceA ?? ''}
+                      onChangeText={(value) => onChangeSourceA?.(normalizeVariableInput(value))}
+                      placeholder="A: N0 ou 10"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                    <TextInput
+                      value={selectedBlock.sourceB ?? ''}
+                      onChangeText={(value) => onChangeSourceB?.(normalizeVariableInput(value))}
+                      placeholder="B: N1 ou 20"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                  </View>
+                </>
+              ) : null}
+
               {selectedBlock.role === 'coil' ? (
                 <>
                   <Text style={styles.inputLabel}>Bobina</Text>
@@ -279,6 +336,48 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       </Pressable>
                     ))}
                   </View>
+                </>
+              ) : null}
+
+              {selectedBlock.mathMode ? (
+                <>
+                  <Text style={styles.inputLabel}>Matematica</Text>
+                  <View style={styles.paletteRow}>
+                    {(['MOV', 'ADD', 'SUB', 'MUL', 'DIV'] as EditorMathMode[]).map((mode) => (
+                      <Pressable key={mode} onPress={() => onChangeMathMode?.(mode)} style={[styles.paletteChip, selectedBlock.mathMode === mode && styles.paletteChipOn]}>
+                        <Text style={[styles.paletteText, selectedBlock.mathMode === mode && styles.paletteTextOn]}>{mode}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <View style={styles.inlineEditorFields}>
+                    <TextInput
+                      value={selectedBlock.sourceA ?? ''}
+                      onChangeText={(value) => onChangeSourceA?.(normalizeVariableInput(value))}
+                      placeholder="A"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                    <TextInput
+                      value={selectedBlock.sourceB ?? ''}
+                      onChangeText={(value) => onChangeSourceB?.(normalizeVariableInput(value))}
+                      placeholder="B"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                  </View>
+                  <TextInput
+                    value={selectedBlock.destination ?? ''}
+                    onChangeText={(value) => onChangeDestination?.(normalizeVariableInput(value))}
+                    placeholder="Destino: N1"
+                    placeholderTextColor={colors.textDim}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    style={styles.editorInput}
+                  />
                 </>
               ) : null}
 
@@ -321,6 +420,26 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                     keyboardType="numeric"
                     style={styles.editorInput}
                   />
+                  <View style={styles.inlineEditorFields}>
+                    <TextInput
+                      value={selectedBlock.downSource ?? ''}
+                      onChangeText={(value) => onChangeDownSource?.(normalizeVariableInput(value))}
+                      placeholder="Down: I0.1"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                    <TextInput
+                      value={selectedBlock.resetSource ?? ''}
+                      onChangeText={(value) => onChangeResetSource?.(normalizeVariableInput(value))}
+                      placeholder="Reset: M0.0"
+                      placeholderTextColor={colors.textDim}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      style={[styles.editorInput, styles.inlineEditorInput]}
+                    />
+                  </View>
                 </>
               ) : null}
             </View>
@@ -666,6 +785,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     paddingHorizontal: spacing.sm,
+  },
+  inlineEditorFields: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  inlineEditorInput: {
+    flex: 1,
+    minWidth: 116,
   },
   paletteRow: {
     flexDirection: 'row',

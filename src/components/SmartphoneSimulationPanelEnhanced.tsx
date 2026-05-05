@@ -23,7 +23,7 @@ import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
 import { PlcMission } from '../lessons/missionTypes';
-import { EditorCoilMode, EditorContactMode, EditorCounterMode, EditorTimerMode } from '../engine/editorTypes';
+import { EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorTimerMode } from '../engine/editorTypes';
 import { spacing } from '../theme/spacing';
 
 type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
@@ -43,6 +43,13 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onChangeCoilMode?: (mode: EditorCoilMode) => void;
   onChangeTimerMode?: (mode: EditorTimerMode) => void;
   onChangeCounterMode?: (mode: EditorCounterMode) => void;
+  onChangeCompareMode?: (mode: EditorCompareMode) => void;
+  onChangeMathMode?: (mode: EditorMathMode) => void;
+  onChangeSourceA?: (value: string) => void;
+  onChangeSourceB?: (value: string) => void;
+  onChangeDestination?: (value: string) => void;
+  onChangeDownSource?: (value: string) => void;
+  onChangeResetSource?: (value: string) => void;
   onChangePresetMs?: (presetMs: number) => void;
   onChangePreset?: (preset: number) => void;
   onAddContact?: () => void;
@@ -90,6 +97,13 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onChangeCoilMode={props.onChangeCoilMode}
         onChangeTimerMode={props.onChangeTimerMode}
         onChangeCounterMode={props.onChangeCounterMode}
+        onChangeCompareMode={props.onChangeCompareMode}
+        onChangeMathMode={props.onChangeMathMode}
+        onChangeSourceA={props.onChangeSourceA}
+        onChangeSourceB={props.onChangeSourceB}
+        onChangeDestination={props.onChangeDestination}
+        onChangeDownSource={props.onChangeDownSource}
+        onChangeResetSource={props.onChangeResetSource}
         onChangePresetMs={props.onChangePresetMs}
         onChangePreset={props.onChangePreset}
         onAddContact={props.onAddContact}

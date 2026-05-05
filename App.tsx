@@ -762,8 +762,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockCompareMode(compareMode: EditorCompareMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockCompareMode(compareMode: EditorCompareMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return mapProjectBlocks(current, (block) =>
@@ -772,8 +772,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockMathMode(mathMode: EditorMathMode) {
-    if (editingLocked) return;
+  function updateSelectedBlockMathMode(mathMode: EditorMathMode, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
       return mapProjectBlocks(current, (block) =>
@@ -782,8 +782,8 @@ export default function App() {
     });
   }
 
-  function updateSelectedBlockOperand(field: 'sourceA' | 'sourceB' | 'destination' | 'downSource' | 'resetSource', value: string) {
-    if (editingLocked) return;
+  function updateSelectedBlockOperand(field: 'sourceA' | 'sourceB' | 'destination' | 'downSource' | 'resetSource', value: string, allowLocked = false) {
+    if (editingLocked && !allowLocked) return;
     const normalized = value.trim().toUpperCase().replace(/\s/g, '');
     setEditorProject((current) => {
       if (!current.selectedBlockId) return current;
@@ -1147,6 +1147,13 @@ export default function App() {
                 onChangeCoilMode={(mode) => updateSelectedBlockCoilMode(mode, true)}
                 onChangeTimerMode={(mode) => updateSelectedBlockTimerMode(mode, true)}
                 onChangeCounterMode={(mode) => updateSelectedBlockCounterMode(mode, true)}
+                onChangeCompareMode={(mode) => updateSelectedBlockCompareMode(mode, true)}
+                onChangeMathMode={(mode) => updateSelectedBlockMathMode(mode, true)}
+                onChangeSourceA={(value) => updateSelectedBlockOperand('sourceA', value, true)}
+                onChangeSourceB={(value) => updateSelectedBlockOperand('sourceB', value, true)}
+                onChangeDestination={(value) => updateSelectedBlockOperand('destination', value, true)}
+                onChangeDownSource={(value) => updateSelectedBlockOperand('downSource', value, true)}
+                onChangeResetSource={(value) => updateSelectedBlockOperand('resetSource', value, true)}
                 onChangePresetMs={(presetMs) => updateSelectedBlockPresetMs(presetMs, true)}
                 onChangePreset={(preset) => updateSelectedBlockPreset(preset, true)}
                 onAddContact={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'series', undefined, true)}
