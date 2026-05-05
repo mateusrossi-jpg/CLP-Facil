@@ -16,7 +16,7 @@ export const PremiumAppShell = memo(function PremiumAppShell({ initialRoute = 'h
   return (
     <View style={styles.shell}>
       <View style={styles.content}>
-        <PremiumRouteContent active={activeRoute} />
+        <PremiumRouteContent active={activeRoute} onNavigate={setActiveRoute} />
       </View>
       <BottomNavigation active={activeRoute} onChange={setActiveRoute} renderContent={false} compact />
     </View>
