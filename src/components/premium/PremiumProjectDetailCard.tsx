@@ -7,6 +7,7 @@ import {
 import { getProjectActionPlan, type ProjectActionStatus } from '../../projects/projectActionPlans';
 import { getBenchBoardTargetLabel, getBenchMappingForProject, getBenchPinRiskLabel, type BenchPinRisk } from '../../projects/projectBenchMappings';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
+import { getProjectExportPlan, type ProjectExportStatus } from '../../projects/projectExportPlans';
 import { getIoPointsForProject, getProjectIoKindLabel, getSafetyCriticalIoPoints, type ProjectIoKind, type ProjectIoPoint } from '../../projects/projectIoMaps';
 import { getRungTemplatesForProject } from '../../projects/projectLadderTemplates';
 import { colors } from '../../theme/colors';
@@ -44,6 +45,18 @@ function statusLabel(status: ProjectActionStatus): string {
   return 'Pendente';
 }
 
+function exportStatusTone(status: ProjectExportStatus): 'green' | 'amber' | 'neutral' {
+  if (status === 'ready') return 'green';
+  if (status === 'attention') return 'amber';
+  return 'neutral';
+}
+
+function exportStatusLabel(status: ProjectExportStatus): string {
+  if (status === 'ready') return 'Pronto';
+  if (status === 'attention') return 'Revisar';
+  return 'Bloqueado';
+}
+
 function IoPointRow({ point }: { point: ProjectIoPoint }) {
   return (
     <View style={[styles.ioPoint, point.safetyCritical && styles.ioPointCritical]}>
@@ -67,6 +80,7 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
   const safetyPoints = getSafetyCriticalIoPoints(project.id);
   const benchMapping = getBenchMappingForProject(project.id);
   const actionPlan = getProjectActionPlan(project);
+  const exportPlan = getProjectExportPlan(project);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -123,6 +137,32 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
             <View style={styles.actionChecklist}>
               {item.checklist.map((check) => <Text key={check} style={styles.actionCheck}>• {check}</Text>)}
             </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.block}>
+        <View style={styles.blockHeaderRow}>
+          <Text style={styles.blockTitle}>Prontidão de exportação</Text>
+          <PremiumBadge label={`${exportPlan.readyTargetCount}/3 alvos`} tone={exportPlan.readyTargetCount >= 2 ? 'green' : 'amber'} />
+        </View>
+        {exportPlan.targets.map((targetPlan) => (
+          <View key={targetPlan.target} style={styles.actionItem}>
+            <View style={styles.actionHeader}>
+              <View style={styles.actionCopy}>
+                <Text style={styles.actionTitle}>{targetPlan.label}</Text>
+                <Text style={styles.actionDescription}>{targetPlan.pinSummary}</Text>
+              </View>
+              <PremiumBadge label={exportStatusLabel(targetPlan.status)} tone={exportStatusTone(targetPlan.status)} />
+            </View>
+            <View style={styles.actionChecklist}>
+              {targetPlan.checklist.map((check) => <Text key={check} style={styles.actionCheck}>• {check}</Text>)}
+            </View>
+            {targetPlan.warnings.map((warning) => (
+              <View key={warning} style={styles.actionWarning}>
+                <Text style={styles.actionWarningText}>{warning}</Text>
+              </View>
+            ))}
           </View>
         ))}
       </View>
