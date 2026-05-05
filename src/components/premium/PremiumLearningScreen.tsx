@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { getClpAchievements } from '../../education/clpAchievements';
 import { clpLearningModules } from '../../education/clpLessonCatalog';
 import {
   getAllModuleProgressSummaries,
@@ -29,6 +30,7 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
   const [tab, setTab] = useState<LearningTab>('tracks');
   const allLessons = useMemo(() => clpLearningModules.flatMap((module) => module.lessons), []);
   const moduleProgress = useMemo(() => getAllModuleProgressSummaries(), []);
+  const achievements = useMemo(() => getClpAchievements(), []);
   const currentLesson = useMemo(() => getCurrentLesson(), []);
   const currentProgress = getLessonProgress(currentLesson.id);
   const nextLessons = allLessons.filter((lesson) => getLessonProgress(lesson.id).status !== 'locked').slice(0, 5);
@@ -131,14 +133,20 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
           </View>
         </PremiumSection>
       ) : (
-        <PremiumSection title="Conquistas" subtitle="Marcos da evolução" tone="green">
+        <PremiumSection title="Conquistas" subtitle="Marcos calculados pelo progresso" tone="green">
           <View style={styles.achievementGrid}>
-            {['Primeiro RUN', 'Selo dominado', 'Timer aplicado', 'Bancada pronta'].map((item, index) => (
-              <View key={item} style={[styles.achievementCard, index < 2 && styles.achievementCardActive]}>
-                <Text style={[styles.achievementIcon, index < 2 && styles.achievementIconActive]}>◆</Text>
-                <Text style={styles.achievementText}>{item}</Text>
-              </View>
-            ))}
+            {achievements.map((achievement) => {
+              const unlocked = achievement.status === 'unlocked';
+              return (
+                <View key={achievement.id} style={[styles.achievementCard, unlocked && styles.achievementCardActive]}>
+                  <Text style={[styles.achievementIcon, unlocked && styles.achievementIconActive]}>{achievement.icon}</Text>
+                  <Text style={styles.achievementText}>{achievement.title}</Text>
+                  <Text style={styles.achievementDescription}>{achievement.description}</Text>
+                  <PremiumProgress value={achievement.progress} label={`${achievement.progress}%`} />
+                  <PremiumBadge label={unlocked ? 'Liberada' : 'Bloqueada'} tone={unlocked ? 'green' : 'neutral'} />
+                </View>
+              );
+            })}
           </View>
         </PremiumSection>
       )}
@@ -178,7 +186,8 @@ const styles = StyleSheet.create({
   achievementGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   achievementCard: { flexGrow: 1, flexBasis: 130, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, alignItems: 'center', gap: spacing.xs },
   achievementCardActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  achievementIcon: { color: colors.textDim, fontSize: 18 },
+  achievementIcon: { color: colors.textDim, fontSize: 18, fontWeight: '900' },
   achievementIconActive: { color: colors.green },
   achievementText: { color: colors.text, fontSize: 12, fontWeight: '900', textAlign: 'center' },
+  achievementDescription: { color: colors.textMuted, fontSize: 10, lineHeight: 15, textAlign: 'center' },
 });
