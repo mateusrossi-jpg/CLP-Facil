@@ -7,6 +7,7 @@ import { PremiumBadge, PremiumScreen, PremiumSection, PremiumSegmented } from '.
 type EditorTab = 'editor' | 'export';
 type ExportTarget = 'arduino' | 'esp32' | 'esphome';
 type LadderComponentType = 'contact_no' | 'contact_nc' | 'coil' | 'timer';
+type CanvasZoom = 'fit' | 'normal' | 'wide';
 
 type LadderComponentDraft = {
   id: string;
@@ -74,13 +75,28 @@ function makeRungLabel(line: number): string {
   return 'Temporização didática';
 }
 
+function canvasWidthForZoom(zoom: CanvasZoom): number {
+  if (zoom === 'fit') return 520;
+  if (zoom === 'normal') return 640;
+  return 780;
+}
+
+function zoomLabel(zoom: CanvasZoom): string {
+  if (zoom === 'fit') return 'Enquadrado';
+  if (zoom === 'normal') return '100%';
+  return 'Amplo';
+}
+
 export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen() {
   const [tab, setTab] = useState<EditorTab>('editor');
   const [target, setTarget] = useState<ExportTarget>('esp32');
   const [components, setComponents] = useState<LadderComponentDraft[]>(initialComponents);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>('r2-q00-seal');
   const [editingComponent, setEditingComponent] = useState<LadderComponentDraft | null>(null);
+  const [canvasZoom, setCanvasZoom] = useState<CanvasZoom>('fit');
+  const [canvasFocus, setCanvasFocus] = useState<'all' | 'selected'>('all');
   const selectedComponent = components.find((component) => component.id === selectedComponentId) ?? null;
+  const canvasWidth = canvasWidthForZoom(canvasZoom);
 
   function openEditor(component: LadderComponentDraft) {
     setSelectedComponentId(component.id);
@@ -92,6 +108,19 @@ export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen
     setComponents((current) => current.map((component) => component.id === editingComponent.id ? editingComponent : component));
     setSelectedComponentId(editingComponent.id);
     setEditingComponent(null);
+  }
+
+  function zoomIn() {
+    setCanvasZoom((current) => current === 'fit' ? 'normal' : 'wide');
+  }
+
+  function zoomOut() {
+    setCanvasZoom((current) => current === 'wide' ? 'normal' : 'fit');
+  }
+
+  function fitCanvas() {
+    setCanvasZoom('fit');
+    setCanvasFocus('all');
   }
 
   return (
@@ -134,59 +163,78 @@ export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen
             </View>
           </PremiumSection>
 
-          <PremiumSection title="Área Ladder" subtitle="Toque em qualquer componente para editar sem sair do rung" tone="green">
+          <PremiumSection title="Área Ladder" subtitle="Arraste lateralmente, ajuste o zoom e toque nos blocos para editar" tone="green">
             <View style={styles.editorHintBox}>
               <Text style={styles.editorHintTitle}>Interação mobile</Text>
-              <Text style={styles.editorHintText}>Toque seleciona, toque novamente abre edição. Próximo bloco: arraste do canvas e mover componentes com toque longo.</Text>
+              <Text style={styles.editorHintText}>Toque seleciona, toque novamente abre edição. Use o controle de canvas para navegar em rungs maiores.</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.ladderCanvas}>
-              <View style={styles.ladderStage}>
-                {[1, 2, 3].map((line) => {
-                  const active = line === 2;
-                  const rungComponents = components.filter((component) => component.rung === line);
-                  const output = rungComponents.find((component) => component.type === 'coil' || component.type === 'timer');
-                  return (
-                    <View key={line} style={[styles.rungCard, active && styles.rungActive]}>
-                      <Text style={styles.rungNumber}>{line}</Text>
-                      <View style={styles.rungLogic}>
-                        <View style={styles.componentRail}>
-                          {rungComponents.filter((component) => component.id !== output?.id).map((component) => {
-                            const selected = component.id === selectedComponentId;
-                            const tone = componentTone(component.type);
-                            return (
-                              <Pressable
-                                key={component.id}
-                                onPress={() => selected ? openEditor(component) : setSelectedComponentId(component.id)}
-                                onLongPress={() => openEditor(component)}
-                                style={[
-                                  styles.ladderBlock,
-                                  tone === 'green' && styles.ladderBlockGreen,
-                                  tone === 'amber' && styles.ladderBlockAmber,
-                                  selected && styles.ladderBlockSelected,
-                                ]}
-                              >
-                                <Text style={[styles.blockCode, selected && styles.blockCodeSelected]}>{componentCode(component.type)}</Text>
-                                <Text style={styles.blockTag}>{component.tag}</Text>
-                                <Text style={styles.blockLabel} numberOfLines={1}>{component.label}</Text>
-                              </Pressable>
-                            );
-                          })}
-                        </View>
-                        <Text style={styles.rungComment} numberOfLines={1}>{makeRungLabel(line)}</Text>
-                      </View>
-                      <Pressable
-                        onPress={() => output ? (output.id === selectedComponentId ? openEditor(output) : setSelectedComponentId(output.id)) : undefined}
-                        onLongPress={() => output ? openEditor(output) : undefined}
-                        style={[styles.outputBox, active && styles.outputBoxActive, output?.id === selectedComponentId && styles.outputBoxSelected]}
-                      >
-                        <Text style={styles.outputLabel}>Saída</Text>
-                        <Text style={[styles.outputValue, active && styles.outputValueActive]}>{output?.tag ?? '—'}</Text>
-                        <Text style={styles.outputSmall}>{output ? componentCode(output.type) : 'Vazio'}</Text>
-                      </Pressable>
-                    </View>
-                  );
-                })}
+
+            <View style={styles.canvasToolbar}>
+              <View style={styles.canvasToolbarCopy}>
+                <Text style={styles.canvasToolbarTitle}>Canvas Ladder</Text>
+                <Text style={styles.canvasToolbarText}>Zoom: {zoomLabel(canvasZoom)} • Foco: {canvasFocus === 'all' ? 'todos os rungs' : 'seleção'}</Text>
               </View>
+              <View style={styles.canvasActions}>
+                <Pressable onPress={zoomOut} style={styles.canvasButton}><Text style={styles.canvasButtonText}>−</Text></Pressable>
+                <Pressable onPress={fitCanvas} style={styles.canvasFitButton}><Text style={styles.canvasFitText}>Enquadrar</Text></Pressable>
+                <Pressable onPress={zoomIn} style={styles.canvasButton}><Text style={styles.canvasButtonText}>+</Text></Pressable>
+              </View>
+            </View>
+
+            <View style={styles.canvasIndicatorBox}>
+              <View style={[styles.canvasIndicatorFill, canvasZoom === 'normal' && styles.canvasIndicatorNormal, canvasZoom === 'wide' && styles.canvasIndicatorWide]} />
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={[styles.ladderCanvas, { minWidth: canvasWidth }]}> 
+              <ScrollView showsVerticalScrollIndicator nestedScrollEnabled contentContainerStyle={styles.ladderVerticalCanvas}>
+                <View style={[styles.ladderStage, { minWidth: canvasWidth }]}> 
+                  {[1, 2, 3].map((line) => {
+                    const active = line === 2;
+                    const rungComponents = components.filter((component) => component.rung === line);
+                    const output = rungComponents.find((component) => component.type === 'coil' || component.type === 'timer');
+                    return (
+                      <View key={line} style={[styles.rungCard, active && styles.rungActive]}>
+                        <Text style={styles.rungNumber}>{line}</Text>
+                        <View style={styles.rungLogic}>
+                          <View style={styles.componentRail}>
+                            {rungComponents.filter((component) => component.id !== output?.id).map((component) => {
+                              const selected = component.id === selectedComponentId;
+                              const tone = componentTone(component.type);
+                              return (
+                                <Pressable
+                                  key={component.id}
+                                  onPress={() => selected ? openEditor(component) : (setSelectedComponentId(component.id), setCanvasFocus('selected'))}
+                                  onLongPress={() => openEditor(component)}
+                                  style={[
+                                    styles.ladderBlock,
+                                    tone === 'green' && styles.ladderBlockGreen,
+                                    tone === 'amber' && styles.ladderBlockAmber,
+                                    selected && styles.ladderBlockSelected,
+                                  ]}
+                                >
+                                  <Text style={[styles.blockCode, selected && styles.blockCodeSelected]}>{componentCode(component.type)}</Text>
+                                  <Text style={styles.blockTag}>{component.tag}</Text>
+                                  <Text style={styles.blockLabel} numberOfLines={1}>{component.label}</Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                          <Text style={styles.rungComment} numberOfLines={1}>{makeRungLabel(line)}</Text>
+                        </View>
+                        <Pressable
+                          onPress={() => output ? (output.id === selectedComponentId ? openEditor(output) : (setSelectedComponentId(output.id), setCanvasFocus('selected'))) : undefined}
+                          onLongPress={() => output ? openEditor(output) : undefined}
+                          style={[styles.outputBox, active && styles.outputBoxActive, output?.id === selectedComponentId && styles.outputBoxSelected]}
+                        >
+                          <Text style={styles.outputLabel}>Saída</Text>
+                          <Text style={[styles.outputValue, active && styles.outputValueActive]}>{output?.tag ?? '—'}</Text>
+                          <Text style={styles.outputSmall}>{output ? componentCode(output.type) : 'Vazio'}</Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
             </ScrollView>
           </PremiumSection>
 
@@ -197,8 +245,8 @@ export const PremiumEditorExportScreen = memo(function PremiumEditorExportScreen
             </View>
             <View style={styles.actionRow}>
               <Pressable disabled={!selectedComponent} onPress={() => selectedComponent ? openEditor(selectedComponent) : undefined} style={styles.primaryAction}><Text style={styles.primaryActionText}>Editar componente</Text></Pressable>
-              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Desfazer</Text></Pressable>
-              <Pressable style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Refazer</Text></Pressable>
+              <Pressable onPress={() => setCanvasFocus('selected')} style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Focar seleção</Text></Pressable>
+              <Pressable onPress={fitCanvas} style={styles.secondaryAction}><Text style={styles.secondaryActionText}>Enquadrar</Text></Pressable>
             </View>
           </PremiumSection>
 
@@ -309,8 +357,22 @@ const styles = StyleSheet.create({
   editorHintBox: { borderColor: colors.cyan, borderWidth: 1, borderRadius: 16, padding: spacing.md, backgroundColor: colors.cyanSoft },
   editorHintTitle: { color: colors.cyan, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
   editorHintText: { color: colors.text, fontSize: 11, lineHeight: 16, fontWeight: '800', marginTop: 3 },
-  ladderCanvas: { paddingBottom: 4, minWidth: 520 },
-  ladderStage: { minWidth: 520, borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.sm, backgroundColor: colors.codeBackground, gap: spacing.sm },
+  canvasToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated },
+  canvasToolbarCopy: { flex: 1, minWidth: 0 },
+  canvasToolbarTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  canvasToolbarText: { color: colors.textMuted, fontSize: 10, lineHeight: 15, fontWeight: '800', marginTop: 2 },
+  canvasActions: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center' },
+  canvasButton: { width: 34, height: 34, borderColor: colors.cyan, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cyanSoft },
+  canvasButtonText: { color: colors.cyan, fontSize: 18, fontWeight: '900' },
+  canvasFitButton: { borderColor: colors.green, borderWidth: 1, borderRadius: 12, paddingHorizontal: spacing.sm, height: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.greenSoft },
+  canvasFitText: { color: colors.green, fontSize: 10, fontWeight: '900' },
+  canvasIndicatorBox: { height: 8, borderRadius: 999, backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1, overflow: 'hidden' },
+  canvasIndicatorFill: { height: '100%', width: '38%', borderRadius: 999, backgroundColor: colors.green },
+  canvasIndicatorNormal: { width: '62%', backgroundColor: colors.cyan },
+  canvasIndicatorWide: { width: '88%', backgroundColor: colors.amber },
+  ladderCanvas: { paddingBottom: 4 },
+  ladderVerticalCanvas: { paddingBottom: 4 },
+  ladderStage: { borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.sm, backgroundColor: colors.codeBackground, gap: spacing.sm },
   rungCard: { flexDirection: 'row', alignItems: 'stretch', borderColor: colors.border, borderWidth: 1, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surfaceElevated, minHeight: 96 },
   rungActive: { borderColor: colors.green, backgroundColor: colors.greenSoft },
   rungNumber: { width: 34, color: colors.cyan, fontSize: 14, fontWeight: '900', textAlign: 'center', paddingTop: spacing.md },
