@@ -14,43 +14,83 @@ function stateLabel(value: boolean): string {
 }
 
 export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramProps) {
-  const rung = project.rungs[0];
-  const active = Boolean(energizedRungs[rung.id]);
+
+  function getValue(variableId: string): boolean {
+    return Boolean(state[variableId]);
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Diagrama Ladder didático</Text>
-      <View style={[styles.railBox, active && styles.railBoxActive]}>
-        <View style={styles.rail} />
-        <View style={styles.rungContent}>
-          <Text style={styles.rungLabel}>{rung.label}</Text>
-          <View style={styles.seriesRow}>
-            {rung.seriesContacts.map((contact) => (
-              <View key={contact.id} style={[styles.contact, Boolean(state[contact.variableId]) && styles.contactActive]}>
-                <Text style={styles.contactText}>{contact.label}</Text>
-                <Text style={styles.contactState}>{stateLabel(Boolean(state[contact.variableId]))}</Text>
-              </View>
-            ))}
-          </View>
-          <Text style={styles.branchTitle}>Ramo paralelo de partida/selo</Text>
-          <View style={styles.parallelBox}>
-            {rung.parallelBranches.map((branch) => (
-              <View key={branch.id} style={styles.branchRow}>
-                {branch.contacts.map((contact) => (
-                  <View key={contact.id} style={[styles.contact, Boolean(state[contact.variableId]) && styles.contactActive]}>
+
+      {project.rungs.map((rung) => {
+        const active = Boolean(energizedRungs[rung.id]);
+
+        return (
+          <View key={rung.id} style={[styles.railBox, active && styles.railBoxActive]}>
+            <View style={styles.rail} />
+
+            <View style={styles.rungContent}>
+              <Text style={styles.rungLabel}>{rung.label}</Text>
+
+              <View style={styles.seriesRow}>
+                {rung.seriesContacts.map((contact) => (
+                  <View
+                    key={contact.id}
+                    style={[
+                      styles.contact,
+                      getValue(contact.variableId) && styles.contactActive,
+                      active && styles.contactEnergized
+                    ]}
+                  >
                     <Text style={styles.contactText}>{contact.label}</Text>
-                    <Text style={styles.contactState}>{stateLabel(Boolean(state[contact.variableId]))}</Text>
+                    <Text style={styles.contactState}>
+                      {stateLabel(getValue(contact.variableId))}
+                    </Text>
                   </View>
                 ))}
               </View>
-            ))}
+
+              <Text style={styles.branchTitle}>Ramo paralelo de partida/selo</Text>
+
+              <View style={styles.parallelBox}>
+                {rung.parallelBranches.map((branch) => (
+                  <View key={branch.id} style={styles.branchRow}>
+                    {branch.contacts.map((contact) => (
+                      <View
+                        key={contact.id}
+                        style={[
+                          styles.contact,
+                          getValue(contact.variableId) && styles.contactActive,
+                          active && styles.contactEnergized
+                        ]}
+                      >
+                        <Text style={styles.contactText}>{contact.label}</Text>
+                        <Text style={styles.contactState}>
+                          {stateLabel(getValue(contact.variableId))}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+              </View>
+
+              <View
+                style={[
+                  styles.coil,
+                  getValue(rung.coilVariableId) && styles.coilActive
+                ]}
+              >
+                <Text style={styles.coilText}>
+                  ( {rung.coilVariableId} / K1 )
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.rail} />
           </View>
-          <View style={[styles.coil, Boolean(state[rung.coilVariableId]) && styles.coilActive]}>
-            <Text style={styles.coilText}>( {rung.coilVariableId} / K1 )</Text>
-          </View>
-        </View>
-        <View style={styles.rail} />
-      </View>
+        );
+      })}
     </View>
   );
 }
@@ -76,6 +116,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
     padding: spacing.md,
+    marginBottom: spacing.md,
   },
   railBoxActive: {
     borderColor: colors.cyan,
@@ -128,6 +169,11 @@ const styles = StyleSheet.create({
   contactActive: {
     borderColor: colors.cyan,
     backgroundColor: colors.cyanSoft,
+  },
+  contactEnergized: {
+    shadowColor: "#00FFFF",
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
   contactText: {
     color: colors.text,
