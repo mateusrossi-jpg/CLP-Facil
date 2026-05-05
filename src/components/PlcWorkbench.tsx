@@ -10,6 +10,7 @@ import { spacing } from '../theme/spacing';
 
 type WorkbenchCategory = ComponentCategory | 'protection';
 type MobileWorkbenchTab = 'execution' | 'io' | 'program' | 'diagnostic';
+type LadderProgramLayout = 'focus' | 'stack';
 
 const categoryTabs: { key: WorkbenchCategory; label: string }[] = [
   { key: 'input', label: 'Comando' },
@@ -474,6 +475,7 @@ export function PlcWorkbench({
   const [pendingComponent, setPendingComponent] = useState<SimulatorComponent | null>(null);
   const [mobileTab, setMobileTab] = useState<MobileWorkbenchTab>('execution');
   const [visualMode, setVisualMode] = useState<'list' | 'flow'>('list');
+  const [ladderProgramLayout, setLadderProgramLayout] = useState<LadderProgramLayout>(width < 980 ? 'focus' : 'stack');
   const [newVariableName, setNewVariableName] = useState('');
   const [newVariableType, setNewVariableType] = useState<EditorVariableDataType>('boolean');
   const [canvasZoom, setCanvasZoom] = useState(1);
@@ -483,6 +485,7 @@ export function PlcWorkbench({
   const rung = editor.rungs.find((item) => item.id === editor.selectedRungId) ?? editor.rungs[0];
   const selectedRungIndex = Math.max(0, editor.rungs.findIndex((item) => item.id === rung.id));
   const energizedRungCount = editor.rungs.filter((item) => evaluation.rungResults[item.id]).length;
+  const focusedProgramLayout = ladderProgramLayout === 'focus';
   const selectedZone = editor.selectedZone;
   const selectedSeriesIndex = editor.selectedSeriesIndex ?? 0;
   const components = useMemo(() => simulatorComponents.filter((component) => component.category === category), [category]);
@@ -1433,32 +1436,56 @@ export function PlcWorkbench({
               <View>
                 <Text style={styles.ladderListTitle}>Programa Ladder</Text>
                 <Text style={styles.ladderListSubtitle}>
-                  {`${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linha ${selectedRungIndex + 1} de ${editor.rungs.length}.`}
+                  {focusedProgramLayout
+                    ? `${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linha ${selectedRungIndex + 1} de ${editor.rungs.length}.`
+                    : `${energizedRungCount}/${editor.rungs.length} linha(s) energizada(s). Linhas empilhadas para edicao geral.`}
                 </Text>
               </View>
               <View style={styles.ladderHeaderTools}>
-                <View style={styles.mobileRungNavigator}>
-                  <Pressable
-                    onPress={() => selectAdjacentRung(-1)}
-                    disabled={selectedRungIndex === 0}
-                    style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex === 0 && styles.disabled, pressed && selectedRungIndex > 0 && styles.pressed]}
-                  >
-                    <Text style={styles.mobileRungNavText}>Anterior</Text>
-                  </Pressable>
-                  <Text style={styles.mobileRungCounter}>Linha {selectedRungIndex + 1}/{editor.rungs.length}</Text>
-                  <Pressable
-                    onPress={() => selectAdjacentRung(1)}
-                    disabled={selectedRungIndex >= editor.rungs.length - 1}
-                    style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex >= editor.rungs.length - 1 && styles.disabled, pressed && selectedRungIndex < editor.rungs.length - 1 && styles.pressed]}
-                  >
-                    <Text style={styles.mobileRungNavText}>Próxima</Text>
-                  </Pressable>
+                <View style={styles.programLayoutSwitch}>
+                  {(['focus', 'stack'] as LadderProgramLayout[]).map((layout) => {
+                    const active = ladderProgramLayout === layout;
+                    return (
+                      <Pressable
+                        key={layout}
+                        onPress={() => setLadderProgramLayout(layout)}
+                        style={({ pressed }) => [styles.programLayoutButton, active && styles.programLayoutButtonActive, pressed && styles.pressed]}
+                      >
+                        <Text style={[styles.programLayoutText, active && styles.programLayoutTextActive]}>{layout === 'focus' ? 'Foco' : 'Todas'}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
+                {focusedProgramLayout ? (
+                  <View style={styles.mobileRungNavigator}>
+                    <Pressable
+                      onPress={() => selectAdjacentRung(-1)}
+                      disabled={selectedRungIndex === 0}
+                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex === 0 && styles.disabled, pressed && selectedRungIndex > 0 && styles.pressed]}
+                    >
+                      <Text style={styles.mobileRungNavText}>Anterior</Text>
+                    </Pressable>
+                    <Text style={styles.mobileRungCounter}>Linha {selectedRungIndex + 1}/{editor.rungs.length}</Text>
+                    <Pressable
+                      onPress={() => selectAdjacentRung(1)}
+                      disabled={selectedRungIndex >= editor.rungs.length - 1}
+                      style={({ pressed }) => [styles.mobileRungNavButton, selectedRungIndex >= editor.rungs.length - 1 && styles.disabled, pressed && selectedRungIndex < editor.rungs.length - 1 && styles.pressed]}
+                    >
+                      <Text style={styles.mobileRungNavText}>Próxima</Text>
+                    </Pressable>
+                  </View>
+                ) : null}
                 <View style={styles.zoomControls}>
-                  <Pressable onPress={() => changeCanvasZoom(-0.1)} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
+                  <Pressable
+                    onPress={() => changeCanvasZoom(-0.1)}
+                    style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}
+                  >
                     <Text style={styles.zoomButtonText}>-</Text>
                   </Pressable>
-                  <Pressable onPress={() => setCanvasZoom(1)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+                  <Pressable
+                    onPress={() => setCanvasZoom(1)}
+                    style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}
+                  >
                     <Text style={styles.zoomValueText}>{Math.round(canvasZoom * 100)}%</Text>
                   </Pressable>
                   <Pressable onPress={() => changeCanvasZoom(0.1)} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
@@ -1475,7 +1502,9 @@ export function PlcWorkbench({
                 </View>
               </View>
             </View>
-            {renderRungCanvas(rung, selectedRungIndex)}
+            {focusedProgramLayout
+              ? renderRungCanvas(rung, selectedRungIndex)
+              : editor.rungs.map((item, index) => renderRungCanvas(item, index))}
           </View>
 
           <View style={[styles.fieldBench, isMobile && mobileTab !== 'execution' && styles.mobileHidden]}>
@@ -2847,6 +2876,34 @@ const styles = StyleSheet.create({
   ladderActions: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  programLayoutSwitch: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
+  programLayoutButton: {
+    minHeight: 36,
+    minWidth: 62,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  programLayoutButtonActive: {
+    backgroundColor: colors.cyanSoft,
+  },
+  programLayoutText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  programLayoutTextActive: {
+    color: colors.cyan,
   },
   mobileRungNavigator: {
     width: '100%',
