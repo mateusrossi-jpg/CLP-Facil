@@ -18,6 +18,24 @@ const sampleSignals: SmartphoneSignalSnapshot[] = [
   { address: 'T0', name: 'Tempo', type: 'function', value: false },
 ];
 
+function runOverviewSummaryRegression(): SmartphoneIoRegressionResult {
+  const summary = createSmartphoneIoSummary(sampleSignals, 'overview');
+  return assertResult(
+    'resumo mobile unificado mostra entradas e saidas na mesma visao',
+    summary.label === 'Entradas + Saídas' &&
+      summary.totalCount === 3 &&
+      summary.activeCount === 2 &&
+      summary.inputCount === 2 &&
+      summary.activeInputCount === 1 &&
+      summary.outputCount === 1 &&
+      summary.activeOutputCount === 1 &&
+      summary.activeAddresses.includes('I0.0') &&
+      summary.activeAddresses.includes('Q0.0') &&
+      /causa e efeito|sem trocar de aba/.test(summary.guidance),
+    JSON.stringify(summary),
+  );
+}
+
 function runInputSummaryRegression(): SmartphoneIoRegressionResult {
   const summary = createSmartphoneIoSummary(sampleSignals, 'inputs');
   return assertResult(
@@ -47,6 +65,7 @@ function runFunctionSummaryRegression(): SmartphoneIoRegressionResult {
 
 export function runSmartphoneIoViewRegressionSuite(): SmartphoneIoRegressionResult[] {
   return [
+    runOverviewSummaryRegression(),
     runInputSummaryRegression(),
     runOutputSummaryRegression(),
     runFunctionSummaryRegression(),
