@@ -24,6 +24,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Paleta global recebeu aliases de compatibilidade (`primary`, `success`, `warning`, `danger`, `blue`, `orange`, `gray`, `white`) para reduzir risco de quebra em componentes antigos durante a migração visual.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
+- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content e telas premium para facilitar a integração final no `App.tsx`.
 - `PremiumProgress` teve a largura percentual tipada para reduzir risco no TypeScript strict.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
