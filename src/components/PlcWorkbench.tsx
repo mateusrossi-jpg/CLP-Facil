@@ -9,7 +9,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 type WorkbenchCategory = ComponentCategory | 'protection';
-type MobileWorkbenchTab = 'program' | 'view' | 'io' | 'field';
+type MobileWorkbenchTab = 'execution' | 'io' | 'program' | 'diagnostic';
 
 const categoryTabs: { key: WorkbenchCategory; label: string }[] = [
   { key: 'input', label: 'Comando' },
@@ -472,7 +472,7 @@ export function PlcWorkbench({
   const { width } = useWindowDimensions();
   const [category, setCategory] = useState<WorkbenchCategory>('input');
   const [pendingComponent, setPendingComponent] = useState<SimulatorComponent | null>(null);
-  const [mobileTab, setMobileTab] = useState<MobileWorkbenchTab>('program');
+  const [mobileTab, setMobileTab] = useState<MobileWorkbenchTab>('execution');
   const [visualMode, setVisualMode] = useState<'list' | 'flow'>('list');
   const [newVariableName, setNewVariableName] = useState('');
   const [newVariableType, setNewVariableType] = useState<EditorVariableDataType>('boolean');
@@ -567,7 +567,7 @@ export function PlcWorkbench({
 
   useEffect(() => {
     if (!isMobile) return;
-    if (locked) setMobileTab('view');
+    if (locked) setMobileTab('execution');
   }, [isMobile, locked]);
 
   const mainY = 96;
@@ -889,7 +889,7 @@ export function PlcWorkbench({
   }
 
   function renderMobileSimulationDock() {
-    if (!isMobile || mobileTab === 'io') return null;
+    if (!isMobile || mobileTab === 'io' || mobileTab === 'program') return null;
     return (
       <View style={styles.mobileRunDock}>
         <View style={styles.mobileRunDockHeader}>
@@ -948,7 +948,7 @@ export function PlcWorkbench({
   }
 
   function renderMobileVisualization() {
-    if (!isMobile || mobileTab !== 'view') return null;
+    if (!isMobile || mobileTab !== 'diagnostic') return null;
 
     function renderBlockChip(block: EditorBlock, key: string, rungActive = false) {
       const active = blockOnlineActive(block, state, rungActive);
@@ -964,8 +964,8 @@ export function PlcWorkbench({
       <View style={styles.visualPanel}>
         <View style={styles.visualHeader}>
           <View>
-            <Text style={styles.visualTitle}>Visualização RUN</Text>
-            <Text style={styles.visualSubtitle}>Acione entradas e acompanhe a automação inteira.</Text>
+            <Text style={styles.visualTitle}>Diagnostico RUN</Text>
+            <Text style={styles.visualSubtitle}>Revise estados, rungs e alertas sem sair da simulação.</Text>
           </View>
           <Text style={[styles.scanState, locked && styles.scanStateRun]}>{locked ? `SCAN ${evaluation.scanNumber}` : 'EDIT'}</Text>
         </View>
@@ -1243,10 +1243,10 @@ export function PlcWorkbench({
           {isMobile ? (
             <View style={styles.mobileTabs}>
               {([
-                ['program', 'Programa'],
-                ['view', 'Visualizar'],
+                ['execution', 'Execução'],
                 ['io', 'I/O'],
-                ['field', 'Bancada'],
+                ['program', 'Programa'],
+                ['diagnostic', 'Diagnóstico'],
               ] as [MobileWorkbenchTab, string][]).map(([tab, label]) => (
                 <Pressable key={tab} onPress={() => setMobileTab(tab)} style={[styles.mobileTab, mobileTab === tab && styles.mobileTabActive]}>
                   <Text style={[styles.mobileTabText, mobileTab === tab && styles.mobileTabTextActive]}>{label}</Text>
@@ -1451,7 +1451,7 @@ export function PlcWorkbench({
             {editor.rungs.map((item, index) => renderRungCanvas(item, index))}
           </View>
 
-          <View style={[styles.fieldBench, isMobile && mobileTab !== 'field' && styles.mobileHidden]}>
+          <View style={[styles.fieldBench, isMobile && mobileTab !== 'execution' && styles.mobileHidden]}>
             <View style={styles.fieldBenchHeader}>
               <View>
                 <Text style={styles.fieldBenchTitle}>Bancada de campo</Text>
