@@ -8,6 +8,7 @@ type BottomNavigationProps = {
   active: BottomNavKey;
   onChange: (key: BottomNavKey) => void;
   compact?: boolean;
+  renderContent?: boolean;
 };
 
 const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
@@ -19,7 +20,7 @@ const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'reference', label: 'Ref', shortLabel: 'Ref' },
 ];
 
-export function BottomNavigation({ active, onChange, compact }: BottomNavigationProps) {
+export function BottomNavigation({ active, onChange, compact, renderContent = true }: BottomNavigationProps) {
   const { width } = useWindowDimensions();
   const effectiveCompact = Boolean(compact || width < 720);
 
@@ -52,7 +53,7 @@ export function BottomNavigation({ active, onChange, compact }: BottomNavigation
           );
         })}
       </View>
-      <PremiumRouteContent active={active} />
+      {renderContent ? <PremiumRouteContent active={active} /> : null}
     </View>
   );
 }
