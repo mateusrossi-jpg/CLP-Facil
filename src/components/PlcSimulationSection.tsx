@@ -48,7 +48,7 @@ export const PlcSimulationSection = memo(function PlcSimulationSection({
           <Text style={[styles.title, { color: accent }]}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
-        <View style={[styles.togglePill, { borderColor: accent }]}> 
+        <View style={[styles.togglePill, { borderColor: accent }]}>
           <Text style={[styles.toggleText, { color: accent }]}>{open ? 'Fechar' : 'Abrir'}</Text>
         </View>
       </Pressable>
