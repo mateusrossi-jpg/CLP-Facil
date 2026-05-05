@@ -49,6 +49,7 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onAdvanceMission?: () => void;
 };
 
 const noop = () => undefined;
@@ -94,6 +95,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onAddCoil={props.onAddCoil}
         onAddTimer={props.onAddTimer}
         onAddBranch={props.onAddBranch}
+        onAdvanceMission={props.onAdvanceMission}
       />
 
       <PlcSimulationSection

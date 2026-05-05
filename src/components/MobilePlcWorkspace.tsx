@@ -34,6 +34,7 @@ type MobilePlcWorkspaceProps = {
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onAdvanceMission?: () => void;
 };
 
 const noop = () => undefined;
@@ -92,6 +93,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onAddCoil,
   onAddTimer,
   onAddBranch,
+  onAdvanceMission,
 }: MobilePlcWorkspaceProps) {
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -147,6 +149,11 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           <Text style={[styles.missionFeedback, missionPassed && styles.missionFeedbackDone]}>
             {missionAttempt?.feedback ?? mission.story}
           </Text>
+          {missionPassed && onAdvanceMission ? (
+            <Pressable onPress={onAdvanceMission} style={({ pressed }) => [styles.nextMissionButton, pressed && styles.pressed]}>
+              <Text style={styles.nextMissionText}>Proxima missão</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 
@@ -469,6 +476,23 @@ const styles = StyleSheet.create({
   },
   missionFeedbackDone: {
     color: colors.text,
+  },
+  nextMissionButton: {
+    minHeight: 38,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.greenSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  nextMissionText: {
+    color: colors.green,
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   hintBox: {
     borderColor: colors.amber,

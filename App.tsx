@@ -235,6 +235,20 @@ export default function App() {
     setMode('simulate');
   }
 
+  function nextPlcMission(currentMission: PlcMission | null): PlcMission | null {
+    if (!currentMission) return null;
+    const allMissions = plcMissionTracks.flatMap((track) => track.missions);
+    const currentIndex = allMissions.findIndex((mission) => mission.id === currentMission.id);
+    if (currentIndex < 0) return null;
+    return allMissions[currentIndex + 1] ?? null;
+  }
+
+  function openNextPlcMission() {
+    const nextMission = nextPlcMission(activePlcMission);
+    if (!nextMission) return;
+    openPlcMission(nextMission);
+  }
+
   function openLessonInSimulator(lesson: Lesson) {
     setEditorProject(createLessonEditorProject(lesson.id));
     setEditorState(createInitialEditorState());
@@ -1113,6 +1127,7 @@ export default function App() {
                 onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
                 onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
                 onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
+                onAdvanceMission={nextPlcMission(activePlcMission) ? openNextPlcMission : undefined}
               />
             ) : null}
             {!(compactSimulator && editorMode === 'simulate') ? (
