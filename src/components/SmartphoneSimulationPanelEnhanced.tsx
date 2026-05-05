@@ -23,6 +23,7 @@ import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
 import { getFirstPlcMissionTrack } from '../lessons/plcMissions';
+import { PlcMission } from '../lessons/missionTypes';
 import { spacing } from '../theme/spacing';
 
 type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
@@ -30,6 +31,7 @@ type OptionalRuntimeProps = 'autoScan' | 'onRunScan' | 'onToggleAutoScan' | 'onS
 
 type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRuntimeProps> & Partial<Pick<FixedPanelProps, OptionalRuntimeProps>> & {
   autoScan?: boolean;
+  mission?: PlcMission | null;
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
   onSetValue?: (variable: string, value: boolean | number) => void;
@@ -44,7 +46,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onRunScan = props.onRunScan ?? noop;
   const onToggleAutoScan = props.onToggleAutoScan ?? noop;
   const onSetValue = props.onSetValue ?? noop;
-  const starterMission = getFirstPlcMissionTrack().missions[2];
+  const starterMission = props.mission ?? getFirstPlcMissionTrack().missions[2];
   const fixedPanelProps: FixedPanelProps = {
     ...props,
     autoScan,

@@ -20,6 +20,7 @@ import { LessonDetail } from './src/components/LessonDetail';
 import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
+import { PlcMissionPathPanel } from './src/components/PlcMissionPathPanel';
 import { PlcProfilePanel } from './src/components/PlcProfilePanel';
 import { CommunicationProtocolsPanel } from './src/components/CommunicationProtocolsPanel';
 import { ReferenceHubPanel } from './src/components/ReferenceHubPanel';
@@ -39,6 +40,8 @@ import { canInsertComponentInZone, explainInsertionRule } from './src/engine/edi
 import { createInitialRuntimeState } from './src/engine/runtimeTypes';
 import { createInitialState, evaluateProject, setInput } from './src/engine/ladderEvaluator';
 import { PlcState } from './src/engine/projectTypes';
+import { PlcMission } from './src/lessons/missionTypes';
+import { plcMissionTracks } from './src/lessons/plcMissions';
 import { colors } from './src/theme/colors';
 import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
@@ -53,6 +56,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('home');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [practiceLesson, setPracticeLesson] = useState<Lesson | null>(null);
+  const [activePlcMission, setActivePlcMission] = useState<PlcMission | null>(null);
   const [completedPracticeSteps, setCompletedPracticeSteps] = useState<Record<string, boolean>>({});
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
   const [editorMessage, setEditorMessage] = useState<string | null>(null);
@@ -171,6 +175,7 @@ export default function App() {
     if (key === 'home') {
       setMode('home');
       setPracticeLesson(null);
+      setActivePlcMission(null);
       setCompletedPracticeSteps({});
       return;
     }
@@ -182,6 +187,7 @@ export default function App() {
 
     if (key === 'simulate') {
       setPracticeLesson(null);
+      setActivePlcMission(null);
       setCompletedPracticeSteps({});
       setMode('simulate');
       return;
@@ -209,7 +215,23 @@ export default function App() {
 
   function openSimulator() {
     setPracticeLesson(null);
+    setActivePlcMission(null);
     setCompletedPracticeSteps({});
+    setMode('simulate');
+  }
+
+  function openPlcMission(mission: PlcMission) {
+    setEditorProject(mission.initialProject ?? createInitialEditorProject());
+    setEditorState(createInitialEditorState());
+    setEditorRuntime(createInitialRuntimeState());
+    setEditorScanNumber(0);
+    setAutoScan(false);
+    setSelectedComponent(null);
+    setPracticeLesson(null);
+    setActivePlcMission(mission);
+    setCompletedPracticeSteps({});
+    setEditorMode('simulate');
+    setEditorMessage(`Missão "${mission.title}" carregada. Acione entradas, rode Scan e acompanhe o feedback.`);
     setMode('simulate');
   }
 
@@ -221,6 +243,7 @@ export default function App() {
     setAutoScan(false);
     setSelectedComponent(null);
     setPracticeLesson(lesson);
+    setActivePlcMission(null);
     setCompletedPracticeSteps({});
     setEditorMode('edit');
     setEditorMessage(`Prática da lição "${lesson.title}" carregada. Revise o objetivo acima, entre em Simular e execute os passos.`);
@@ -240,6 +263,7 @@ export default function App() {
     setAutoScan(false);
     setSelectedComponent(null);
     setPracticeLesson(null);
+    setActivePlcMission(null);
     setCompletedPracticeSteps({});
     setEditorMode('edit');
     setEditorMessage(`${example.title} carregado. Alterne para Simular e acione as entradas indicadas na Tabela de I/O para testar.`);
@@ -866,6 +890,11 @@ export default function App() {
           <>
             <AppHeader title="Modo Aprender" subtitle="Escolha uma lição, entenda a teoria e depois pratique no simulador quando a lição permitir." />
             <AdPlaceholder placement="bannerLearning" visible={showAds} />
+            <PlcMissionPathPanel
+              tracks={plcMissionTracks}
+              activeMissionId={activePlcMission?.id}
+              onOpenMission={openPlcMission}
+            />
             {learningModules.map((module) => {
               const moduleLessons = lessons.filter((lesson) => lesson.moduleId === module.id);
               return (
@@ -1029,7 +1058,7 @@ export default function App() {
               <View style={[styles.simulatorTopBar, compactSimulator && styles.simulatorTopBarCompact]}>
                 <View style={styles.simulatorTopText}>
                   <Text style={styles.simulatorEyebrow}>Easy-CLP</Text>
-                  <Text style={styles.simulatorTitle}>{practiceLesson ? practiceLesson.title : 'Bancada Ladder'}</Text>
+                  <Text style={styles.simulatorTitle}>{activePlcMission ? activePlcMission.title : practiceLesson ? practiceLesson.title : 'Bancada Ladder'}</Text>
                 </View>
                 <View style={styles.simulatorTopActions}>
                   {practiceLesson ? (
@@ -1062,6 +1091,7 @@ export default function App() {
                 evaluation={editorEvaluation}
                 selectedProfile={selectedPlcProfile}
                 onSelectProfile={setSelectedPlcProfile}
+                mission={activePlcMission}
                 autoScan={autoScan}
                 onRunScan={runEditorScan}
                 onToggleAutoScan={() => setAutoScan((current) => !current)}
