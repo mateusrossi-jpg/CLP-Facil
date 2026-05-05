@@ -10,6 +10,7 @@ export * from './PremiumLessonDetailCard';
 export * from './PremiumLessonQuizCard';
 export * from './PremiumGuidedPracticeCard';
 export * from './PremiumProjectIntentBanner';
+export * from './PremiumProjectLearningFocus';
 export * from './PremiumProjectsScreen';
 export * from './PremiumProjectWorkspace';
 export * from './PremiumProjectQuickSummary';
