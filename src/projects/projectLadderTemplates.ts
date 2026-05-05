@@ -1,0 +1,201 @@
+import type { TrainingProject } from './projectCatalog';
+
+export type ProjectRungTemplate = {
+  id: string;
+  projectId: TrainingProject['id'];
+  rungNumber: number;
+  title: string;
+  description: string;
+  conditions: string[];
+  output: string;
+  outputDescription: string;
+};
+
+export const projectRungTemplates: ProjectRungTemplate[] = [
+  {
+    id: 'partida-direta-r1',
+    projectId: 'partida-direta',
+    rungNumber: 1,
+    title: 'Partida direta do motor',
+    description: 'Liga o contator quando a parada está fechada e o botão de partida é acionado.',
+    conditions: ['I0.1 Parada NF', 'I0.0 Partida NA'],
+    output: 'Q0.0 KM1',
+    outputDescription: 'Contator principal do motor',
+  },
+  {
+    id: 'selo-r1',
+    projectId: 'selo',
+    rungNumber: 1,
+    title: 'Partida com retenção',
+    description: 'Liga a saída por partida momentânea e mantém por contato auxiliar de selo.',
+    conditions: ['I0.1 Parada NF', 'I0.0 Partida NA', 'Q0.0 Selo em paralelo'],
+    output: 'Q0.0 KM1',
+    outputDescription: 'Motor sustentado pelo selo',
+  },
+  {
+    id: 'selo-r2',
+    projectId: 'selo',
+    rungNumber: 2,
+    title: 'Diagnóstico de motor ligado',
+    description: 'Cria memória didática para indicar que o motor permanece em operação.',
+    conditions: ['Q0.0 KM1 ligado'],
+    output: 'M0.0 Motor ligado',
+    outputDescription: 'Memória de estado para diagnóstico',
+  },
+  {
+    id: 'reversao-r1',
+    projectId: 'reversao',
+    rungNumber: 1,
+    title: 'Comando de avanço',
+    description: 'Liga K1 somente se parada estiver OK e K2 não estiver acionado.',
+    conditions: ['I0.2 Parada NF', 'I0.0 Avanço NA', 'Q0.1 K2 reverso NF'],
+    output: 'Q0.0 K1',
+    outputDescription: 'Contator de avanço',
+  },
+  {
+    id: 'reversao-r2',
+    projectId: 'reversao',
+    rungNumber: 2,
+    title: 'Comando de reverso',
+    description: 'Liga K2 somente se parada estiver OK e K1 não estiver acionado.',
+    conditions: ['I0.2 Parada NF', 'I0.1 Reverso NA', 'Q0.0 K1 avanço NF'],
+    output: 'Q0.1 K2',
+    outputDescription: 'Contator de reversão',
+  },
+  {
+    id: 'estrela-triangulo-r1',
+    projectId: 'estrela-triangulo',
+    rungNumber: 1,
+    title: 'Partida em estrela',
+    description: 'Aciona contatores principal e estrela durante o tempo inicial.',
+    conditions: ['I0.1 Parada NF', 'I0.0 Partida NA', 'T1 não concluído'],
+    output: 'Q0.1 K estrela',
+    outputDescription: 'Contator estrela durante partida reduzida',
+  },
+  {
+    id: 'estrela-triangulo-r2',
+    projectId: 'estrela-triangulo',
+    rungNumber: 2,
+    title: 'Transição para triângulo',
+    description: 'Após o tempo de partida, bloqueia estrela e libera triângulo.',
+    conditions: ['T1 concluído', 'Q0.1 estrela NF'],
+    output: 'Q0.2 K triângulo',
+    outputDescription: 'Contator triângulo em regime',
+  },
+  {
+    id: 'semaforo-r1',
+    projectId: 'semaforo',
+    rungNumber: 1,
+    title: 'Etapa verde',
+    description: 'Mantém o verde ligado enquanto o temporizador da primeira etapa acumula.',
+    conditions: ['RUN ativo', 'T1 não concluído'],
+    output: 'Q0.0 Verde',
+    outputDescription: 'Luz verde do semáforo',
+  },
+  {
+    id: 'semaforo-r2',
+    projectId: 'semaforo',
+    rungNumber: 2,
+    title: 'Etapa amarela',
+    description: 'Liga o amarelo depois do verde e antes do vermelho.',
+    conditions: ['T1 concluído', 'T2 não concluído'],
+    output: 'Q0.1 Amarelo',
+    outputDescription: 'Luz amarela de transição',
+  },
+  {
+    id: 'semaforo-r3',
+    projectId: 'semaforo',
+    rungNumber: 3,
+    title: 'Etapa vermelha',
+    description: 'Liga o vermelho até reiniciar a sequência.',
+    conditions: ['T2 concluído', 'T3 não concluído'],
+    output: 'Q0.2 Vermelho',
+    outputDescription: 'Luz vermelha do semáforo',
+  },
+  {
+    id: 'bomba-alternada-r1',
+    projectId: 'bomba-alternada',
+    rungNumber: 1,
+    title: 'Solicitação de bombeamento',
+    description: 'Detecta nível baixo e habilita a necessidade de ligar uma bomba.',
+    conditions: ['I0.0 Nível baixo', 'I0.3 Proteção OK'],
+    output: 'M0.0 Solicita bomba',
+    outputDescription: 'Memória de demanda de bombeamento',
+  },
+  {
+    id: 'bomba-alternada-r2',
+    projectId: 'bomba-alternada',
+    rungNumber: 2,
+    title: 'Alternância de bomba',
+    description: 'Usa memória/contador para escolher a próxima bomba a operar.',
+    conditions: ['M0.0 Solicita bomba', 'C0 alternância'],
+    output: 'Q0.0 / Q0.1',
+    outputDescription: 'Bomba A ou B conforme alternância',
+  },
+  {
+    id: 'esteira-r1',
+    projectId: 'esteira',
+    rungNumber: 1,
+    title: 'Liga esteira',
+    description: 'Liga a esteira se houver habilitação e lote ainda não foi completo.',
+    conditions: ['I0.0 Start', 'I0.1 Stop NF', 'C0 lote não completo'],
+    output: 'Q0.0 Esteira',
+    outputDescription: 'Motor da esteira',
+  },
+  {
+    id: 'esteira-r2',
+    projectId: 'esteira',
+    rungNumber: 2,
+    title: 'Contagem de peças',
+    description: 'Conta uma peça a cada pulso do sensor.',
+    conditions: ['I0.2 Sensor peça', 'Borda positiva'],
+    output: 'C0 Contador',
+    outputDescription: 'Contador de peças do lote',
+  },
+  {
+    id: 'portao-automatico-r1',
+    projectId: 'portao-automatico',
+    rungNumber: 1,
+    title: 'Abrir portão',
+    description: 'Aciona abertura se comando recebido e fim de curso aberto ainda não atuou.',
+    conditions: ['I0.0 Comando abrir', 'I0.2 Fim aberto NF', 'Q0.1 Fechar NF'],
+    output: 'Q0.0 Abrir',
+    outputDescription: 'Motor no sentido de abertura',
+  },
+  {
+    id: 'portao-automatico-r2',
+    projectId: 'portao-automatico',
+    rungNumber: 2,
+    title: 'Fechar portão',
+    description: 'Aciona fechamento se comando recebido e fim de curso fechado ainda não atuou.',
+    conditions: ['I0.1 Comando fechar', 'I0.3 Fim fechado NF', 'Q0.0 Abrir NF'],
+    output: 'Q0.1 Fechar',
+    outputDescription: 'Motor no sentido de fechamento',
+  },
+  {
+    id: 'reservatorio-r1',
+    projectId: 'reservatorio',
+    rungNumber: 1,
+    title: 'Liga bomba por nível baixo',
+    description: 'Liga a bomba quando o nível está baixo e há proteção contra funcionamento a seco.',
+    conditions: ['I0.0 Nível baixo', 'I0.2 Proteção seco OK'],
+    output: 'Q0.0 Bomba',
+    outputDescription: 'Bomba de enchimento',
+  },
+  {
+    id: 'reservatorio-r2',
+    projectId: 'reservatorio',
+    rungNumber: 2,
+    title: 'Desliga por nível alto',
+    description: 'Remove a solicitação quando o sensor superior indica reservatório cheio.',
+    conditions: ['I0.1 Nível alto'],
+    output: 'M0.0 Solicitação OFF',
+    outputDescription: 'Memória de controle do enchimento',
+  },
+];
+
+export function getRungTemplatesForProject(projectId: TrainingProject['id']): ProjectRungTemplate[] {
+  return projectRungTemplates
+    .filter((rung) => rung.projectId === projectId)
+    .sort((a, b) => a.rungNumber - b.rungNumber);
+}
