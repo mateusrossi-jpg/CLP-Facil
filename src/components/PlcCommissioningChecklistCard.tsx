@@ -185,7 +185,7 @@ export const PlcCommissioningChecklistCard = memo(function PlcCommissioningCheck
             <View style={styles.itemHeader}>
               <View style={[styles.statusDot, item.status === 'done' && styles.statusDotDone, item.status === 'attention' && styles.statusDotAttention]} />
               <Text style={[styles.itemStatus, item.status === 'done' && styles.itemStatusDone, item.status === 'attention' && styles.itemStatusAttention]}>{statusLabel(item.status)}</Text>
-              <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.itemTitle}>{item.title}</Text>
             </View>
             <Text style={styles.itemDescription}>{item.description}</Text>
           </View>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

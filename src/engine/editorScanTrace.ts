@@ -110,18 +110,21 @@ function parallelBranchesFor(rung: EditorRung): EditorParallelBranch[] {
   }));
 }
 
-function branchEndIndex(branch: EditorParallelBranch, seriesLength: number): number {
+function branchEndIndex(branch: EditorParallelBranch, seriesLength: number, outputVariable?: string): number {
   const startIndex = Math.min(Math.max(branch.seriesIndex, 0), Math.max(seriesLength - 1, 0));
   const branchSpan = Math.max(branch.blocks.filter(isContact).length, 1);
+  const normalizedOutput = outputVariable ? normalizeVariable(outputVariable) : '';
+  const isSealBranch = Boolean(normalizedOutput) && branch.blocks.some((block) => normalizeVariable(block.variable) === normalizedOutput);
+  if (!isSealBranch && startIndex === 0) return seriesLength;
   return Math.min(startIndex + branchSpan, seriesLength);
 }
 
-function traceBranch(branch: EditorParallelBranch, state: PlcState, runtime: EditorRuntimeState | undefined, seriesLength: number): EditorBranchTrace {
+function traceBranch(branch: EditorParallelBranch, state: PlcState, runtime: EditorRuntimeState | undefined, seriesLength: number, outputVariable?: string): EditorBranchTrace {
   const contacts = branch.blocks.filter(isContact).map((block) => traceContact(block, state, runtime));
   return {
     branchId: branch.id,
     seriesIndex: branch.seriesIndex,
-    endIndex: branchEndIndex(branch, seriesLength),
+    endIndex: branchEndIndex(branch, seriesLength, outputVariable),
     energized: contacts.length > 0 && contacts.every((contact) => contact.energized),
     contacts,
   };
@@ -131,7 +134,7 @@ export function traceEditorRung(rung: EditorRung, state: PlcState, runtime?: Edi
   const seriesContactBlocks = rung.seriesBlocks.filter(isContact);
   const seriesContacts = seriesContactBlocks.map((block) => traceContact(block, state, runtime));
   const parallelBranches = parallelBranchesFor(rung);
-  const branchTraces = parallelBranches.map((branch) => traceBranch(branch, state, runtime, seriesContacts.length));
+  const branchTraces = parallelBranches.map((branch) => traceBranch(branch, state, runtime, seriesContacts.length, rung.coilBlock?.variable));
   const seriesLength = seriesContacts.length;
   const reachable = new Set<number>([0]);
 

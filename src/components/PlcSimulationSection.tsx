@@ -17,7 +17,7 @@ function toneColor(tone: PlcSimulationSectionTone): string {
   if (tone === 'green') return colors.green;
   if (tone === 'amber') return colors.amber;
   if (tone === 'red') return colors.red;
-  if (tone === 'purple') return colors.cyan;
+  if (tone === 'purple') return colors.purple;
   if (tone === 'neutral') return colors.textMuted;
   return colors.cyan;
 }
@@ -26,7 +26,7 @@ function toneBackground(tone: PlcSimulationSectionTone): string {
   if (tone === 'green') return colors.greenSoft;
   if (tone === 'amber') return colors.amberSoft;
   if (tone === 'red') return colors.redSoft;
-  if (tone === 'purple') return colors.cyanSoft;
+  if (tone === 'purple') return colors.purpleSoft;
   if (tone === 'neutral') return colors.surfaceElevated;
   return colors.cyanSoft;
 }
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.7,
+    letterSpacing: 0,
   },
   subtitle: {
     color: colors.text,

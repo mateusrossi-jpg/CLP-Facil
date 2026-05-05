@@ -190,7 +190,7 @@ export const PlcSafetyInterlockCard = memo(function PlcSafetyInterlockCard({ pro
           <View key={item.id} style={[styles.itemCard, item.severity === 'danger' && styles.itemDanger, item.severity === 'warn' && styles.itemWarn, item.severity === 'ok' && styles.itemOk]}>
             <View style={styles.itemHeader}>
               <Text style={[styles.itemSeverity, item.severity === 'danger' && styles.textDanger, item.severity === 'warn' && styles.textWarn, item.severity === 'ok' && styles.textOk]}>{severityLabel(item.severity)}</Text>
-              <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.itemTitle}>{item.title}</Text>
             </View>
             <Text style={styles.itemDescription}>{item.description}</Text>
           </View>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

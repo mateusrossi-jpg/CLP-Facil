@@ -23,6 +23,11 @@ type RubricItem = {
   level: RubricLevel;
 };
 
+type CriticalReview = {
+  cap: number;
+  blockers: string[];
+};
+
 function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
@@ -53,6 +58,13 @@ function hasOutput(project: EditorProjectState): boolean {
   return project.rungs.some((rung) => {
     const variable = normalize(rung.coilBlock?.variable);
     return variable.startsWith('Q') || variable.startsWith('O');
+  });
+}
+
+function hasAnyInput(project: EditorProjectState): boolean {
+  return collectBlocks(project).some((block) => {
+    const variable = normalize(block.variable);
+    return block.role === 'contact' && variable.startsWith('I');
   });
 }
 
@@ -100,15 +112,17 @@ function buildRubric(project: EditorProjectState, state: PlcState, evaluation: E
   const outputsOn = activeOutputCount(state);
   const started = hasStart(project);
   const stopped = hasStop(project);
+  const hasInput = hasAnyInput(project);
+  const output = hasOutput(project);
   const advanced = hasAdvancedInstruction(project);
   const parallel = hasParallel(project);
 
   const structurePoints = project.rungs.length > 0 ? Math.min(20, 8 + project.rungs.length * 4) : 0;
-  const ioPoints = hasOutput(project) ? 15 : 0;
+  const ioPoints = output && hasInput ? 15 : output || hasInput ? 8 : 0;
   const safetyPoints = started && stopped ? 20 : started || stopped ? 10 : 0;
   const diagnosticPoints = diagnostics === 0 && duplicates === 0 ? 20 : diagnostics <= 1 && duplicates === 0 ? 12 : 5;
-  const advancedPoints = advanced && parallel ? 15 : advanced || parallel ? 10 : 4;
-  const testPoints = outputsOn === 0 ? 10 : 6;
+  const advancedPoints = advanced && parallel ? 15 : advanced || parallel ? 10 : 0;
+  const testPoints = output ? outputsOn > 0 ? 8 : 6 : 0;
 
   return [
     {
@@ -122,7 +136,7 @@ function buildRubric(project: EditorProjectState, state: PlcState, evaluation: E
     {
       id: 'io',
       title: 'Uso de I/O',
-      description: hasOutput(project) ? 'Há pelo menos uma saída/atuador definido para validar o exercício.' : 'Inclua uma bobina de saída Q/O para tornar o exercício observável.',
+      description: output && hasInput ? 'Há entrada de campo e saída/atuador para validar o exercício.' : 'Inclua pelo menos uma entrada I e uma bobina Q/O para tornar o exercício observável.',
       points: ioPoints,
       maxPoints: 15,
       level: levelFor(ioPoints, 15),
@@ -154,12 +168,38 @@ function buildRubric(project: EditorProjectState, state: PlcState, evaluation: E
     {
       id: 'test',
       title: 'Condição de teste',
-      description: outputsOn === 0 ? 'Nenhuma saída permanece ligada neste momento de avaliação.' : `${outputsOn} saída(s) ligada(s); confirme se a condição é esperada.`,
+      description: output ? outputsOn > 0 ? `${outputsOn} saída(s) ligada(s); confirme se a condição é esperada e se Stop desliga.` : 'Saída definida, mas ainda não foi observada ligada neste estado de teste.' : 'Sem saída Q/O não há atuador para validar em bancada.',
       points: testPoints,
       maxPoints: 10,
       level: levelFor(testPoints, 10),
     },
   ];
+}
+
+function criticalReview(project: EditorProjectState, evaluation: EditorEvaluationResult): CriticalReview {
+  const diagnostics = evaluation.diagnostics?.length ?? 0;
+  const duplicates = duplicateCoilCount(project);
+  const blockers: string[] = [];
+  let cap = 100;
+
+  if (!hasOutput(project)) {
+    blockers.push('saída Q/O');
+    cap = Math.min(cap, 55);
+  }
+  if (!hasStop(project)) {
+    blockers.push('Stop/Parada');
+    cap = Math.min(cap, 70);
+  }
+  if (!hasStart(project)) {
+    blockers.push('Start/Partida');
+    cap = Math.min(cap, 80);
+  }
+  if (diagnostics > 0 || duplicates > 0) {
+    blockers.push('diagnóstico revisado');
+    cap = Math.min(cap, 75);
+  }
+
+  return { cap, blockers };
 }
 
 function levelLabel(level: RubricLevel): string {
@@ -169,14 +209,19 @@ function levelLabel(level: RubricLevel): string {
   return 'Ausente';
 }
 
-function totalScore(items: RubricItem[]): number {
+function rawScore(items: RubricItem[]): number {
   const points = items.reduce((total, item) => total + item.points, 0);
   const max = items.reduce((total, item) => total + item.maxPoints, 0);
   if (max <= 0) return 0;
   return Math.round((points / max) * 100);
 }
 
-function scoreConclusion(score: number): string {
+function totalScore(items: RubricItem[], review: CriticalReview): number {
+  return Math.min(rawScore(items), review.cap);
+}
+
+function scoreConclusion(score: number, review: CriticalReview): string {
+  if (review.blockers.length > 0) return `Nota limitada: revise ${review.blockers.join(', ')} antes de considerar domínio do exercício.`;
   if (score >= 85) return 'Projeto muito forte para demonstração didática.';
   if (score >= 70) return 'Projeto bom, com alguns pontos para refinamento.';
   if (score >= 50) return 'Projeto funcional, mas ainda precisa de melhoria didática e segurança.';
@@ -185,7 +230,8 @@ function scoreConclusion(score: number): string {
 
 export const PlcTeacherRubricCard = memo(function PlcTeacherRubricCard({ project, state, evaluation }: PlcTeacherRubricCardProps) {
   const items = useMemo(() => buildRubric(project, state, evaluation), [evaluation, project, state]);
-  const score = totalScore(items);
+  const review = useMemo(() => criticalReview(project, evaluation), [evaluation, project]);
+  const score = totalScore(items, review);
 
   return (
     <View style={[styles.card, score >= 85 && styles.cardExcellent, score < 70 && styles.cardAttention]}>
@@ -200,14 +246,14 @@ export const PlcTeacherRubricCard = memo(function PlcTeacherRubricCard({ project
         </View>
       </View>
 
-      <Text style={styles.conclusion}>{scoreConclusion(score)}</Text>
+      <Text style={styles.conclusion}>{scoreConclusion(score, review)}</Text>
 
       <View style={styles.itemStack}>
         {items.map((item) => (
           <View key={item.id} style={[styles.itemCard, item.level === 'excellent' && styles.itemExcellent, item.level === 'attention' && styles.itemAttention, item.level === 'missing' && styles.itemMissing]}>
             <View style={styles.itemHeader}>
               <Text style={[styles.itemLevel, item.level === 'excellent' && styles.itemLevelExcellent, item.level === 'attention' && styles.itemLevelAttention, item.level === 'missing' && styles.itemLevelMissing]}>{levelLabel(item.level)}</Text>
-              <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+              <Text style={styles.itemTitle}>{item.title}</Text>
               <Text style={styles.itemPoints}>{item.points}/{item.maxPoints}</Text>
             </View>
             <Text style={styles.itemDescription}>{item.description}</Text>
@@ -252,7 +298,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

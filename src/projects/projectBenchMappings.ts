@@ -82,7 +82,7 @@ export const projectBenchMappings: ProjectBenchMapping[] = [
     recommendedTarget: 'esp32_devkit',
     pins: [
       { tag: 'I0.0', label: 'Start', direction: 'input', arduinoPin: 'D2', esp32Pin: 'GPIO18', risk: 'safe', note: 'Botão de partida.' },
-      { tag: 'I0.1', label: 'Stop NF', direction: 'input', arduinoPin: 'D3', esp32Pin: 'GPIO19', risk: 'safe', note: 'Parada NF.' },
+      { tag: 'I0.1', label: 'Stop NF', direction: 'input', arduinoPin: 'D3', esp32Pin: 'GPIO19', risk: 'safe', note: 'Parada NF com contato de seguranca.' },
       { tag: 'I0.2', label: 'Sensor peça', direction: 'input', arduinoPin: 'D4', esp32Pin: 'GPIO21', risk: 'safe', note: 'Sensor digital ou botão simulando pulso.' },
       { tag: 'Q0.0', label: 'Motor esteira', direction: 'output', arduinoPin: 'D8', esp32Pin: 'GPIO23', risk: 'attention', note: 'Use LED, driver ou módulo isolado para motor.' },
     ],

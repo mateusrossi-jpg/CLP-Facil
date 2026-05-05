@@ -1,5 +1,5 @@
 import { memo, useMemo, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { DimensionValue, StyleSheet, Text, View } from 'react-native';
 import { traceEditorScan } from '../engine/editorScanTrace';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
@@ -47,7 +47,7 @@ function watchdogLabel(watchdog: ScanHistorySample['watchdog']): string {
   return 'OK';
 }
 
-function barWidth(value: number, max: number): string {
+function barWidth(value: number, max: number): DimensionValue {
   if (max <= 0) return '4%';
   return `${Math.min(100, Math.max(4, Math.round((value / max) * 100)))}%`;
 }
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

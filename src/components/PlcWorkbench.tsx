@@ -667,6 +667,30 @@ export function PlcWorkbench({
     const canvasWidth = canvasWidthFor(targetRung);
     const parallelLayout = createParallelLayout(targetRung);
     const complexityHint = rungComplexityHint(targetRung);
+    const contactAssemblyWidth = 148;
+    const coilAssemblyWidth = 176;
+    const coilLeftX = canvasWidth - 54 - coilAssemblyWidth;
+    const seriesSegments = targetRung.seriesBlocks.length === 0
+      ? [{ key: 'main-left-empty', left: 16, width: Math.max(coilLeftX - 16, 0) }]
+      : [
+          { key: 'main-left', left: 16, width: Math.max(seriesStartX - 16, 0) },
+          ...targetRung.seriesBlocks.slice(0, -1).map((block, index) => {
+            const left = seriesStartX + index * seriesStepX + contactAssemblyWidth;
+            const nextLeft = seriesStartX + (index + 1) * seriesStepX;
+            return { key: `main-between-${block.id}`, left, width: Math.max(nextLeft - left, 0) };
+          }),
+          {
+            key: 'main-to-coil',
+            left: seriesStartX + (targetRung.seriesBlocks.length - 1) * seriesStepX + contactAssemblyWidth,
+            width: Math.max(coilLeftX - (seriesStartX + (targetRung.seriesBlocks.length - 1) * seriesStepX + contactAssemblyWidth), 0),
+          },
+        ];
+    const outputSegment = {
+      key: 'main-output',
+      left: coilLeftX + coilAssemblyWidth,
+      width: Math.max(canvasWidth - 16 - (coilLeftX + coilAssemblyWidth), 0),
+    };
+    const mainWireSegments = [...seriesSegments, outputSegment].filter((segment) => segment.width > 0);
     const seriesInsertionPoints = targetRung.seriesBlocks.length === 0
       ? [{ key: 'series-start', afterIndex: -1, left: seriesStartX - 10 }]
       : [
@@ -722,7 +746,9 @@ export function PlcWorkbench({
           >
             <View style={styles.leftRail} />
             <View style={styles.rightRail} />
-            <View style={[styles.mainLine, rungActive && styles.wireOn]} />
+            {mainWireSegments.map((segment) => (
+              <View key={segment.key} style={[styles.mainLineSegment, { left: segment.left, width: segment.width }, rungActive && styles.wireOn]} />
+            ))}
             <View style={styles.leftNode} />
             <View style={styles.rightNode} />
             {!locked && selectedRung && pendingComponent ? (
@@ -2888,10 +2914,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.inactive,
   },
-  mainLine: {
+  mainLineSegment: {
     position: 'absolute',
-    left: 16,
-    right: 16,
     top: 96,
     height: 3,
     borderRadius: 2,

@@ -23,7 +23,10 @@ import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { spacing } from '../theme/spacing';
 
-type SmartphoneSimulationPanelEnhancedProps = ComponentProps<typeof SmartphoneSimulationPanelFixed> & {
+type FixedPanelProps = ComponentProps<typeof SmartphoneSimulationPanelFixed>;
+type OptionalRuntimeProps = 'autoScan' | 'onRunScan' | 'onToggleAutoScan' | 'onSetValue';
+
+type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRuntimeProps> & Partial<Pick<FixedPanelProps, OptionalRuntimeProps>> & {
   autoScan?: boolean;
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
@@ -38,6 +41,14 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const autoScan = Boolean(props.autoScan);
   const onRunScan = props.onRunScan ?? noop;
   const onToggleAutoScan = props.onToggleAutoScan ?? noop;
+  const onSetValue = props.onSetValue ?? noop;
+  const fixedPanelProps: FixedPanelProps = {
+    ...props,
+    autoScan,
+    onRunScan,
+    onToggleAutoScan,
+    onSetValue,
+  };
 
   return (
     <View style={styles.stack}>
@@ -54,7 +65,6 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         title="CPU"
         subtitle="Estado RUN/STOP, tempo de ciclo e watchdog"
         tone="green"
-        defaultOpen
       >
         <PlcCpuStatusCard
           isRunning
@@ -69,7 +79,6 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         title="Scan"
         subtitle="Histórico, ciclo de varredura e imagem de processo"
         tone="cyan"
-        defaultOpen
       >
         <View style={styles.innerStack}>
           <PlcScanHistoryCard
@@ -120,7 +129,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <PlcSimulationSection
         title="Memória"
-        subtitle="Watch Table, ligação I/O e mapa de endereços do programa"
+        subtitle="Watch Table e mapa de endereços do programa"
         tone="purple"
       >
         <View style={styles.innerStack}>
@@ -129,11 +138,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
             state={props.plcState}
             runtime={props.evaluation.runtime}
           />
-          <PlcIoWiringMapCard
-            project={props.editorProject}
-            state={props.plcState}
-          />
           <PlcMemoryMapCard project={props.editorProject} />
+          <PlcIoWiringMapCard project={props.editorProject} state={props.plcState} />
         </View>
       </PlcSimulationSection>
 
@@ -203,7 +209,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         tone="green"
         defaultOpen
       >
-        <SmartphoneSimulationPanelFixed {...props} />
+        <SmartphoneSimulationPanelFixed {...fixedPanelProps} />
       </PlcSimulationSection>
     </View>
   );

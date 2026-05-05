@@ -153,9 +153,12 @@ function evaluateBranch(branch: EditorParallelBranch, state: PlcState, runtime?:
   return contacts.every((block) => evaluateContact(block, state, runtime));
 }
 
-function branchEndIndex(branch: EditorParallelBranch, seriesLength: number): number {
+function branchEndIndex(branch: EditorParallelBranch, seriesLength: number, outputVariable?: string): number {
   const startIndex = Math.min(Math.max(branch.seriesIndex, 0), Math.max(seriesLength - 1, 0));
   const branchSpan = Math.max(branch.blocks.filter(isContact).length, 1);
+  const normalizedOutput = outputVariable ? normalizeVariable(outputVariable) : '';
+  const isSealBranch = Boolean(normalizedOutput) && branch.blocks.some((block) => normalizeVariable(block.variable) === normalizedOutput);
+  if (!isSealBranch && startIndex === 0) return seriesLength;
   return Math.min(startIndex + branchSpan, seriesLength);
 }
 
@@ -179,7 +182,7 @@ function evaluateRung(rung: EditorRung, state: PlcState, runtime: EditorRuntimeS
     for (const branch of parallelBranches) {
       if (branch.seriesIndex !== nodeIndex) continue;
       if (evaluateBranch(branch, state, runtime)) {
-        reachable.add(branchEndIndex(branch, seriesLength));
+        reachable.add(branchEndIndex(branch, seriesLength, rung.coilBlock?.variable));
       }
     }
   }

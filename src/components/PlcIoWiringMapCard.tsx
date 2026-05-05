@@ -87,19 +87,28 @@ function fieldDeviceLabel(point: IoPoint): string {
   const text = `${point.address} ${point.label}`.toLowerCase();
   if (point.kind === 'input') {
     if (text.includes('stop') || text.includes('parada') || text.includes('emerg')) return 'Botoeira NF / Emergência';
-    if (text.includes('start') || text.includes('liga') || text.includes('partida')) return 'Botoeira NA';
-    if (text.includes('sensor')) return 'Sensor digital';
+    if (text.includes('start') || text.includes('liga') || text.includes('partida') || text.includes('abrir') || text.includes('fechar')) return 'Botoeira NA';
+    if (text.includes('fim') || text.includes('curso')) return 'Fim de curso / sensor de posição';
+    if (text.includes('sensor') || text.includes('peça') || text.includes('peca') || text.includes('nivel') || text.includes('nível')) return 'Sensor digital';
+    if (text.includes('chave') || text.includes('seletor')) return 'Chave seletora';
     return 'Entrada digital';
   }
-  if (text.includes('motor') || text.includes('contator')) return 'Contator / comando de motor';
-  if (text.includes('lamp') || text.includes('luz')) return 'Sinalizador / lâmpada';
+  if (text.includes('motor') || text.includes('contator') || text.includes('km') || text.includes('k1') || text.includes('k2')) return 'Contator / comando de motor';
+  if (text.includes('lamp') || text.includes('luz') || text.includes('led') || text.includes('verde') || text.includes('amarelo') || text.includes('vermelho')) return 'Sinalizador / lâmpada';
+  if (text.includes('valv') || text.includes('solenoide')) return 'Válvula solenoide';
+  if (text.includes('sirene') || text.includes('alarme')) return 'Sirene / alarme';
   return 'Relé / saída digital';
 }
 
 function testHint(point: IoPoint): string {
+  const text = `${point.address} ${point.label}`.toLowerCase();
   if (point.kind === 'input') {
+    if (text.includes('stop') || text.includes('parada') || text.includes('emerg')) return 'Acione Stop e confirme que toda saída segura desliga no scan seguinte.';
+    if (text.includes('sensor') || text.includes('peça') || text.includes('peca') || text.includes('fim') || text.includes('curso')) return 'Simule a mudança do sensor e observe o rung, timer ou contador associado.';
     return point.active ? 'Entrada acionada: observe se o rung conduz.' : 'Acione esta entrada e execute um scan.';
   }
+  if (text.includes('motor') || text.includes('contator') || text.includes('km')) return point.active ? 'Contator ligado: teste Stop e intertravamentos antes de considerar seguro.' : 'Contator desligado: confirme se falta partida, permissivo ou selo.';
+  if (text.includes('lamp') || text.includes('luz') || text.includes('led')) return point.active ? 'Sinalizador ligado: confirme se a condição indicada é a esperada.' : 'Sinalizador desligado: verifique a condição do rung correspondente.';
   return point.active ? 'Saída ligada: confirme se o intertravamento desliga.' : 'Saída desligada: confirme condição de acionamento.';
 }
 
@@ -188,7 +197,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

@@ -19,7 +19,7 @@ type ForceCandidate = {
   label: string;
   kind: ForceCandidateKind;
   currentValue: boolean | number | undefined;
-  forceStatus: 'available' | 'blocked_output_on' | 'numeric_not_supported';
+  forceStatus: 'available' | 'blocked_output' | 'numeric_not_supported';
 };
 
 type OriginalForceValues = Record<string, boolean | number | undefined>;
@@ -57,13 +57,12 @@ function addCandidate(rows: Map<string, ForceCandidate>, address: string | undef
   if (!kind) return;
   const currentValue = state[normalized];
   const numeric = typeof currentValue === 'number';
-  const activeOutput = kind === 'output' && Boolean(currentValue);
   rows.set(normalized, {
     address: normalized,
     label: label || (kind === 'input' ? 'Entrada' : kind === 'output' ? 'Saída' : 'Memória'),
     kind,
     currentValue,
-    forceStatus: numeric ? 'numeric_not_supported' : activeOutput ? 'blocked_output_on' : 'available',
+    forceStatus: numeric ? 'numeric_not_supported' : kind === 'output' ? 'blocked_output' : 'available',
   });
 }
 
@@ -93,9 +92,19 @@ function kindLabel(kind: ForceCandidateKind): string {
 }
 
 function statusLabel(status: ForceCandidate['forceStatus']): string {
-  if (status === 'blocked_output_on') return 'Cuidado';
+  if (status === 'blocked_output') return 'Bloqueada';
   if (status === 'numeric_not_supported') return 'Numérico';
   return 'Pronto';
+}
+
+function blockedForceMessage(candidate: ForceCandidate): string {
+  if (candidate.forceStatus === 'blocked_output') {
+    return `${candidate.address} é saída Q/O. Force direto em saída fica bloqueado por segurança; teste a lógica por entradas ou memórias.`;
+  }
+  if (candidate.forceStatus === 'numeric_not_supported') {
+    return `${candidate.address} é registrador numérico. Esta Force Table didática aplica apenas sinais booleanos I/Q/M.`;
+  }
+  return `${candidate.address} bloqueado pela política de force.`;
 }
 
 function valueLabel(value: boolean | number | undefined): string {
@@ -125,9 +134,21 @@ export const PlcForceTableCard = memo(function PlcForceTableCard({ project, stat
   const [lastMessage, setLastMessage] = useState('Nenhum force aplicado nesta sessão.');
   const candidates = useMemo(() => collectForceCandidates(project, state), [project, state]);
   const preview = useMemo(() => applyPlcForces(state, forceEntries), [forceEntries, state]);
-  const blockedCount = candidates.filter((candidate) => candidate.forceStatus !== 'available').length + preview.blockedForces.length;
+  const blockedCount = new Set([
+    ...candidates.filter((candidate) => candidate.forceStatus !== 'available').map((candidate) => candidate.address),
+    ...preview.blockedForces.map((entry) => normalize(entry.address)),
+  ]).size;
 
   const applyForce = (candidate: ForceCandidate, mode: PlcForceEntry['mode']) => {
+    if (!onSetValue) {
+      setLastMessage('Force não aplicado: o painel não recebeu onSetValue para alterar o estado da simulação.');
+      return;
+    }
+    if (candidate.forceStatus !== 'available') {
+      setLastMessage(blockedForceMessage(candidate));
+      return;
+    }
+
     const nextEntries = upsertPlcForce(forceEntries, { address: candidate.address, mode, enabled: true, reason: 'Aplicado pela Force Table didática.' });
     const result = applyPlcForces(state, nextEntries);
     const applied = result.appliedForces.find((entry) => normalize(entry.address) === candidate.address);
@@ -145,19 +166,24 @@ export const PlcForceTableCard = memo(function PlcForceTableCard({ project, stat
       return { ...current, [candidate.address]: candidate.currentValue };
     });
     setForceEntries(nextEntries);
-    onSetValue?.(candidate.address, mode === 'force_on');
+    onSetValue(candidate.address, mode === 'force_on');
     setLastMessage(`${candidate.address} forçado para ${mode === 'force_on' ? 'ON' : 'OFF'}.`);
   };
 
   const clearForce = (candidate: ForceCandidate) => {
+    const hadOriginal = Object.prototype.hasOwnProperty.call(originalValues, candidate.address);
     const restored = restoreValue(originalValues[candidate.address]);
     setForceEntries((current) => clearPlcForce(current, candidate.address));
     setOriginalValues((current) => {
       const { [candidate.address]: _removed, ...next } = current;
       return next;
     });
-    onSetValue?.(candidate.address, restored);
-    setLastMessage(`Force de ${candidate.address} removido. Valor restaurado para ${valueLabel(restored)}.`);
+    if (onSetValue && hadOriginal) {
+      onSetValue(candidate.address, restored);
+      setLastMessage(`Force de ${candidate.address} removido. Valor restaurado para ${valueLabel(restored)}.`);
+      return;
+    }
+    setLastMessage(`Force de ${candidate.address} removido. Valor atual preservado porque nenhum force foi aplicado nesse ponto.`);
   };
 
   return (
@@ -193,7 +219,7 @@ export const PlcForceTableCard = memo(function PlcForceTableCard({ project, stat
             <View key={candidate.address} style={[styles.forceRow, active && styles.forceRowActive, (warn || blocked) && styles.forceRowWarn]}>
               <View style={styles.signalCopy}>
                 <Text style={[styles.signalAddress, active && styles.signalAddressActive]}>{candidate.address}</Text>
-                <Text style={styles.signalLabel} numberOfLines={1}>{candidate.label} • {kindLabel(candidate.kind)}</Text>
+                <Text style={styles.signalLabel}>{candidate.label} • {kindLabel(candidate.kind)}</Text>
                 {activeForce ? <Text style={styles.forceSessionText}>Sessão: {activeForce.mode === 'force_on' ? 'FORCE ON' : 'FORCE OFF'}</Text> : null}
               </View>
               <View style={styles.valueBox}>
@@ -248,7 +274,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,
@@ -315,6 +341,7 @@ const styles = StyleSheet.create({
   },
   forceRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: spacing.xs,
     borderColor: colors.border,
@@ -395,6 +422,10 @@ const styles = StyleSheet.create({
     color: colors.amber,
   },
   buttonColumn: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
     gap: 3,
   },
   forceButton: {

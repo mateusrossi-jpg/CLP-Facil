@@ -212,7 +212,7 @@ export const PlcLearningCoachCard = memo(function PlcLearningCoachCard({ project
                 <Text style={styles.stepNumberText}>{index + 1}</Text>
               </View>
               <Text style={[styles.stepPriority, step.priority === 'warning' && styles.stepPriorityWarning, step.priority === 'mastery' && styles.stepPriorityMastery]}>{priorityLabel(step.priority)}</Text>
-              <Text style={styles.stepTitle} numberOfLines={1}>{step.title}</Text>
+              <Text style={styles.stepTitle}>{step.title}</Text>
             </View>
             <Text style={styles.stepDescription}>{step.description}</Text>
           </View>
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,

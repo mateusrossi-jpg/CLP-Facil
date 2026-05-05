@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     color: colors.green,
     fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 0.9,
+    letterSpacing: 0,
     textTransform: 'uppercase',
   },
   title: {

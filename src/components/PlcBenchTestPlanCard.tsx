@@ -84,26 +84,27 @@ function buildPlan(project: EditorProjectState, state: PlcState, evaluation: Edi
   const energizedRungs = Object.values(evaluation.rungResults ?? {}).filter(Boolean).length;
   const advanced = hasTimerOrCounter(project);
   const parallel = hasParallel(project);
+  const readyForBench = hasStart && hasStop && outputs.length > 0 && diagnostics === 0;
 
   const steps: TestStep[] = [
     {
       id: 'prepare',
       title: '1. Preparar bancada virtual',
-      action: 'Deixe entradas desligadas, remova forces e execute um scan manual.',
-      expected: diagnostics > 0 ? 'Diagnósticos devem ser revisados antes do teste.' : 'Sem diagnóstico crítico antes de iniciar.',
+      action: 'Deixe entradas em repouso, remova forces e execute um scan manual.',
+      expected: diagnostics > 0 ? 'Revise os diagnósticos antes de confiar no teste.' : 'Sem diagnóstico crítico antes de iniciar.',
       status: diagnostics > 0 ? 'attention' : 'ready',
     },
     {
       id: 'start',
       title: '2. Testar partida',
-      action: hasStart ? 'Acione o contato Start/Liga/Partida e execute o scan.' : 'Nomeie ou adicione uma entrada de partida antes deste teste.',
-      expected: outputs.length > 0 ? `Alguma condição deve conduzir até ${outputs.join(', ')} quando a lógica permitir.` : 'Uma bobina Q/O deve existir para observar atuação.',
+      action: hasStart ? 'Mantenha Stop em condição segura, acione Start/Liga/Partida e execute o scan.' : 'Nomeie ou adicione uma entrada de partida antes deste teste.',
+      expected: outputs.length > 0 ? `A lógica deve conduzir até ${outputs.join(', ')} somente quando as permissões forem verdadeiras.` : 'Uma bobina Q/O deve existir para observar atuação.',
       status: hasStart && outputs.length > 0 ? 'observe' : 'attention',
     },
     {
       id: 'output',
       title: '3. Validar saída/atuador',
-      action: 'Observe Imagem de Processo, Watch Table e Fluxo do Rung.',
+      action: outputs.length > 0 ? `Observe ${outputs.join(', ')} na Imagem de Processo, Watch Table e Fluxo do Rung.` : 'Adicione uma saída Q/O antes de validar atuador.',
       expected: outputsOn.length > 0 ? `${outputsOn.join(', ')} está ON neste scan; confirme se era esperado.` : 'A saída deve ligar apenas quando todas as condições forem verdadeiras.',
       status: outputsOn.length > 0 ? 'observe' : outputs.length > 0 ? 'ready' : 'attention',
     },
@@ -111,29 +112,29 @@ function buildPlan(project: EditorProjectState, state: PlcState, evaluation: Edi
       id: 'stop',
       title: '4. Testar parada/intertravamento',
       action: hasStop ? 'Acione Stop/Parada/Emergência e execute novo scan.' : 'Adicione ou nomeie um Stop/Parada/Emergência para validar segurança.',
-      expected: 'A saída deve desligar e o selo não pode manter a bobina energizada após Stop.',
+      expected: outputs.length > 0 ? `${outputs.join(', ')} deve desligar; selo ou timer não pode manter a saída após Stop.` : 'Sem saída Q/O, não há como provar a parada.',
       status: hasStop ? 'observe' : 'attention',
     },
     {
       id: 'seal',
       title: '5. Verificar selo ou branch paralelo',
-      action: parallel ? 'Solte a partida e veja se o branch de retenção mantém a lógica conforme o esperado.' : 'Inclua um branch paralelo/selo para treinar retenção.',
-      expected: parallel ? 'O selo deve cair ao acionar Stop/intertravamento.' : 'Sem branch paralelo, este exercício ainda é básico.',
+      action: parallel ? 'Depois da partida, solte Start e veja se o branch de retenção mantém a lógica conforme o esperado.' : 'Inclua um branch paralelo/selo quando o exercício pedir retenção.',
+      expected: parallel ? 'O selo deve manter apenas com permissivos verdadeiros e cair ao acionar Stop.' : 'Sem branch paralelo, trate o exercício como comando simples.',
       status: parallel ? 'observe' : 'attention',
     },
     {
       id: 'advanced',
       title: '6. Testar timer/contador',
       action: advanced ? 'Acompanhe PRE, ACC e DN/Q no Monitor T/C durante scans sucessivos.' : 'Adicione TON/CTU para praticar comportamento temporal ou por pulsos.',
-      expected: advanced ? 'ACC deve evoluir e DN/Q deve mudar somente quando a condição for atingida.' : 'Timer/contador aumenta o nível do exercício.',
+      expected: advanced ? 'ACC deve evoluir e DN/Q deve mudar somente quando a condição for atingida.' : 'Timer/contador é opcional, mas aumenta o nível da prática.',
       status: advanced ? 'observe' : 'attention',
     },
     {
       id: 'final-diagnostics',
       title: '7. Revisar conclusão do teste',
       action: 'Abra Relatório, Rubrica e Trace textual depois dos testes.',
-      expected: energizedRungs > 0 ? `${energizedRungs} rung(s) ficaram TRUE em algum ponto do teste atual.` : 'Ao menos um rung deve ficar TRUE durante o ensaio esperado.',
-      status: energizedRungs > 0 ? 'ready' : 'attention',
+      expected: readyForBench && energizedRungs > 0 ? 'Teste pronto para apresentação didática: há Start, Stop, saída e diagnóstico limpo.' : 'Antes de concluir, resolva pendências de I/O, Stop ou diagnóstico.',
+      status: readyForBench && energizedRungs > 0 ? 'ready' : 'attention',
     },
   ];
 
@@ -173,7 +174,7 @@ export const PlcBenchTestPlanCard = memo(function PlcBenchTestPlanCard({ project
           <View key={step.id} style={[styles.stepCard, step.status === 'attention' && styles.stepAttention, step.status === 'observe' && styles.stepObserve]}>
             <View style={styles.stepHeader}>
               <Text style={[styles.stepStatus, step.status === 'attention' && styles.stepStatusAttention, step.status === 'observe' && styles.stepStatusObserve]}>{statusLabel(step.status)}</Text>
-              <Text style={styles.stepTitle} numberOfLines={1}>{step.title}</Text>
+              <Text style={styles.stepTitle}>{step.title}</Text>
             </View>
             <Text style={styles.stepAction}>{step.action}</Text>
             <Text style={styles.stepExpected}>Esperado: {step.expected}</Text>
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
   },
   title: {
     color: colors.text,
