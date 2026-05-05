@@ -1,6 +1,9 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { getProjectLearningLinkSummary } from '../../education/projectLearningLinks';
+import {
+  getGuidedPracticesLinkedToProject,
+  getProjectLearningLinkSummary,
+} from '../../education/projectLearningLinks';
 import { getProjectCategoryLabel, getProjectDifficultyLabel, type ProjectDifficulty, type TrainingProject } from '../../projects/projectCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -18,6 +21,7 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
 
 export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({ project }: PremiumProjectDetailCardProps) {
   const learning = getProjectLearningLinkSummary(project.id);
+  const linkedPractices = getGuidedPracticesLinkedToProject(project.id);
 
   return (
     <PremiumSection title="Projeto aberto" subtitle="Detalhe técnico e didático do exemplo selecionado" tone="green">
@@ -50,6 +54,26 @@ export const PremiumProjectDetailCard = memo(function PremiumProjectDetailCard({
         <Text style={styles.learningText}>{learning.linkedLessons.length} lições vinculadas • {learning.linkedPracticeCount} práticas guiadas</Text>
         <PremiumProgress value={learning.teachingScore} label={`Score didático ${learning.teachingScore}%`} />
       </View>
+
+      {learning.linkedLessons.length > 0 || linkedPractices.length > 0 ? (
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>Conteúdo vinculado</Text>
+          {learning.linkedLessons.map((lesson) => (
+            <View key={lesson.id} style={styles.linkedItem}>
+              <Text style={styles.linkedLabel}>Lição</Text>
+              <Text style={styles.linkedTitle}>{lesson.title}</Text>
+              <Text style={styles.linkedDescription}>{lesson.practice}</Text>
+            </View>
+          ))}
+          {linkedPractices.map((practice) => (
+            <View key={practice.lessonId} style={styles.linkedItem}>
+              <Text style={styles.linkedLabel}>Prática guiada</Text>
+              <Text style={styles.linkedTitle}>{practice.title}</Text>
+              <Text style={styles.linkedDescription}>{practice.objective}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.block}>
         <Text style={styles.blockTitle}>Objetivos de aprendizagem</Text>
@@ -118,6 +142,10 @@ const styles = StyleSheet.create({
   block: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
   blockTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
   blockText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
+  linkedItem: { borderColor: colors.border, borderWidth: 1, borderRadius: 14, padding: spacing.sm, backgroundColor: colors.surface, gap: 3 },
+  linkedLabel: { color: colors.green, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  linkedTitle: { color: colors.text, fontSize: 12, lineHeight: 17, fontWeight: '900' },
+  linkedDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '700' },
   instructionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   instructionChip: { color: colors.cyan, borderColor: colors.cyan, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '900', backgroundColor: colors.cyanSoft },
   tagChip: { color: colors.textMuted, borderColor: colors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4, fontSize: 10, fontWeight: '900', backgroundColor: colors.surface },
