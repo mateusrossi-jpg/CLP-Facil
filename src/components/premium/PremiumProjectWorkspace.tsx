@@ -4,6 +4,7 @@ import type { TrainingProject } from '../../projects/projectCatalog';
 import type { ProjectQuickActionKind } from '../../projects/projectQuickActions';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import type { BottomNavKey } from '../navigationTypes';
 import { PremiumSegmented } from './PremiumControls';
 import { PremiumProjectDetailCard } from './PremiumProjectDetailCard';
 import { PremiumProjectExportCodePreviews } from './PremiumProjectExportCodePreviews';
@@ -13,6 +14,7 @@ type ProjectWorkspaceTab = 'summary' | 'technical' | 'code';
 
 type PremiumProjectWorkspaceProps = {
   project: TrainingProject;
+  onNavigate?: (route: BottomNavKey) => void;
 };
 
 function getTabForQuickAction(kind: ProjectQuickActionKind): ProjectWorkspaceTab {
@@ -21,7 +23,13 @@ function getTabForQuickAction(kind: ProjectQuickActionKind): ProjectWorkspaceTab
   return 'summary';
 }
 
-export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ project }: PremiumProjectWorkspaceProps) {
+function getRouteForQuickAction(kind: ProjectQuickActionKind): BottomNavKey | undefined {
+  if (kind === 'study') return 'learn';
+  if (kind === 'simulate') return 'simulate';
+  return undefined;
+}
+
+export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ project, onNavigate }: PremiumProjectWorkspaceProps) {
   const [tab, setTab] = useState<ProjectWorkspaceTab>('summary');
 
   return (
@@ -44,7 +52,19 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
         ]}
       />
 
-      {tab === 'summary' ? <PremiumProjectQuickSummary project={project} onQuickAction={(kind) => setTab(getTabForQuickAction(kind))} /> : null}
+      {tab === 'summary' ? (
+        <PremiumProjectQuickSummary
+          project={project}
+          onQuickAction={(kind) => {
+            const route = getRouteForQuickAction(kind);
+            if (route) {
+              onNavigate?.(route);
+              return;
+            }
+            setTab(getTabForQuickAction(kind));
+          }}
+        />
+      ) : null}
       {tab === 'technical' ? <PremiumProjectDetailCard project={project} /> : null}
       {tab === 'code' ? <PremiumProjectExportCodePreviews project={project} /> : null}
     </View>
