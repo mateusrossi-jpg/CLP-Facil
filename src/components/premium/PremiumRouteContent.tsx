@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import type { ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
 import type { BottomNavKey } from '../navigationTypes';
 import { ReferenceHubPanel } from '../ReferenceHubPanel';
 import { SimulationModeRouter } from '../SimulationModeRouter';
@@ -10,13 +11,14 @@ import { PremiumTagsDiagnosticsScreen } from './PremiumTagsDiagnosticsScreen';
 
 type PremiumRouteContentProps = {
   active: BottomNavKey;
-  onNavigate?: (route: BottomNavKey) => void;
+  projectIntent?: ProjectNavigationIntent;
+  onNavigate?: (route: BottomNavKey, intent?: ProjectNavigationIntent) => void;
 };
 
-export const PremiumRouteContent = memo(function PremiumRouteContent({ active, onNavigate }: PremiumRouteContentProps) {
+export const PremiumRouteContent = memo(function PremiumRouteContent({ active, projectIntent, onNavigate }: PremiumRouteContentProps) {
   if (active === 'home') return <PremiumHomeScreen />;
-  if (active === 'learn') return <PremiumLearningScreen />;
-  if (active === 'simulate') return <SimulationModeRouter />;
+  if (active === 'learn') return <PremiumLearningScreen projectIntent={projectIntent} />;
+  if (active === 'simulate') return <SimulationModeRouter projectIntent={projectIntent} />;
   if (active === 'projects') return <PremiumProjectsScreen onNavigate={onNavigate} />;
   if (active === 'pro') return <PremiumEditorExportScreen />;
   if (active === 'reference') {
