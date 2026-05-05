@@ -14,11 +14,19 @@ function evaluateBranch(branch: LadderBranch, state: PlcState): boolean {
   return evaluateSeries(branch.contacts, state);
 }
 
-function evaluateRung(rung: LadderRung, state: PlcState): boolean {
+function evaluateParallel(rung: LadderRung, state: PlcState): boolean {
+  if (rung.parallelBranches.length === 0) return false;
+  return rung.parallelBranches.some((branch) => evaluateBranch(branch, state));
+}
+
+function evaluateRung(rung: LadderRung, state: PlcState, previousState: PlcState): boolean {
   const seriesOk = evaluateSeries(rung.seriesContacts, state);
-  const hasParallel = rung.parallelBranches.length > 0;
-  const parallelOk = hasParallel ? rung.parallelBranches.some((branch) => evaluateBranch(branch, state)) : true;
-  return seriesOk && parallelOk;
+  const parallelOk = evaluateParallel(rung, state);
+
+  // 🔥 Implementação de selo (latch)
+  const previousCoil = Boolean(previousState[rung.coilVariableId]);
+
+  return seriesOk && (parallelOk || previousCoil);
 }
 
 export function createInitialState(project: LadderProject): PlcState {
@@ -33,7 +41,7 @@ export function evaluateProject(project: LadderProject, currentState: PlcState):
   const energizedRungs: Record<string, boolean> = {};
 
   for (const rung of project.rungs) {
-    const energized = evaluateRung(rung, nextState);
+    const energized = evaluateRung(rung, nextState, currentState);
     energizedRungs[rung.id] = energized;
     nextState[rung.coilVariableId] = energized;
   }
