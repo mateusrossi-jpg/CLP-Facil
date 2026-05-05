@@ -1,3 +1,4 @@
+import { getTrainingProjectById } from '../projects/projectCatalog';
 import { getClpAchievements } from './clpAchievements';
 import { clpGuidedPractices, getGuidedPracticeForLesson } from './clpGuidedPractice';
 import { clpLearningModules, getAllClpLessons, getClpLessonById } from './clpLessonCatalog';
@@ -99,6 +100,22 @@ function runGuidedPracticeRegression(): EducationRegressionResult {
   );
 }
 
+function runEducationProjectLinkRegression(): EducationRegressionResult {
+  const lessonsWithMissingProjects = getAllClpLessons()
+    .filter((lesson) => lesson.exampleProjectId && !getTrainingProjectById(lesson.exampleProjectId))
+    .map((lesson) => `${lesson.id}:${lesson.exampleProjectId}`);
+
+  const practicesWithMissingProjects = clpGuidedPractices
+    .filter((practice) => practice.projectId && !getTrainingProjectById(practice.projectId))
+    .map((practice) => `${practice.lessonId}:${practice.projectId}`);
+
+  return assertResult(
+    'links entre educacao e biblioteca de projetos apontam para projetos existentes',
+    lessonsWithMissingProjects.length === 0 && practicesWithMissingProjects.length === 0,
+    `missingLessons=${lessonsWithMissingProjects.join(',')}; missingPractices=${practicesWithMissingProjects.join(',')}`,
+  );
+}
+
 export function runEducationRegressionSuite(): EducationRegressionResult[] {
   return [
     runLessonCatalogCoverageRegression(),
@@ -106,5 +123,6 @@ export function runEducationRegressionSuite(): EducationRegressionResult[] {
     runProgressRegression(),
     runAchievementsRegression(),
     runGuidedPracticeRegression(),
+    runEducationProjectLinkRegression(),
   ];
 }
