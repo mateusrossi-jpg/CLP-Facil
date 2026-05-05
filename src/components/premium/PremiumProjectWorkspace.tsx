@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { TrainingProject } from '../../projects/projectCatalog';
+import type { ProjectQuickActionKind } from '../../projects/projectQuickActions';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumSegmented } from './PremiumControls';
@@ -13,6 +14,12 @@ type ProjectWorkspaceTab = 'summary' | 'technical' | 'code';
 type PremiumProjectWorkspaceProps = {
   project: TrainingProject;
 };
+
+function getTabForQuickAction(kind: ProjectQuickActionKind): ProjectWorkspaceTab {
+  if (kind === 'code') return 'code';
+  if (kind === 'technical' || kind === 'bench') return 'technical';
+  return 'summary';
+}
 
 export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ project }: PremiumProjectWorkspaceProps) {
   const [tab, setTab] = useState<ProjectWorkspaceTab>('summary');
@@ -37,7 +44,7 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
         ]}
       />
 
-      {tab === 'summary' ? <PremiumProjectQuickSummary project={project} /> : null}
+      {tab === 'summary' ? <PremiumProjectQuickSummary project={project} onQuickAction={(kind) => setTab(getTabForQuickAction(kind))} /> : null}
       {tab === 'technical' ? <PremiumProjectDetailCard project={project} /> : null}
       {tab === 'code' ? <PremiumProjectExportCodePreviews project={project} /> : null}
     </View>
