@@ -7,14 +7,22 @@ import { spacing } from '../theme/spacing';
 type PlcMissionPathPanelProps = {
   tracks: PlcMissionTrack[];
   activeMissionId?: string | null;
+  completedMissionIds?: Record<string, boolean>;
   onOpenMission?: (mission: PlcMission) => void;
 };
 
 export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
   tracks,
   activeMissionId,
+  completedMissionIds = {},
   onOpenMission,
 }: PlcMissionPathPanelProps) {
+  const totalMissions = tracks.reduce((total, track) => total + track.missions.length, 0);
+  const completedCount = tracks.reduce(
+    (total, track) => total + track.missions.filter((mission) => completedMissionIds[mission.id]).length,
+    0,
+  );
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -24,7 +32,7 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
           <Text style={styles.subtitle}>Trilhas curtas para praticar no celular e receber feedback imediato no rung.</Text>
         </View>
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{tracks.length} trilhas</Text>
+          <Text style={styles.badgeText}>{completedCount}/{totalMissions}</Text>
         </View>
       </View>
 
@@ -44,20 +52,23 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
             <View style={styles.missionStack}>
               {track.missions.slice(0, 3).map((mission, missionIndex) => {
                 const active = activeMissionId === mission.id;
+                const completed = Boolean(completedMissionIds[mission.id]);
                 return (
                   <Pressable
                     key={mission.id}
                     onPress={() => onOpenMission?.(mission)}
-                    style={({ pressed }) => [styles.missionRow, active && styles.missionRowActive, pressed && styles.pressed]}
+                    style={({ pressed }) => [styles.missionRow, completed && styles.missionRowDone, active && styles.missionRowActive, pressed && styles.pressed]}
                   >
-                    <View style={[styles.missionDot, active && styles.missionDotActive]}>
-                      <Text style={[styles.missionDotText, active && styles.missionDotTextActive]}>{missionIndex + 1}</Text>
+                    <View style={[styles.missionDot, completed && styles.missionDotDone, active && styles.missionDotActive]}>
+                      <Text style={[styles.missionDotText, (completed || active) && styles.missionDotTextActive]}>{completed ? '✓' : missionIndex + 1}</Text>
                     </View>
                     <View style={styles.missionCopy}>
                       <Text style={styles.missionTitle}>{mission.title}</Text>
                       <Text style={styles.missionObjective} numberOfLines={2}>{mission.objective}</Text>
                     </View>
-                    <Text style={[styles.openText, active && styles.openTextActive]}>{active ? 'Ativa' : 'Abrir'}</Text>
+                    <Text style={[styles.openText, completed && styles.openTextDone, active && styles.openTextActive]}>
+                      {active ? 'Ativa' : completed ? 'Feita' : 'Abrir'}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -185,6 +196,9 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
     backgroundColor: colors.greenSoft,
   },
+  missionRowDone: {
+    borderColor: colors.cyanLine,
+  },
   missionDot: {
     width: 26,
     height: 26,
@@ -198,6 +212,10 @@ const styles = StyleSheet.create({
   missionDotActive: {
     borderColor: colors.green,
     backgroundColor: colors.green,
+  },
+  missionDotDone: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
   },
   missionDotText: {
     color: colors.textMuted,
@@ -229,6 +247,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   openTextActive: {
+    color: colors.green,
+  },
+  openTextDone: {
     color: colors.green,
   },
   pressed: {

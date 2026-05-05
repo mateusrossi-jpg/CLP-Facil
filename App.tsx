@@ -42,6 +42,7 @@ import { createInitialState, evaluateProject, setInput } from './src/engine/ladd
 import { PlcState } from './src/engine/projectTypes';
 import { PlcMission } from './src/lessons/missionTypes';
 import { plcMissionTracks } from './src/lessons/plcMissions';
+import { evaluateMissionAttempt } from './src/lessons/missionValidation';
 import { colors } from './src/theme/colors';
 import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
@@ -57,6 +58,7 @@ export default function App() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [practiceLesson, setPracticeLesson] = useState<Lesson | null>(null);
   const [activePlcMission, setActivePlcMission] = useState<PlcMission | null>(null);
+  const [completedMissionIds, setCompletedMissionIds] = useState<Record<string, boolean>>({});
   const [completedPracticeSteps, setCompletedPracticeSteps] = useState<Record<string, boolean>>({});
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
   const [editorMessage, setEditorMessage] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export default function App() {
     passed: step.passed || Boolean(completedPracticeSteps[step.id]),
   }));
   const guidedDone = hydratedGuidedSteps.length > 0 && hydratedGuidedSteps.every((step) => step.passed);
+  const activeMissionAttempt = activePlcMission ? evaluateMissionAttempt(activePlcMission, editorEvaluation.state, editorEvaluation) : null;
 
   useEffect(() => {
     editorProjectRef.current = editorProject;
@@ -142,6 +145,14 @@ export default function App() {
       return changed ? next : current;
     });
   }, [practiceLesson?.id, editorEvaluation]);
+
+  useEffect(() => {
+    if (!activePlcMission || !activeMissionAttempt?.passed) return;
+    setCompletedMissionIds((current) => {
+      if (current[activePlcMission.id]) return current;
+      return { ...current, [activePlcMission.id]: true };
+    });
+  }, [activePlcMission?.id, activeMissionAttempt?.passed]);
 
   function parallelBranchesForRung(rung: EditorProjectState['rungs'][number]): EditorParallelBranch[] {
     if (rung.parallelBranches) return rung.parallelBranches;
@@ -911,6 +922,7 @@ export default function App() {
             <PlcMissionPathPanel
               tracks={plcMissionTracks}
               activeMissionId={activePlcMission?.id}
+              completedMissionIds={completedMissionIds}
               onOpenMission={openPlcMission}
             />
             {learningModules.map((module) => {
