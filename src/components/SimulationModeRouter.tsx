@@ -11,6 +11,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
+import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 import { PremiumProjectSimulationFocus } from './premium/PremiumProjectSimulationFocus';
@@ -86,6 +87,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           scanNumber={result.scanNumber || scanCount}
           runtime={result.runtime}
         />
+        <PlcProcessImageCard
+          project={project}
+          state={state}
+          scanNumber={result.scanNumber || scanCount}
+          runtime={result.runtime}
+        />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -112,6 +119,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PremiumProjectIntentBanner intent={projectIntent} />
         <PremiumProjectSimulationFocus intent={projectIntent} />
         <PlcScanCycleCard
+          project={project}
+          state={state}
+          scanNumber={result.scanNumber || scanCount}
+          runtime={result.runtime}
+        />
+        <PlcProcessImageCard
           project={project}
           state={state}
           scanNumber={result.scanNumber || scanCount}
@@ -145,6 +158,12 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <PremiumProjectIntentBanner intent={projectIntent} />
       <PremiumProjectSimulationFocus intent={projectIntent} />
       <PlcScanCycleCard
+        project={project}
+        state={state}
+        scanNumber={result.scanNumber || scanCount}
+        runtime={result.runtime}
+      />
+      <PlcProcessImageCard
         project={project}
         state={state}
         scanNumber={result.scanNumber || scanCount}
