@@ -17,8 +17,15 @@ type MobileRungViewerProps = {
   onSelectBlock?: (block: EditorBlock) => void;
 };
 
+const MIN_LADDER_ZOOM = 0.78;
+const MAX_LADDER_ZOOM = 1.22;
+
 function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
+}
+
+function clampLadderZoom(value: number): number {
+  return Math.min(MAX_LADDER_ZOOM, Math.max(MIN_LADDER_ZOOM, value));
 }
 
 function contactSymbol(block: EditorBlock): string {
@@ -54,14 +61,27 @@ function flattenRung(rung: EditorRung): EditorBlock[] {
   ];
 }
 
-function BlockChip({ block, active, mode, onPress }: { block: EditorBlock; active: boolean; mode: MobileRungViewMode; onPress?: () => void }) {
+function BlockChip({ block, active, mode, zoom = 1, onPress }: { block: EditorBlock; active: boolean; mode: MobileRungViewMode; zoom?: number; onPress?: () => void }) {
   const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
   const symbol = outputLike ? coilSymbol(block) : contactSymbol(block);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.blockChip, outputLike && styles.outputChip, active && styles.blockChipOn, pressed && styles.pressed]}>
-      <Text style={[styles.blockAddress, active && styles.blockAddressOn]}>{blockAddress(block)}</Text>
-      {mode !== 'list' ? <Text style={[styles.blockSymbol, active && styles.blockAddressOn]}>{symbol}</Text> : null}
-      <Text style={styles.blockName} numberOfLines={mode === 'list' ? 2 : 1}>{block.name}</Text>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.blockChip,
+        {
+          minWidth: Math.round((outputLike ? 116 : 96) * zoom),
+          minHeight: Math.round(70 * zoom),
+          padding: Math.max(5, Math.round(spacing.sm * zoom)),
+        },
+        outputLike && styles.outputChip,
+        active && styles.blockChipOn,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.blockAddress, { fontSize: Math.round(12 * zoom) }, active && styles.blockAddressOn]}>{blockAddress(block)}</Text>
+      {mode !== 'list' ? <Text style={[styles.blockSymbol, { fontSize: Math.round(15 * zoom) }, active && styles.blockAddressOn]}>{symbol}</Text> : null}
+      <Text style={[styles.blockName, { fontSize: Math.max(9, Math.round(10 * zoom)) }]} numberOfLines={mode === 'list' ? 2 : 1}>{block.name}</Text>
     </Pressable>
   );
 }
@@ -75,11 +95,14 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   onSelectBlock,
 }: MobileRungViewerProps) {
   const [viewMode, setViewMode] = useState<MobileRungViewMode>('ladder');
+  const [ladderZoom, setLadderZoom] = useState(0.92);
   const safeIndex = Math.min(Math.max(rungIndex, 0), Math.max(editorProject.rungs.length - 1, 0));
   const rung = editorProject.rungs[safeIndex];
   const rungActive = Boolean(rung && evaluation.rungResults?.[rung.id]);
   const blocks = useMemo(() => rung ? flattenRung(rung) : [], [rung]);
   const branches = rung?.parallelBranches ?? [];
+  const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
+  const outputActive = outputBlock ? blockActive(outputBlock, plcState, rungActive) : false;
 
   if (!rung) {
     return (
@@ -120,11 +143,36 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         </Pressable>
       </View>
 
+      <View style={[styles.outputSummary, outputActive && styles.outputSummaryOn]}>
+        <View style={styles.outputSummaryCopy}>
+          <Text style={styles.outputSummaryLabel}>Carga / saida</Text>
+          <Text style={[styles.outputSummaryTitle, outputActive && styles.blockAddressOn]} numberOfLines={1}>
+            {outputBlock ? `${blockAddress(outputBlock)} • ${outputBlock.name}` : 'Sem saida nesta rung'}
+          </Text>
+        </View>
+        <Text style={[styles.outputSummaryState, outputActive && styles.blockAddressOn]}>{outputActive ? 'ON' : 'OFF'}</Text>
+      </View>
+
       {viewMode === 'ladder' ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ladderRail}>
-          <Text style={[styles.railText, rungActive && styles.railTextOn]}>|</Text>
+        <>
+        <View style={styles.zoomRow}>
+          <Text style={styles.zoomHint}>Arraste para o lado</Text>
+          <View style={styles.zoomControls}>
+            <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current - 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
+              <Text style={styles.zoomButtonText}>-</Text>
+            </Pressable>
+            <Pressable onPress={() => setLadderZoom(0.84)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+              <Text style={styles.zoomValueText}>{Math.round(ladderZoom * 100)}%</Text>
+            </Pressable>
+            <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current + 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
+              <Text style={styles.zoomButtonText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.ladderRail}>
+          <Text style={[styles.railText, { fontSize: Math.round(34 * ladderZoom) }, rungActive && styles.railTextOn]}>|</Text>
           {rung.seriesBlocks.map((block) => (
-            <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
+            <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
           ))}
           {branches.length > 0 ? (
             <View style={styles.branchBox}>
@@ -132,15 +180,16 @@ export const MobileRungViewer = memo(function MobileRungViewer({
               {branches.map((branch) => (
                 <View key={branch.id} style={styles.branchRow}>
                   {branch.blocks.map((block) => (
-                    <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
+                    <BlockChip key={block.id} block={block} active={blockActive(block, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
                   ))}
                 </View>
               ))}
             </View>
           ) : null}
-          {rung.coilBlock ? <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} /> : null}
-          <Text style={[styles.railText, rungActive && styles.railTextOn]}>|</Text>
+          {rung.coilBlock ? <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} /> : null}
+          <Text style={[styles.railText, { fontSize: Math.round(34 * ladderZoom) }, rungActive && styles.railTextOn]}>|</Text>
         </ScrollView>
+        </>
       ) : null}
 
       {viewMode === 'flow' ? (
@@ -275,6 +324,92 @@ const styles = StyleSheet.create({
   },
   modeTextOn: {
     color: colors.cyan,
+  },
+  outputSummary: {
+    minHeight: 46,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceElevated,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  outputSummaryOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  outputSummaryCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  outputSummaryLabel: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  outputSummaryTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  outputSummaryState: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  zoomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  zoomHint: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  zoomControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+  zoomButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceElevated,
+  },
+  zoomButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+    lineHeight: 18,
+  },
+  zoomValueButton: {
+    minWidth: 52,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderLeftColor: colors.border,
+    borderRightColor: colors.border,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    paddingHorizontal: spacing.sm,
+  },
+  zoomValueText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
   },
   ladderRail: {
     alignItems: 'center',

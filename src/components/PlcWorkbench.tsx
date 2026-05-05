@@ -663,6 +663,8 @@ export function PlcWorkbench({
   function renderRungCanvas(targetRung: typeof rung, rungIndex: number) {
     const selectedRung = targetRung.id === editor.selectedRungId;
     const rungActive = Boolean(evaluation.rungResults[targetRung.id]);
+    const loadBlock = targetRung.coilBlock;
+    const loadActive = loadBlock ? blockOnlineActive(loadBlock, state, rungActive) : false;
     const canvasHeight = canvasHeightFor(targetRung);
     const canvasWidth = canvasWidthFor(targetRung);
     const parallelLayout = createParallelLayout(targetRung);
@@ -719,6 +721,15 @@ export function PlcWorkbench({
             <Text style={styles.canvasSubtitle}>{targetRung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
           </View>
           <Text style={[styles.rungStatus, rungActive && styles.rungStatusOn]}>{rungActive ? 'ENERGIZADA' : selectedRung ? 'EDITANDO' : 'ABERTA'}</Text>
+        </View>
+        <View style={[styles.mobileLoadSummary, loadActive && styles.mobileLoadSummaryOn]}>
+          <View style={styles.mobileLoadCopy}>
+            <Text style={styles.mobileLoadLabel}>Carga / saida sempre visivel</Text>
+            <Text style={[styles.mobileLoadTitle, loadActive && styles.mobileLoadTitleOn]} numberOfLines={1}>
+              {loadBlock ? `${blockAddress(loadBlock)} · ${loadBlock.name}` : 'Sem bobina, timer ou contador no fim da linha'}
+            </Text>
+          </View>
+          <Text style={[styles.mobileLoadState, loadActive && styles.mobileLoadTitleOn]}>{loadActive ? 'ON' : 'OFF'}</Text>
         </View>
         {complexityHint ? (
           <View style={styles.rungHintBox}>
@@ -2881,6 +2892,47 @@ const styles = StyleSheet.create({
   },
   rungStatusOn: {
     color: colors.green,
+  },
+  mobileLoadSummary: {
+    minHeight: 44,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  mobileLoadSummaryOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  mobileLoadCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  mobileLoadLabel: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  mobileLoadTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  mobileLoadTitleOn: {
+    color: colors.green,
+  },
+  mobileLoadState: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '900',
   },
   circuitCanvas: {
     height: 290,
