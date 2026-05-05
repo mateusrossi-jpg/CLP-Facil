@@ -22,7 +22,6 @@ import { PlcWatchTableCard } from './PlcWatchTableCard';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './SmartphoneSimulationPanelFixed';
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
-import { getFirstPlcMissionTrack } from '../lessons/plcMissions';
 import { PlcMission } from '../lessons/missionTypes';
 import { EditorCoilMode, EditorContactMode, EditorCounterMode, EditorTimerMode } from '../engine/editorTypes';
 import { spacing } from '../theme/spacing';
@@ -62,7 +61,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onRunScan = props.onRunScan ?? noop;
   const onToggleAutoScan = props.onToggleAutoScan ?? noop;
   const onSetValue = props.onSetValue ?? noop;
-  const starterMission = props.mission ?? getFirstPlcMissionTrack().missions[2];
+  const activeMission = props.mission ?? undefined;
   const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics);
   const fixedPanelProps: FixedPanelProps = {
     ...props,
@@ -79,8 +78,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         plcState={props.plcState}
         evaluation={props.evaluation}
         autoScan={autoScan}
-        mission={starterMission}
-        missionTitle={starterMission?.title ?? 'Bancada guiada'}
+        mission={activeMission}
+        missionTitle={activeMission?.title ?? 'Bancada Ladder'}
         onSetValue={onSetValue}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}

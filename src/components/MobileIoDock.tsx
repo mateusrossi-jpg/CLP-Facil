@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
@@ -97,8 +97,11 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
   return (
     <View style={styles.card}>
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>Entradas</Text>
-        <View style={styles.inputGrid}>
+        <View style={styles.groupHeader}>
+          <Text style={styles.groupTitle}>Entradas</Text>
+          <Text style={styles.groupHint}>toque para acionar</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inputRail}>
           {inputs.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma entrada I encontrada.</Text>
           ) : inputs.map((input) => {
@@ -117,12 +120,15 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       </View>
 
       <View style={styles.group}>
-        <Text style={styles.groupTitle}>Saidas</Text>
-        <View style={styles.outputList}>
+        <View style={styles.groupHeader}>
+          <Text style={styles.groupTitle}>Saidas</Text>
+          <Text style={styles.groupHint}>resultado</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.outputRail}>
           {outputs.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma saida Q/O encontrada.</Text>
           ) : outputs.map((output) => {
@@ -138,7 +144,7 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
               </View>
             );
           })}
-        </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -156,21 +162,31 @@ const styles = StyleSheet.create({
   group: {
     gap: spacing.xs,
   },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
   groupTitle: {
     color: colors.text,
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
-  inputGrid: {
+  groupHint: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  inputRail: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.xs,
+    paddingRight: spacing.xs,
   },
   inputButton: {
-    flexGrow: 1,
-    flexBasis: 104,
-    minHeight: 70,
+    width: 132,
+    minHeight: 66,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 14,
@@ -182,10 +198,13 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
     backgroundColor: colors.greenSoft,
   },
-  outputList: {
+  outputRail: {
+    flexDirection: 'row',
     gap: spacing.xs,
+    paddingRight: spacing.xs,
   },
   outputRow: {
+    width: 184,
     minHeight: 52,
     borderColor: colors.border,
     borderWidth: 1,
