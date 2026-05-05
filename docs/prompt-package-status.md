@@ -41,9 +41,11 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Nova regressão `src/education/projectLearningLinksRegression.ts` criada para proteger vínculos Projeto ↔ Aprender, score didático e vínculo do projeto Selo.
 - Novo catálogo de projetos `src/projects/projectCatalog.ts` criado com exemplos de bancada, metadados técnicos, objetivos de aprendizagem, instruções e resumo de I/O.
 - `projectCatalog` agora possui filtro reutilizável `filterTrainingProjects`, com busca normalizada sem acentos por nome, descrição, tags, instruções e objetivos de aprendizagem.
+- Novo catálogo `src/projects/projectLadderTemplates.ts` criado com prévias Ladder compactas por projeto, incluindo condições, saída/carga e descrição didática por rung.
+- Nova regressão `src/projects/projectLadderTemplatesRegression.ts` criada para proteger templates Ladder, projetos vinculados, lógica mínima e ordenação dos rungs.
 - Nova regressão `src/projects/projectCatalogRegression.ts` criada para proteger exemplos obrigatórios, objetivos de aprendizagem, instruções, categorias, níveis e busca/filtros.
-- `test:simulator` agora compila `src/education/educationRegression.ts`, `src/education/projectLearningLinksRegression.ts`, `src/projects/projectCatalogRegression.ts` e `src/theme/codeContrastRegression.ts`.
-- `scripts/run-simulator-regression.mjs` agora executa `runEducationRegressionSuite()`, `runProjectLearningLinksRegressionSuite()` e `runProjectCatalogRegressionSuite()` junto das demais regressões.
+- `test:simulator` agora compila `src/education/educationRegression.ts`, `src/education/projectLearningLinksRegression.ts`, `src/projects/projectCatalogRegression.ts`, `src/projects/projectLadderTemplatesRegression.ts` e `src/theme/codeContrastRegression.ts`.
+- `scripts/run-simulator-regression.mjs` agora executa `runEducationRegressionSuite()`, `runProjectLearningLinksRegressionSuite()`, `runProjectCatalogRegressionSuite()` e `runProjectLadderTemplatesRegressionSuite()` junto das demais regressões.
 
 ## Concluído na interface
 
@@ -77,6 +79,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - `PremiumProjectsScreen` agora possui busca real com `TextInput`, filtro por termo, filtro por dificuldade/favoritos e estado vazio.
 - Novo `PremiumProjectDetailCard` criado para mostrar detalhe do projeto selecionado com objetivos, I/O, instruções, tags e vínculo com Aprender.
 - `PremiumProjectDetailCard` agora lista as lições e práticas guiadas vinculadas ao projeto aberto.
+- `PremiumProjectDetailCard` agora exibe prévia Ladder compacta com condições à esquerda e saída/carga fixa à direita.
 - `PremiumProjectsScreen` agora permite abrir/selecionar um projeto e destacar o card selecionado com badge `Aberto`.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
@@ -110,7 +113,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
   - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo, detalhe de lição, prática guiada, quiz, progresso por lição e conquistas calculadas.
-  - Tocar em Projetos e conferir a `PremiumProjectsScreen` com catálogo reutilizável, metas de aprendizagem, instruções, resumo de I/O, vínculo didático com Aprender, busca real e detalhe do projeto aberto.
+  - Tocar em Projetos e conferir a `PremiumProjectsScreen` com catálogo reutilizável, metas de aprendizagem, instruções, resumo de I/O, vínculo didático com Aprender, busca real, detalhe do projeto aberto e prévia Ladder compacta.
   - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
   - Conferir `PremiumTagsDiagnosticsScreen` na aba Ref.
