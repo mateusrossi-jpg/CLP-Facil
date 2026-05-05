@@ -18,6 +18,7 @@ const { runChangeTestingScheduleRegressionSuite } = require('/tmp/easy-clp-sim-t
 const { runPerformanceRegressionSuite } = require('/tmp/easy-clp-sim-test/performance/performanceRegression.js');
 const { runCodeContrastRegressionSuite } = require('/tmp/easy-clp-sim-test/theme/codeContrastRegression.js');
 const { runEducationRegressionSuite } = require('/tmp/easy-clp-sim-test/education/educationRegression.js');
+const { runProjectLearningLinksRegressionSuite } = require('/tmp/easy-clp-sim-test/education/projectLearningLinksRegression.js');
 const { runProjectCatalogRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectCatalogRegression.js');
 
 const results = [
@@ -38,6 +39,7 @@ const results = [
   ...runPerformanceRegressionSuite(),
   ...runCodeContrastRegressionSuite(),
   ...runEducationRegressionSuite(),
+  ...runProjectLearningLinksRegressionSuite(),
   ...runProjectCatalogRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
