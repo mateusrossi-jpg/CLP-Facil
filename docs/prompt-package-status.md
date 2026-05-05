@@ -35,6 +35,9 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Novo modelo de progresso `src/education/clpLearningProgress.ts` criado com status por lição (`locked`, `available`, `in_progress`, `completed`), pontuação, progresso por módulo e progresso geral.
 - Novo modelo de conquistas `src/education/clpAchievements.ts` criado com conquistas liberadas/bloqueadas calculadas pelo progresso das lições.
 - Novo catálogo de práticas guiadas `src/education/clpGuidedPractice.ts` criado com objetivo, projeto vinculado, passos, instruções e observações esperadas por lição.
+- Nova regressão educativa `src/education/educationRegression.ts` criada para proteger catálogo de lições, quizzes, progresso, conquistas e práticas guiadas.
+- `test:simulator` agora compila `src/education/educationRegression.ts` e `src/theme/codeContrastRegression.ts`.
+- `scripts/run-simulator-regression.mjs` agora executa `runEducationRegressionSuite()` junto das demais regressões.
 
 ## Concluído na interface
 
