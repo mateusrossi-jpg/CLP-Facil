@@ -5,10 +5,12 @@ import { createInitialEditorProject, EditorProjectState } from '../engine/editor
 import { PlcState } from '../engine/projectTypes';
 import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { PlcProfileId } from '../plcProfiles/plcProfiles';
+import type { ProjectNavigationIntent } from '../projects/projectNavigationIntent';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
+import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
 
 type SimulationMode = 'choice' | 'mobile' | 'classic';
 
@@ -22,6 +24,7 @@ type SimulationModeRouterProps = {
   scanCount?: number;
   lastScanMs?: number;
   classicContent?: ReactNode;
+  projectIntent?: ProjectNavigationIntent;
 };
 
 function makeFallbackState(project: EditorProjectState): PlcState {
@@ -54,6 +57,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   scanCount = 124,
   lastScanMs = 12,
   classicContent,
+  projectIntent,
 }: SimulationModeRouterProps) {
   const { width } = useWindowDimensions();
   const compactDevice = width < 760;
@@ -65,22 +69,26 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
 
   if (mode === 'mobile') {
     return (
-      <MobileExecutionCockpit
-        editorProject={project}
-        plcState={state}
-        evaluation={result}
-        selectedProfile={selectedProfile}
-        isRunning={isRunning}
-        isAutoScan={isAutoScan}
-        scanCount={scanCount}
-        lastScanMs={lastScanMs}
-      />
+      <View style={styles.stack}>
+        <PremiumProjectIntentBanner intent={projectIntent} />
+        <MobileExecutionCockpit
+          editorProject={project}
+          plcState={state}
+          evaluation={result}
+          selectedProfile={selectedProfile}
+          isRunning={isRunning}
+          isAutoScan={isAutoScan}
+          scanCount={scanCount}
+          lastScanMs={lastScanMs}
+        />
+      </View>
     );
   }
 
   if (mode === 'classic') {
     return (
       <View style={styles.stack}>
+        <PremiumProjectIntentBanner intent={projectIntent} />
         {compactDevice ? (
           <View style={styles.mobileHint}>
             <Text style={styles.mobileHintTitle}>Modo clássico ativo</Text>
@@ -99,10 +107,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
   }
 
   return (
-    <MobileSimulationEntryCard
-      onOpenMobileExecution={() => setMode('mobile')}
-      onContinueClassic={() => setMode('classic')}
-    />
+    <View style={styles.stack}>
+      <PremiumProjectIntentBanner intent={projectIntent} />
+      <MobileSimulationEntryCard
+        onOpenMobileExecution={() => setMode('mobile')}
+        onContinueClassic={() => setMode('classic')}
+      />
+    </View>
   );
 });
 
