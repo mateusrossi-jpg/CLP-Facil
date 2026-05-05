@@ -31,7 +31,7 @@ import { SmartphoneSimulationPanel } from './src/components/SmartphoneSimulation
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
 import { createLessonEditorProject } from './src/data/lessonEditorProjects';
-import { SimulatorComponent } from './src/data/componentLibrary';
+import { SimulatorComponent, simulatorComponents } from './src/data/componentLibrary';
 import { Lesson, learningModules, lessons } from './src/data/learningContent';
 import { getGuidedPracticeSteps, GuidedPracticeStep } from './src/education/guidedPractice';
 import { createEditorBlock, createInitialEditorProject, EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorParallelBranch, EditorProjectState, EditorInsertionZone, EditorTimerMode, EditorVariableDataType } from './src/engine/editorTypes';
@@ -566,9 +566,13 @@ export default function App() {
     setEditorMessage(null);
   }
 
-  function addComponentToEditor(component: SimulatorComponent, requestedZone?: EditorInsertionZone, requestedSeriesIndex?: number) {
+  function findSimulatorComponent(componentId: string): SimulatorComponent {
+    return simulatorComponents.find((component) => component.id === componentId) ?? simulatorComponents[0];
+  }
+
+  function addComponentToEditor(component: SimulatorComponent, requestedZone?: EditorInsertionZone, requestedSeriesIndex?: number, allowLocked = false) {
     setSelectedComponent(component);
-    if (editingLocked) return;
+    if (editingLocked && !allowLocked) return;
 
     const insertionZone = requestedZone ?? editorProject.selectedZone;
 
@@ -1105,6 +1109,10 @@ export default function App() {
                 onChangeCounterMode={(mode) => updateSelectedBlockCounterMode(mode, true)}
                 onChangePresetMs={(presetMs) => updateSelectedBlockPresetMs(presetMs, true)}
                 onChangePreset={(preset) => updateSelectedBlockPreset(preset, true)}
+                onAddContact={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'series', undefined, true)}
+                onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
+                onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
+                onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
               />
             ) : null}
             {!(compactSimulator && editorMode === 'simulate') ? (

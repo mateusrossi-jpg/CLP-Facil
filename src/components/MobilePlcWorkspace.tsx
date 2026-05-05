@@ -30,6 +30,10 @@ type MobilePlcWorkspaceProps = {
   onChangeCounterMode?: (mode: EditorCounterMode) => void;
   onChangePresetMs?: (presetMs: number) => void;
   onChangePreset?: (preset: number) => void;
+  onAddContact?: () => void;
+  onAddCoil?: () => void;
+  onAddTimer?: () => void;
+  onAddBranch?: () => void;
 };
 
 const noop = () => undefined;
@@ -84,6 +88,10 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onChangeCounterMode,
   onChangePresetMs,
   onChangePreset,
+  onAddContact,
+  onAddCoil,
+  onAddTimer,
+  onAddBranch,
 }: MobilePlcWorkspaceProps) {
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -283,10 +291,20 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
             <Text style={styles.hintText}>Toque em contato, bobina, timer ou contador para editar.</Text>
           )}
           <View style={styles.paletteRow}>
-            {['+ Contato', '+ Bobina', '+ Timer', '+ Branch'].map((item) => (
-              <View key={item} style={styles.paletteChip}>
-                <Text style={styles.paletteText}>{item}</Text>
-              </View>
+            {[
+              { label: '+ Contato', action: onAddContact },
+              { label: '+ Bobina', action: onAddCoil },
+              { label: '+ Timer', action: onAddTimer },
+              { label: '+ Branch', action: onAddBranch },
+            ].map((item) => (
+              <Pressable
+                key={item.label}
+                disabled={!item.action}
+                onPress={item.action}
+                style={({ pressed }) => [styles.paletteChip, item.action && styles.paletteChipAction, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
+              >
+                <Text style={[styles.paletteText, item.action && styles.paletteTextAction]}>{item.label}</Text>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -564,6 +582,13 @@ const styles = StyleSheet.create({
     borderColor: colors.cyan,
     backgroundColor: colors.cyanSoft,
   },
+  paletteChipAction: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  disabledChip: {
+    opacity: 0.55,
+  },
   paletteText: {
     color: colors.textMuted,
     fontSize: 10,
@@ -571,5 +596,11 @@ const styles = StyleSheet.create({
   },
   paletteTextOn: {
     color: colors.cyan,
+  },
+  paletteTextAction: {
+    color: colors.cyan,
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });

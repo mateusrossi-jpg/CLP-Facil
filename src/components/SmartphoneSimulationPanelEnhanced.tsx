@@ -45,6 +45,10 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onChangeCounterMode?: (mode: EditorCounterMode) => void;
   onChangePresetMs?: (presetMs: number) => void;
   onChangePreset?: (preset: number) => void;
+  onAddContact?: () => void;
+  onAddCoil?: () => void;
+  onAddTimer?: () => void;
+  onAddBranch?: () => void;
 };
 
 const noop = () => undefined;
@@ -86,6 +90,10 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onChangeCounterMode={props.onChangeCounterMode}
         onChangePresetMs={props.onChangePresetMs}
         onChangePreset={props.onChangePreset}
+        onAddContact={props.onAddContact}
+        onAddCoil={props.onAddCoil}
+        onAddTimer={props.onAddTimer}
+        onAddBranch={props.onAddBranch}
       />
 
       <PlcSimulationSection
