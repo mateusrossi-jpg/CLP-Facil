@@ -60,6 +60,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         plcState={props.plcState}
         evaluation={props.evaluation}
         autoScan={autoScan}
+        mission={starterMission}
         missionTitle={starterMission?.title ?? 'Bancada guiada'}
         onSetValue={onSetValue}
         onRunScan={onRunScan}

@@ -22,6 +22,7 @@ const { runStoreListingRegressionSuite } = require('/tmp/easy-clp-sim-test/relea
 const { runChangeTestingScheduleRegressionSuite } = require('/tmp/easy-clp-sim-test/release/changeTestingScheduleRegression.js');
 const { runPerformanceRegressionSuite } = require('/tmp/easy-clp-sim-test/performance/performanceRegression.js');
 const { runCodeContrastRegressionSuite } = require('/tmp/easy-clp-sim-test/theme/codeContrastRegression.js');
+const { runMissionValidationRegressionSuite } = require('/tmp/easy-clp-sim-test/lessons/missionValidationRegression.js');
 const { runEducationRegressionSuite } = require('/tmp/easy-clp-sim-test/education/educationRegression.js');
 const { runProjectLearningLinksRegressionSuite } = require('/tmp/easy-clp-sim-test/education/projectLearningLinksRegression.js');
 const { runProjectCatalogRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectCatalogRegression.js');
@@ -61,6 +62,7 @@ const results = [
   ...runChangeTestingScheduleRegressionSuite(),
   ...runPerformanceRegressionSuite(),
   ...runCodeContrastRegressionSuite(),
+  ...runMissionValidationRegressionSuite(),
   ...runEducationRegressionSuite(),
   ...runProjectLearningLinksRegressionSuite(),
   ...runProjectCatalogRegressionSuite(),

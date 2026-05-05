@@ -19,6 +19,7 @@ export const simulatorRegressionSources = [
   'src/release/changeTestingScheduleRegression.ts',
   'src/performance/performanceRegression.ts',
   'src/theme/codeContrastRegression.ts',
+  'src/lessons/missionValidationRegression.ts',
   'src/education/educationRegression.ts',
   'src/education/projectLearningLinksRegression.ts',
   'src/projects/projectCatalogRegression.ts',

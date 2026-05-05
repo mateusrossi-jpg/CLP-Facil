@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
+import { PlcMission } from '../lessons/missionTypes';
+import { evaluateMissionAttempt } from '../lessons/missionValidation';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { MobileIoDock } from './MobileIoDock';
@@ -14,6 +16,7 @@ type MobilePlcWorkspaceProps = {
   plcState: PlcState;
   evaluation: EditorEvaluationResult;
   autoScan?: boolean;
+  mission?: PlcMission;
   missionTitle?: string;
   onSetValue?: (variable: string, value: boolean | number) => void;
   onRunScan?: () => void;
@@ -45,6 +48,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   plcState,
   evaluation,
   autoScan = false,
+  mission,
   missionTitle = 'Bancada guiada',
   onSetValue = noop,
   onRunScan = noop,
@@ -55,7 +59,12 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const [showHint, setShowHint] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<EditorBlock | null>(null);
   const activeOutputs = useMemo(() => activeOutputCount(plcState), [plcState]);
+  const missionAttempt = useMemo(
+    () => mission ? evaluateMissionAttempt(mission, plcState, evaluation) : null,
+    [evaluation, mission, plcState],
+  );
   const diagnostics = evaluation.diagnostics?.length ?? 0;
+  const missionPassed = Boolean(missionAttempt?.passed);
 
   return (
     <View style={styles.workspace}>
@@ -78,6 +87,25 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         <Text style={styles.scanText}>Scan #{evaluation.scanNumber || 0}</Text>
         <Text style={[styles.scanText, diagnostics > 0 && styles.warningText]}>{cycleStatus(evaluation)}</Text>
       </View>
+
+      {mission ? (
+        <View style={[styles.missionBox, missionPassed && styles.missionBoxDone]}>
+          <View style={styles.missionHeader}>
+            <View style={styles.missionCopy}>
+              <Text style={styles.missionLabel}>Objetivo</Text>
+              <Text style={styles.missionObjective}>{mission.objective}</Text>
+            </View>
+            <View style={[styles.missionProgressPill, missionPassed && styles.missionProgressPillDone]}>
+              <Text style={[styles.missionProgressText, missionPassed && styles.missionProgressTextDone]}>
+                {missionAttempt?.passedRules ?? 0}/{missionAttempt?.totalRules ?? mission.validation.length}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.missionFeedback, missionPassed && styles.missionFeedbackDone]}>
+            {missionAttempt?.feedback ?? mission.story}
+          </Text>
+        </View>
+      ) : null}
 
       <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
 
@@ -228,6 +256,70 @@ const styles = StyleSheet.create({
   },
   warningText: {
     color: colors.amber,
+  },
+  missionBox: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    gap: spacing.xs,
+  },
+  missionBoxDone: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  missionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  missionCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  missionLabel: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  missionObjective: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  missionProgressPill: {
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    backgroundColor: colors.surfaceElevated,
+  },
+  missionProgressPillDone: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  missionProgressText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  missionProgressTextDone: {
+    color: colors.green,
+  },
+  missionFeedback: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+  },
+  missionFeedbackDone: {
+    color: colors.text,
   },
   hintBox: {
     borderColor: colors.amber,
