@@ -17,6 +17,7 @@ import { PlcMemoryMapCard } from './PlcMemoryMapCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
+import { PlcScanHistoryCard } from './PlcScanHistoryCard';
 import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PlcWatchTableCard } from './PlcWatchTableCard';
 import { PremiumProjectIntentBanner } from './premium/PremiumProjectIntentBanner';
@@ -94,6 +95,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           lastScanMs={lastScanMs}
           runtime={result.runtime}
         />
+        <PlcScanHistoryCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          scanNumber={result.scanNumber || scanCount}
+          lastScanMs={lastScanMs}
+        />
         <PlcScanCycleCard
           project={project}
           state={state}
@@ -147,6 +155,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
           scanCount={result.scanNumber || scanCount}
           lastScanMs={lastScanMs}
           runtime={result.runtime}
+        />
+        <PlcScanHistoryCard
+          project={project}
+          state={state}
+          runtime={result.runtime}
+          scanNumber={result.scanNumber || scanCount}
+          lastScanMs={lastScanMs}
         />
         <PlcScanCycleCard
           project={project}
@@ -203,6 +218,13 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         scanCount={result.scanNumber || scanCount}
         lastScanMs={lastScanMs}
         runtime={result.runtime}
+      />
+      <PlcScanHistoryCard
+        project={project}
+        state={state}
+        runtime={result.runtime}
+        scanNumber={result.scanNumber || scanCount}
+        lastScanMs={lastScanMs}
       />
       <PlcScanCycleCard
         project={project}
