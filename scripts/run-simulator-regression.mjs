@@ -21,6 +21,7 @@ const { runEducationRegressionSuite } = require('/tmp/easy-clp-sim-test/educatio
 const { runProjectLearningLinksRegressionSuite } = require('/tmp/easy-clp-sim-test/education/projectLearningLinksRegression.js');
 const { runProjectCatalogRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectCatalogRegression.js');
 const { runProjectLadderTemplatesRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectLadderTemplatesRegression.js');
+const { runProjectIoMapsRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectIoMapsRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
@@ -43,6 +44,7 @@ const results = [
   ...runProjectLearningLinksRegressionSuite(),
   ...runProjectCatalogRegressionSuite(),
   ...runProjectLadderTemplatesRegressionSuite(),
+  ...runProjectIoMapsRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
