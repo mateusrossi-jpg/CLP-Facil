@@ -4,6 +4,7 @@ import { PlcCommissioningChecklistCard } from './PlcCommissioningChecklistCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
 import { PlcForceTableCard } from './PlcForceTableCard';
+import { PlcLearningCoachCard } from './PlcLearningCoachCard';
 import { PlcMemoryMapCard } from './PlcMemoryMapCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
@@ -146,10 +147,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <PlcSimulationSection
         title="Diagnóstico"
-        subtitle="Relatório de teste, rubrica, trace textual do scan e linha selecionada"
+        subtitle="Coach, relatório, rubrica, trace textual do scan e linha selecionada"
         tone="neutral"
       >
         <View style={styles.innerStack}>
+          <PlcLearningCoachCard
+            project={props.editorProject}
+            state={props.plcState}
+            evaluation={props.evaluation}
+          />
           <PlcSimulationTestReportCard
             project={props.editorProject}
             state={props.plcState}
