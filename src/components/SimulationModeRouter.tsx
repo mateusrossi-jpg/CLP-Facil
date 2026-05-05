@@ -12,6 +12,7 @@ import { spacing } from '../theme/spacing';
 import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
+import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
 import { PlcScanCycleCard } from './PlcScanCycleCard';
@@ -112,6 +113,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         />
         <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
+        <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -164,6 +166,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         />
         <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
+        <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
           state={state}
@@ -218,6 +221,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       />
       <PlcTimerCounterMonitorCard project={project} runtime={result.runtime} />
       <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
+      <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
       <ScanTraceDiagnosticCard
         project={project}
         state={state}
