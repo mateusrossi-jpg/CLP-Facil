@@ -24,7 +24,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Paleta global migrada para o sistema dark premium: #020817, #07111F, #0B1220, #111827, #22D3EE, #22C55E e #F59E0B.
 - Paleta global recebeu aliases de compatibilidade (`primary`, `success`, `warning`, `danger`, `blue`, `orange`, `gray`, `white`) para reduzir risco de quebra em componentes antigos durante a migração visual.
 - Componentes base premium criados em `src/components/premium`: tokens, layout, cards, badges, métricas, progress bar, segmented control e action tiles.
-- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição, quiz de lição e telas premium para facilitar a integração final no `App.tsx`.
+- Barrel premium `src/components/premium/index.ts` agora exporta também shell, route content, detalhe de lição, quiz de lição, prática guiada e telas premium para facilitar a integração final no `App.tsx`.
 - `PremiumProgress` teve a largura percentual tipada para reduzir risco no TypeScript strict.
 - Arquivo temporário `src/components/premium/test.txt` removido após criação da pasta premium.
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
@@ -34,6 +34,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Novo catálogo de quizzes `src/education/clpLessonQuizzes.ts` criado com perguntas, alternativas, resposta correta e explicação por alternativa.
 - Novo modelo de progresso `src/education/clpLearningProgress.ts` criado com status por lição (`locked`, `available`, `in_progress`, `completed`), pontuação, progresso por módulo e progresso geral.
 - Novo modelo de conquistas `src/education/clpAchievements.ts` criado com conquistas liberadas/bloqueadas calculadas pelo progresso das lições.
+- Novo catálogo de práticas guiadas `src/education/clpGuidedPractice.ts` criado com objetivo, projeto vinculado, passos, instruções e observações esperadas por lição.
 
 ## Concluído na interface
 
@@ -60,6 +61,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Aba Conquistas da `PremiumLearningScreen` agora usa `clpAchievements`, exibindo conquistas liberadas/bloqueadas, descrição e progresso calculado.
 - Novo `PremiumLessonDetailCard` criado e exibido na tela Aprender para mostrar Conceito, Por que importa, Prática e Checagem de domínio da lição atual.
 - Novo `PremiumLessonQuizCard` criado e conectado ao detalhe da lição para exibir pergunta, alternativas, feedback e explicação da resposta.
+- Novo `PremiumGuidedPracticeCard` criado e conectado ao detalhe da lição para exibir objetivo, projeto vinculado, passos, instruções e observações esperadas da prática.
 - Nova `PremiumProjectsScreen` criada para biblioteca premium de projetos/exemplos, com busca visual, filtros, projeto em destaque, cards de Partida direta, Selo, Reversão, Estrela-triângulo, Semáforo, Bomba alternada, Esteira e Portão.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
@@ -92,7 +94,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
 - Testar no celular real:
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
-  - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo, detalhe de lição, quiz, progresso por lição e conquistas calculadas.
+  - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo, detalhe de lição, prática guiada, quiz, progresso por lição e conquistas calculadas.
   - Tocar em Projetos e conferir a `PremiumProjectsScreen`.
   - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
