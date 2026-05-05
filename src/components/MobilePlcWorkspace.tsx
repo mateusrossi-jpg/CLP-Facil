@@ -110,6 +110,8 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   );
   const diagnostics = evaluation.diagnostics?.length ?? 0;
   const missionPassed = Boolean(missionAttempt?.passed);
+  const shouldShowMissionStory = Boolean(mission && !missionPassed && missionAttempt?.feedback && missionAttempt.feedback !== mission.story);
+  const visibleMissionComponents = mission?.availableComponents.slice(0, 5) ?? [];
 
   return (
     <View style={styles.workspace}>
@@ -149,14 +151,19 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           <Text style={[styles.missionFeedback, missionPassed && styles.missionFeedbackDone]}>
             {missionAttempt?.feedback ?? mission.story}
           </Text>
-          {!missionPassed ? (
+          {shouldShowMissionStory && mission ? (
             <Text style={styles.missionStory}>{mission.story}</Text>
           ) : null}
-          <View style={styles.componentRail}>
-            {mission.availableComponents.slice(0, 5).map((component) => (
-              <Text key={component} style={styles.componentChip}>{component}</Text>
-            ))}
-          </View>
+          {visibleMissionComponents.length > 0 ? (
+            <View style={styles.componentBox}>
+              <Text style={styles.componentLabel}>Componentes</Text>
+              <View style={styles.componentRail}>
+                {visibleMissionComponents.map((component) => (
+                  <Text key={component} style={styles.componentChip}>{component}</Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
           {missionPassed && onAdvanceMission ? (
             <Pressable onPress={onAdvanceMission} style={({ pressed }) => [styles.nextMissionButton, pressed && styles.pressed]}>
               <Text style={styles.nextMissionText}>Proxima missão</Text>
@@ -495,6 +502,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+  },
+  componentBox: {
+    gap: 4,
+  },
+  componentLabel: {
+    color: colors.textDim,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   componentChip: {
     color: colors.cyan,
