@@ -25,6 +25,11 @@ function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
 
+function blockText(block: EditorBlock): string {
+  const extra = block as EditorBlock & { description?: string };
+  return `${block.name ?? ''} ${extra.description ?? ''} ${block.variable ?? ''}`.toLowerCase();
+}
+
 function collectBlocks(project: EditorProjectState): EditorBlock[] {
   return project.rungs.flatMap((rung) => [
     ...rung.seriesBlocks,
@@ -46,14 +51,14 @@ function activeOutputCount(state: PlcState): number {
 
 function hasStopLikeContact(project: EditorProjectState): boolean {
   return collectBlocks(project).some((block) => {
-    const text = `${block.name ?? ''} ${block.description ?? ''} ${block.variable ?? ''}`.toLowerCase();
+    const text = blockText(block);
     return block.role === 'contact' && (text.includes('stop') || text.includes('parada') || text.includes('emerg'));
   });
 }
 
 function hasStartLikeContact(project: EditorProjectState): boolean {
   return collectBlocks(project).some((block) => {
-    const text = `${block.name ?? ''} ${block.description ?? ''} ${block.variable ?? ''}`.toLowerCase();
+    const text = blockText(block);
     return block.role === 'contact' && (text.includes('start') || text.includes('liga') || text.includes('partida'));
   });
 }
@@ -91,6 +96,8 @@ function buildChecklist(project: EditorProjectState, state: PlcState, evaluation
   const outputsOn = activeOutputCount(state);
   const duplicateCoils = duplicateCoilCount(project);
   const hasRungs = project.rungs.length > 0;
+  const hasStart = hasStartLikeContact(project);
+  const hasStop = hasStopLikeContact(project);
 
   return [
     {
@@ -102,10 +109,10 @@ function buildChecklist(project: EditorProjectState, state: PlcState, evaluation
     {
       id: 'start-stop-logic',
       title: 'Partida e parada identificadas',
-      description: hasStartLikeContact(project) && hasStopLikeContact(project)
+      description: hasStart && hasStop
         ? 'A lógica possui elementos nomeados de partida e parada/emergência.'
         : 'Nomeie claramente Start/Liga/Partida e Stop/Parada/Emergência para melhorar o treino.',
-      status: hasStartLikeContact(project) && hasStopLikeContact(project) ? 'done' : 'attention',
+      status: hasStart && hasStop ? 'done' : 'attention',
     },
     {
       id: 'outputs-safe',
