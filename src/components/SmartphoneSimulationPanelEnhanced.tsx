@@ -5,6 +5,7 @@ import { PlcCommissioningChecklistCard } from './PlcCommissioningChecklistCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
 import { PlcForceTableCard } from './PlcForceTableCard';
+import { PlcIoWiringMapCard } from './PlcIoWiringMapCard';
 import { PlcLearningCoachCard } from './PlcLearningCoachCard';
 import { PlcMemoryMapCard } from './PlcMemoryMapCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
@@ -119,7 +120,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <PlcSimulationSection
         title="Memória"
-        subtitle="Watch Table e mapa de endereços do programa"
+        subtitle="Watch Table, ligação I/O e mapa de endereços do programa"
         tone="purple"
       >
         <View style={styles.innerStack}>
@@ -127,6 +128,10 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
             project={props.editorProject}
             state={props.plcState}
             runtime={props.evaluation.runtime}
+          />
+          <PlcIoWiringMapCard
+            project={props.editorProject}
+            state={props.plcState}
           />
           <PlcMemoryMapCard project={props.editorProject} />
         </View>
