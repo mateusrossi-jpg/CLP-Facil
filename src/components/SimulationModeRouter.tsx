@@ -13,6 +13,7 @@ import { MobileExecutionCockpit } from './MobileExecutionCockpit';
 import { MobileSimulationEntryCard } from './MobileSimulationEntryCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
 import { PlcEdgePulseMonitorCard } from './PlcEdgePulseMonitorCard';
+import { PlcForceTableCard } from './PlcForceTableCard';
 import { PlcMemoryMapCard } from './PlcMemoryMapCard';
 import { PlcProcessImageCard } from './PlcProcessImageCard';
 import { PlcRungPowerFlowCard } from './PlcRungPowerFlowCard';
@@ -125,6 +126,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
         <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
+        <PlcForceTableCard project={project} state={state} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -187,6 +189,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
         <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
         <PlcMemoryMapCard project={project} />
         <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
+        <PlcForceTableCard project={project} state={state} />
         <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
         <ScanTraceDiagnosticCard
           project={project}
@@ -251,6 +254,7 @@ export const SimulationModeRouter = memo(function SimulationModeRouter({
       <PlcWatchTableCard project={project} state={state} runtime={result.runtime} />
       <PlcMemoryMapCard project={project} />
       <PlcSafetyInterlockCard project={project} state={state} runtime={result.runtime} />
+      <PlcForceTableCard project={project} state={state} />
       <PlcEdgePulseMonitorCard project={project} state={state} runtime={result.runtime} />
       <ScanTraceDiagnosticCard
         project={project}
