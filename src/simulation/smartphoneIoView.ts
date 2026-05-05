@@ -7,7 +7,7 @@ export type SmartphoneSignalSnapshot = {
   value: boolean | number | string | undefined;
 };
 
-export type SmartphoneIoGroupId = 'inputs' | 'outputs' | 'memory' | 'functions';
+export type SmartphoneIoGroupId = 'overview' | 'inputs' | 'outputs' | 'memory' | 'functions';
 
 export type SmartphoneIoSummary = {
   groupId: SmartphoneIoGroupId;
@@ -16,9 +16,14 @@ export type SmartphoneIoSummary = {
   activeCount: number;
   guidance: string;
   activeAddresses: string[];
+  inputCount?: number;
+  activeInputCount?: number;
+  outputCount?: number;
+  activeOutputCount?: number;
 };
 
 const groupLabels: Record<SmartphoneIoGroupId, string> = {
+  overview: 'Entradas + Saídas',
   inputs: 'Entradas',
   outputs: 'Saídas',
   memory: 'Memórias',
@@ -26,6 +31,7 @@ const groupLabels: Record<SmartphoneIoGroupId, string> = {
 };
 
 function signalMatchesGroup(signal: SmartphoneSignalSnapshot, groupId: SmartphoneIoGroupId) {
+  if (groupId === 'overview') return signal.type === 'input' || signal.type === 'output';
   if (groupId === 'inputs') return signal.type === 'input';
   if (groupId === 'outputs') return signal.type === 'output';
   if (groupId === 'memory') return signal.type === 'memory';
@@ -39,6 +45,12 @@ function isActive(value: SmartphoneSignalSnapshot['value']) {
 }
 
 function guidanceFor(groupId: SmartphoneIoGroupId, activeCount: number, totalCount: number) {
+  if (groupId === 'overview') {
+    return activeCount > 0
+      ? `${activeCount} de ${totalCount} sinal(is) de entrada/saída estão ativos. Observe causa e efeito no mesmo scan, sem trocar de aba.`
+      : 'Nenhuma entrada ou saída ativa. Acione uma entrada e observe a saída correspondente no mesmo monitor.';
+  }
+
   if (groupId === 'inputs') {
     return activeCount > 0
       ? `${activeCount} de ${totalCount} entrada(s) estão acionadas neste scan. Entradas representam botoeiras, sensores e permissões.`
@@ -68,6 +80,8 @@ export function createSmartphoneIoSummary(
 ): SmartphoneIoSummary {
   const groupSignals = signals.filter((signal) => signalMatchesGroup(signal, groupId));
   const activeSignals = groupSignals.filter((signal) => isActive(signal.value));
+  const inputSignals = groupSignals.filter((signal) => signal.type === 'input');
+  const outputSignals = groupSignals.filter((signal) => signal.type === 'output');
 
   return {
     groupId,
@@ -76,5 +90,9 @@ export function createSmartphoneIoSummary(
     activeCount: activeSignals.length,
     guidance: guidanceFor(groupId, activeSignals.length, groupSignals.length),
     activeAddresses: activeSignals.map((signal) => signal.address).slice(0, 6),
+    inputCount: groupId === 'overview' ? inputSignals.length : undefined,
+    activeInputCount: groupId === 'overview' ? inputSignals.filter((signal) => isActive(signal.value)).length : undefined,
+    outputCount: groupId === 'overview' ? outputSignals.length : undefined,
+    activeOutputCount: groupId === 'overview' ? outputSignals.filter((signal) => isActive(signal.value)).length : undefined,
   };
 }
