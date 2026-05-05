@@ -9,13 +9,19 @@ import {
   getLessonStatusLabel,
   getOverallLearningProgress,
 } from '../../education/clpLearningProgress';
+import type { ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 import { PremiumLessonDetailCard } from './PremiumLessonDetailCard';
+import { PremiumProjectIntentBanner } from './PremiumProjectIntentBanner';
 
 type LearningTab = 'tracks' | 'modules' | 'challenges' | 'achievements';
 type BadgeTone = 'cyan' | 'green' | 'amber' | 'purple';
+
+type PremiumLearningScreenProps = {
+  projectIntent?: ProjectNavigationIntent;
+};
 
 const trackTones: BadgeTone[] = ['cyan', 'green', 'amber', 'purple', 'cyan', 'green'];
 
@@ -26,7 +32,7 @@ function statusTone(status: ReturnType<typeof getLessonProgress>['status']): 'gr
   return 'neutral';
 }
 
-export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
+export const PremiumLearningScreen = memo(function PremiumLearningScreen({ projectIntent }: PremiumLearningScreenProps) {
   const [tab, setTab] = useState<LearningTab>('tracks');
   const allLessons = useMemo(() => clpLearningModules.flatMap((module) => module.lessons), []);
   const moduleProgress = useMemo(() => getAllModuleProgressSummaries(), []);
@@ -38,6 +44,8 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
 
   return (
     <PremiumScreen>
+      <PremiumProjectIntentBanner intent={projectIntent} />
+
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>Aprender</Text>
         <Text style={styles.title}>Trilhas, módulos e progresso</Text>
