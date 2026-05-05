@@ -81,9 +81,31 @@ Validar:
   - Aplicações reais;
   - Diagnóstico;
 - há card de lição atual;
+- há detalhe da lição com:
+  - Conceito;
+  - Por que importa;
+  - Prática;
+  - Checagem de domínio;
+- há Prática guiada com objetivo, passos e o que observar;
+- há Quiz com alternativas clicáveis, feedback e explicação;
+- a aba Módulos mostra lições com status/progresso;
+- a aba Desafios mostra práticas com status;
+- a aba Conquistas mostra conquistas liberadas/bloqueadas com progresso;
 - a tela comunica ensino guiado, não apenas lista estática.
 
-## 6. Tela Simular
+## 6. Conteúdo educativo
+
+Validar estrutura do conteúdo:
+
+- cada lição deve ter conceito, importância, prática e checagem;
+- quizzes devem ter uma única resposta correta;
+- alternativas erradas devem explicar o erro;
+- práticas guiadas devem ter passos observáveis;
+- progresso deve ficar entre 0% e 100%;
+- conquistas devem ser calculadas pelo progresso;
+- `npm run test:simulator` deve executar a regressão educativa.
+
+## 7. Tela Simular
 
 Abrir: `Simular`.
 
@@ -106,7 +128,7 @@ Validar:
 - o rodapé mostra Linha ativa, Saída e Último scan;
 - a tela não fica poluída no smartphone.
 
-## 7. Tela Projetos
+## 8. Tela Projetos
 
 Abrir: `Projetos`.
 
@@ -131,7 +153,7 @@ Validar:
   - Portão automático;
 - cada card mostra dificuldade, rungs, timers/contadores quando aplicável e botão Abrir.
 
-## 8. Tela Editor
+## 9. Tela Editor
 
 Abrir: `Editor`.
 
@@ -151,7 +173,7 @@ Validar:
 - há comentário didático do rung;
 - há ações Desfazer, Refazer e Excluir rung.
 
-## 9. Exportação
+## 10. Exportação
 
 Na tela `Editor`, alternar para `Exportar`.
 
@@ -167,7 +189,7 @@ Validar:
 - texto do código é claro (`#F8FAFC` ou próximo);
 - botões Copiar código e Exportar código aparecem com boa área de toque.
 
-## 10. Tela Ref / Tags + Diagnóstico
+## 11. Tela Ref / Tags + Diagnóstico
 
 Abrir: `Ref`.
 
@@ -190,7 +212,7 @@ Validar:
 - há alerta de segurança sobre Force;
 - há diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
 
-## 11. Critério final de aceite
+## 12. Critério final de aceite
 
 O pacote visual premium pode ser considerado aprovado quando:
 
@@ -202,13 +224,15 @@ O pacote visual premium pode ser considerado aprovado quando:
 6. Código/exportação tem contraste correto.
 7. Simulação mobile mantém saída/carga sempre visível.
 8. A experiência no celular se aproxima dos mockups salvos.
+9. O modo Aprender mostra lição, prática guiada, quiz, progresso e conquistas.
 
-## 12. Próxima fase após aprovação
+## 13. Próxima fase após aprovação
 
 Depois que este checklist passar:
 
 1. Integrar os dados reais do simulador nas telas premium.
 2. Substituir renderizações emergenciais no BottomNavigation por renderização principal no App.tsx.
-3. Refinar microinterações, animações leves e estados vazios.
-4. Expandir lições históricas e técnicas do CLP.
-5. Preparar versão de teste interno para Play Store.
+3. Persistir o progresso educativo localmente.
+4. Refinar microinterações, animações leves e estados vazios.
+5. Expandir lições históricas e técnicas do CLP.
+6. Preparar versão de teste interno para Play Store.
