@@ -13,6 +13,7 @@ import { PlcScanHistoryCard } from './PlcScanHistoryCard';
 import { PlcSimulationOverviewCard } from './PlcSimulationOverviewCard';
 import { PlcSimulationSection } from './PlcSimulationSection';
 import { PlcSimulationTestReportCard } from './PlcSimulationTestReportCard';
+import { PlcTeacherRubricCard } from './PlcTeacherRubricCard';
 import { PlcTimerCounterMonitorCard } from './PlcTimerCounterMonitorCard';
 import { PlcWatchTableCard } from './PlcWatchTableCard';
 import { ScanTraceDiagnosticCard } from './ScanTraceDiagnosticCard';
@@ -145,7 +146,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <PlcSimulationSection
         title="Diagnóstico"
-        subtitle="Relatório de teste, trace textual do scan e linha selecionada"
+        subtitle="Relatório de teste, rubrica, trace textual do scan e linha selecionada"
         tone="neutral"
       >
         <View style={styles.innerStack}>
@@ -154,6 +155,11 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
             state={props.plcState}
             evaluation={props.evaluation}
             autoScan={props.autoScan}
+          />
+          <PlcTeacherRubricCard
+            project={props.editorProject}
+            state={props.plcState}
+            evaluation={props.evaluation}
           />
           <ScanTraceDiagnosticCard
             project={props.editorProject}
