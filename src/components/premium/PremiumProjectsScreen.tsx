@@ -2,7 +2,6 @@ import { memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getProjectLearningLinkSummary } from '../../education/projectLearningLinks';
 import {
-  filterTrainingProjects,
   getFeaturedTrainingProject,
   getProjectCategoryLabel,
   getProjectDifficultyLabel,
@@ -11,6 +10,7 @@ import {
   type ProjectDifficulty,
   type TrainingProject,
 } from '../../projects/projectCatalog';
+import { searchTrainingProjects } from '../../projects/projectSearch';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumMetric, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
@@ -29,7 +29,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
   const [filter, setFilter] = useState<ProjectFilter>('all');
   const [search, setSearch] = useState('');
   const [selectedProject, setSelectedProject] = useState<TrainingProject>(featuredProject);
-  const filteredProjects = filterTrainingProjects({ filter, search });
+  const filteredProjects = searchTrainingProjects({ filter, search });
   const featuredLearning = getProjectLearningLinkSummary(featuredProject.id);
 
   return (
@@ -43,7 +43,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Buscar projeto, aplicação ou instrução..."
+            placeholder="Buscar projeto, I/O, tag ou instrução..."
             placeholderTextColor={colors.textDim}
             style={styles.searchInput}
           />
@@ -105,7 +105,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
           {filteredProjects.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyTitle}>Nenhum projeto encontrado</Text>
-              <Text style={styles.emptyText}>Tente buscar por motor, timer, contador, selo, semáforo ou instruções como TON e CTU.</Text>
+              <Text style={styles.emptyText}>Tente buscar por motor, I0.0, Q0.0, KM1, sensor, fim de curso, timer, contador, TON ou CTU.</Text>
             </View>
           ) : null}
           {filteredProjects.map((project) => {
