@@ -4,6 +4,7 @@ import { clpLearningModules } from '../../education/clpLessonCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
+import { PremiumLessonDetailCard } from './PremiumLessonDetailCard';
 
 type LearningTab = 'tracks' | 'modules' | 'challenges' | 'achievements';
 type BadgeTone = 'cyan' | 'green' | 'amber' | 'purple';
@@ -56,6 +57,8 @@ export const PremiumLearningScreen = memo(function PremiumLearningScreen() {
           <PremiumProgress value={58} label="58% concluído" />
         </View>
       </PremiumSection>
+
+      <PremiumLessonDetailCard lesson={currentLesson} />
 
       {tab === 'tracks' ? (
         <PremiumSection title="Trilhas" subtitle="Do contexto histórico ao diagnóstico profissional" tone="cyan">
