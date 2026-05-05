@@ -11,6 +11,7 @@ export * from './PremiumLessonQuizCard';
 export * from './PremiumGuidedPracticeCard';
 export * from './PremiumProjectsScreen';
 export * from './PremiumProjectWorkspace';
+export * from './PremiumProjectQuickSummary';
 export * from './PremiumProjectDetailCard';
 export * from './PremiumProjectExportCodePreviews';
 export * from './PremiumEditorExportScreen';
