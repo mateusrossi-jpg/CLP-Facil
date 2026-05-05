@@ -46,6 +46,12 @@ function computeMetrics(state: PlcState, evaluation: EditorEvaluationResult): Ov
   };
 }
 
+function projectTitle(project: EditorProjectState): string {
+  const rungCount = project.rungs?.length ?? 0;
+  const variableCount = project.projectVariables?.length ?? 0;
+  return `Projeto ladder • ${rungCount} linha(s) • ${variableCount} tag(s)`;
+}
+
 export const PlcSimulationOverviewCard = memo(function PlcSimulationOverviewCard({
   project,
   state,
@@ -55,6 +61,7 @@ export const PlcSimulationOverviewCard = memo(function PlcSimulationOverviewCard
   onToggleAutoScan,
 }: PlcSimulationOverviewCardProps) {
   const metrics = useMemo(() => computeMetrics(state, evaluation), [evaluation, state]);
+  const title = useMemo(() => projectTitle(project), [project]);
   const hasDiagnostics = metrics.diagnostics > 0;
 
   return (
@@ -62,7 +69,7 @@ export const PlcSimulationOverviewCard = memo(function PlcSimulationOverviewCard
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>Resumo da simulação</Text>
-          <Text style={styles.title}>{project.name || 'Projeto ladder'} • Scan #{evaluation.scanNumber || 0}</Text>
+          <Text style={styles.title}>{title} • Scan #{evaluation.scanNumber || 0}</Text>
         </View>
         <View style={[styles.modePill, autoScan && styles.modePillAuto]}>
           <Text style={[styles.modePillText, autoScan && styles.modePillTextAuto]}>{autoScan ? 'AUTO' : 'MANUAL'}</Text>
