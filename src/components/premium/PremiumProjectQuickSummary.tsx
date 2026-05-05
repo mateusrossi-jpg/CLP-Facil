@@ -1,10 +1,12 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { getProjectQuickActions } from '../../projects/projectQuickActions';
 import { getProjectWorkspaceSummary } from '../../projects/projectWorkspaceSummary';
 import type { TrainingProject } from '../../projects/projectCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumProgress, PremiumSection } from './PremiumCards';
+import { PremiumActionTile } from './PremiumControls';
 
 type PremiumProjectQuickSummaryProps = {
   project: TrainingProject;
@@ -24,6 +26,7 @@ function difficultyTone(difficulty: TrainingProject['difficulty']): 'green' | 'a
 
 export const PremiumProjectQuickSummary = memo(function PremiumProjectQuickSummary({ project }: PremiumProjectQuickSummaryProps) {
   const summary = getProjectWorkspaceSummary(project);
+  const quickActions = getProjectQuickActions(project);
 
   return (
     <PremiumSection title="Resumo rápido" subtitle="Visão compacta para decidir o próximo passo" tone="green">
@@ -53,6 +56,25 @@ export const PremiumProjectQuickSummary = memo(function PremiumProjectQuickSumma
         <View style={styles.metricCard}><Text style={styles.metricValue}>{summary.ioPointCount}</Text><Text style={styles.metricLabel}>I/O</Text></View>
         <View style={styles.metricCard}><Text style={styles.metricValue}>{summary.exportReadyTargetCount}/3</Text><Text style={styles.metricLabel}>export</Text></View>
         <View style={[styles.metricCard, summary.safetyCriticalCount > 0 && styles.metricCardAlert]}><Text style={[styles.metricValue, summary.safetyCriticalCount > 0 && styles.metricValueAlert]}>{summary.safetyCriticalCount}</Text><Text style={styles.metricLabel}>críticos</Text></View>
+      </View>
+
+      <View style={styles.actionsBlock}>
+        <View style={styles.actionsHeader}>
+          <Text style={styles.actionsTitle}>Atalhos do projeto</Text>
+          <PremiumBadge label={`${quickActions.filter((action) => action.enabled).length}/${quickActions.length} ativos`} tone="cyan" />
+        </View>
+        <View style={styles.actionsGrid}>
+          {quickActions.map((action) => (
+            <View key={action.kind} style={[styles.actionWrap, !action.enabled && styles.actionDisabled]}>
+              <PremiumActionTile
+                title={action.title}
+                description={action.description}
+                icon={action.icon}
+                tone={action.enabled ? action.tone : 'neutral'}
+              />
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.highlightsRow}>
@@ -91,6 +113,12 @@ const styles = StyleSheet.create({
   metricValue: { color: colors.cyan, fontSize: 18, fontWeight: '900' },
   metricValueAlert: { color: colors.amber },
   metricLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', marginTop: 2 },
+  actionsBlock: { borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.sm },
+  actionsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
+  actionsTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  actionsGrid: { gap: spacing.sm },
+  actionWrap: { opacity: 1 },
+  actionDisabled: { opacity: 0.58 },
   highlightsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   highlightChip: { color: colors.textMuted, borderColor: colors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 5, fontSize: 10, fontWeight: '900', backgroundColor: colors.surface },
 });
