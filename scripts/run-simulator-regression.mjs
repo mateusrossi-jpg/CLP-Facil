@@ -31,6 +31,7 @@ const { runProjectWorkspaceSummaryRegressionSuite } = require('/tmp/easy-clp-sim
 const { runProjectQuickActionsRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectQuickActionsRegression.js');
 const { runProjectQuickActionNavigationRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectQuickActionNavigationRegression.js');
 const { runProjectNavigationIntentRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectNavigationIntentRegression.js');
+const { runProjectSimulationFocusRegressionSuite } = require('/tmp/easy-clp-sim-test/projects/projectSimulationFocusRegression.js');
 
 const results = [
   ...runEditorEvaluatorRegressionSuite(),
@@ -63,6 +64,7 @@ const results = [
   ...runProjectQuickActionsRegressionSuite(),
   ...runProjectQuickActionNavigationRegressionSuite(),
   ...runProjectNavigationIntentRegressionSuite(),
+  ...runProjectSimulationFocusRegressionSuite(),
 ];
 const failed = results.filter((result) => !result.passed);
 
