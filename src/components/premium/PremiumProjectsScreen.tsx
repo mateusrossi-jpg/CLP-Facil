@@ -1,19 +1,20 @@
 import { memo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getProjectLearningLinkSummary } from '../../education/projectLearningLinks';
 import {
+  filterTrainingProjects,
   getFeaturedTrainingProject,
   getProjectCategoryLabel,
   getProjectDifficultyLabel,
   trainingProjects,
+  type ProjectCatalogFilter,
   type ProjectDifficulty,
-  type TrainingProject,
 } from '../../projects/projectCatalog';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { PremiumBadge, PremiumMetric, PremiumScreen, PremiumSection, PremiumSegmented } from './index';
 
-type ProjectFilter = 'all' | 'basic' | 'intermediate' | 'advanced' | 'favorites';
+type ProjectFilter = ProjectCatalogFilter;
 
 function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'purple' {
   if (difficulty === 'basic') return 'green';
@@ -21,17 +22,10 @@ function difficultyTone(difficulty: ProjectDifficulty): 'green' | 'amber' | 'pur
   return 'purple';
 }
 
-function filterProjects(filter: ProjectFilter): TrainingProject[] {
-  if (filter === 'basic') return trainingProjects.filter((project) => project.difficulty === 'basic');
-  if (filter === 'intermediate') return trainingProjects.filter((project) => project.difficulty === 'intermediate');
-  if (filter === 'advanced') return trainingProjects.filter((project) => project.difficulty === 'advanced');
-  if (filter === 'favorites') return trainingProjects.filter((project) => project.favorite);
-  return trainingProjects;
-}
-
 export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
   const [filter, setFilter] = useState<ProjectFilter>('all');
-  const filteredProjects = filterProjects(filter);
+  const [search, setSearch] = useState('');
+  const filteredProjects = filterTrainingProjects({ filter, search });
   const featuredProject = getFeaturedTrainingProject();
   const featuredLearning = getProjectLearningLinkSummary(featuredProject.id);
 
@@ -43,7 +37,13 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
         <Text style={styles.subtitle}>Modelos prontos para estudar, editar, simular e exportar para bancada.</Text>
         <View style={styles.searchBox}>
           <Text style={styles.searchIcon}>⌕</Text>
-          <Text style={styles.searchText}>Buscar projeto, aplicação ou instrução...</Text>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar projeto, aplicação ou instrução..."
+            placeholderTextColor={colors.textDim}
+            style={styles.searchInput}
+          />
         </View>
       </View>
 
@@ -62,7 +62,7 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
       <View style={styles.metricRow}>
         <PremiumMetric label="Projetos" value={trainingProjects.length} hint="biblioteca" tone="cyan" />
         <PremiumMetric label="Favoritos" value={trainingProjects.filter((project) => project.favorite).length} hint="salvos" tone="amber" />
-        <PremiumMetric label="Avançados" value={trainingProjects.filter((project) => project.difficulty === 'advanced').length} hint="prática" tone="purple" />
+        <PremiumMetric label="Filtrados" value={filteredProjects.length} hint="resultado" tone="green" />
       </View>
 
       <PremiumSection title="Projeto em destaque" subtitle="Ideal para iniciar no pensamento Ladder" tone="green">
@@ -97,6 +97,12 @@ export const PremiumProjectsScreen = memo(function PremiumProjectsScreen() {
 
       <PremiumSection title="Projetos populares" subtitle="Escolha um modelo e comece a praticar" tone="cyan">
         <View style={styles.projectGrid}>
+          {filteredProjects.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>Nenhum projeto encontrado</Text>
+              <Text style={styles.emptyText}>Tente buscar por motor, timer, contador, selo, semáforo ou instruções como TON e CTU.</Text>
+            </View>
+          ) : null}
           {filteredProjects.map((project) => {
             const learning = getProjectLearningLinkSummary(project.id);
             return (
@@ -145,9 +151,9 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.cyan, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
   title: { color: colors.text, fontSize: 26, lineHeight: 31, fontWeight: '900' },
   subtitle: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.border, borderWidth: 1, borderRadius: 18, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surfaceElevated },
   searchIcon: { color: colors.cyan, fontSize: 18, fontWeight: '900' },
-  searchText: { color: colors.textDim, fontSize: 12, fontWeight: '800' },
+  searchInput: { flex: 1, minHeight: 34, color: colors.text, fontSize: 12, fontWeight: '800', paddingVertical: 0 },
   metricRow: { flexDirection: 'row', gap: spacing.sm },
   featuredCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 20, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.md },
   featuredTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
@@ -184,6 +190,9 @@ const styles = StyleSheet.create({
   projectDescription: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
   favorite: { color: colors.amber, fontSize: 18, fontWeight: '900' },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  emptyCard: { borderColor: colors.border, borderWidth: 1, borderRadius: 18, padding: spacing.md, backgroundColor: colors.surfaceElevated, gap: spacing.xs },
+  emptyTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  emptyText: { color: colors.textMuted, fontSize: 12, lineHeight: 18, fontWeight: '700' },
   openButton: { borderColor: colors.borderStrong, borderWidth: 1, borderRadius: 14, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.surface },
   openButtonText: { color: colors.text, fontSize: 12, fontWeight: '900' },
 });
