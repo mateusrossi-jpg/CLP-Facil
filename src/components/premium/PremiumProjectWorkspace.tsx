@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { createProjectNavigationIntent, type ProjectNavigationIntent } from '../../projects/projectNavigationIntent';
 import type { TrainingProject } from '../../projects/projectCatalog';
 import { getProjectQuickActionNavigation, type ProjectWorkspaceTab } from '../../projects/projectQuickActionNavigation';
 import { colors } from '../../theme/colors';
@@ -12,7 +13,7 @@ import { PremiumProjectQuickSummary } from './PremiumProjectQuickSummary';
 
 type PremiumProjectWorkspaceProps = {
   project: TrainingProject;
-  onNavigate?: (route: BottomNavKey) => void;
+  onNavigate?: (route: BottomNavKey, intent?: ProjectNavigationIntent) => void;
 };
 
 export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ project, onNavigate }: PremiumProjectWorkspaceProps) {
@@ -44,7 +45,7 @@ export const PremiumProjectWorkspace = memo(function PremiumProjectWorkspace({ p
           onQuickAction={(kind) => {
             const target = getProjectQuickActionNavigation(kind);
             if (target.route) {
-              onNavigate?.(target.route);
+              onNavigate?.(target.route, createProjectNavigationIntent(project, kind, target.route));
               return;
             }
             setTab(target.tab);
