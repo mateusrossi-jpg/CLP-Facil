@@ -146,11 +146,11 @@ export const PlcTimerCounterMonitorCard = memo(function PlcTimerCounterMonitorCa
 
 const styles = StyleSheet.create({
   card: {
-    borderColor: colors.purple,
+    borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 20,
     padding: spacing.md,
-    backgroundColor: colors.purpleSoft,
+    backgroundColor: colors.cyanSoft,
     gap: spacing.sm,
   },
   headerRow: {
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   eyebrow: {
-    color: colors.purple,
+    color: colors.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   countPill: {
-    borderColor: colors.purple,
+    borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: spacing.sm,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   countValue: {
-    color: colors.purple,
+    color: colors.cyan,
     fontSize: 16,
     fontWeight: '900',
   },
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   itemMode: {
-    color: colors.purple,
+    color: colors.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
