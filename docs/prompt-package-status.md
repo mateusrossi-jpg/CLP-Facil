@@ -30,6 +30,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Tipo compartilhado `BottomNavKey` extraído para `src/components/navigationTypes.ts`.
 - `BottomNavigation` e `PremiumRouteContent` usam o tipo compartilhado, eliminando dependência cruzada entre navegação e renderer premium.
 - `BottomNavigation` reexporta `BottomNavKey` para manter compatibilidade com imports antigos após a extração do tipo.
+- Novo catálogo educativo `src/education/clpLessonCatalog.ts` criado com módulos e lições estruturadas para História do CLP, Como o CLP funciona, Pensamento Ladder, Instruções essenciais, Aplicações reais e Diagnóstico.
 
 ## Concluído na interface
 
@@ -52,7 +53,7 @@ Este documento registra o fechamento do pacote de evolução orientado pelo prom
 - Novo `MobileSimulationEntryCard` criado para perguntar ao usuário se deseja abrir a execução mobile ou continuar no modo clássico.
 - Novo `SimulationModeRouter` criado para alternar entre aviso, execução mobile e conteúdo clássico, com fallback seguro para projeto didático.
 - Nova `PremiumHomeScreen` criada como conceito implementável da Home no padrão visual aprovado.
-- Nova `PremiumLearningScreen` criada para Aprender com trilhas, módulos, desafios, conquistas e conteúdo de História do CLP / funcionamento / Ladder / aplicações / diagnóstico.
+- Nova `PremiumLearningScreen` conectada ao catálogo real `clpLessonCatalog`, usando módulos, progresso, próximas lições e desafios gerados da estrutura educativa.
 - Nova `PremiumProjectsScreen` criada para biblioteca premium de projetos/exemplos, com busca visual, filtros, projeto em destaque, cards de Partida direta, Selo, Reversão, Estrela-triângulo, Semáforo, Bomba alternada, Esteira e Portão.
 - Nova `PremiumEditorExportScreen` criada para Editor Ladder + Exportação, com toolbar NA/NF/COIL/TON/CTU, rungs compactos, comentário do rung, tabs Arduino/ESP32/ESPHome, validação de GPIO e code preview escuro.
 - Nova `PremiumTagsDiagnosticsScreen` criada para tabela de tags, Force didático, alerta de segurança, diagnóstico de scan, linha ativa, saída ativa e eventos recentes.
@@ -85,7 +86,7 @@ Se algum teste falhar, a próxima etapa deve ser somente correção de typecheck
 - Testar no celular real:
   - Conferir se a paleta global dark não quebrou contraste em telas antigas.
   - Tocar em Início e conferir a `PremiumHomeScreen`.
-  - Tocar em Aprender e conferir a `PremiumLearningScreen`.
+  - Tocar em Aprender e conferir a `PremiumLearningScreen` com dados do catálogo educativo.
   - Tocar em Projetos e conferir a `PremiumProjectsScreen`.
   - Tocar em Editor e conferir a `PremiumEditorExportScreen`.
   - Tocar em Ref e confirmar que não fica vazia.
