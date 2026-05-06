@@ -9,6 +9,8 @@ export const simulatorRegressionSources = [
   'src/plcProfiles/simulatorDialectRegression.ts',
   'src/simulation/smartphoneProgramViewRegression.ts',
   'src/simulation/smartphoneIoViewRegression.ts',
+  'src/simulation/mobileIoPoints.ts',
+  'src/simulation/mobileIoPointsRegression.ts',
   'src/simulation/mobileScanTraceSummaryRegression.ts',
   'src/communication/protocolRegression.ts',
   'src/data/exampleLibraryRegression.ts',

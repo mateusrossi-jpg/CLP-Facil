@@ -7,7 +7,8 @@ import { PlcMission } from '../lessons/missionTypes';
 import { evaluateMissionAttempt } from '../lessons/missionValidation';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
-import { collectMobileIoPoints, isMobileIoActive, MobileIoDock, mobileIoValueLabel } from './MobileIoDock';
+import { collectMobileIoPoints, isMobileIoActive, mobileIoValueLabel } from '../simulation/mobileIoPoints';
+import { MobileIoDock } from './MobileIoDock';
 import { MobileRungViewer } from './MobileRungViewer';
 import { MobileSimulationControls } from './MobileSimulationControls';
 import { EditorRunMode } from './EditorModeToggle';
@@ -221,8 +222,8 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   );
   const activeOutputs = useMemo(() => activeOutputCount(plcState), [plcState]);
   const floatingIoPoints = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
-  const floatingInputs = floatingIoPoints.filter((point) => point.kind === 'input').slice(0, 12);
-  const floatingOutputs = floatingIoPoints.filter((point) => point.kind === 'output').slice(0, 12);
+  const floatingInputs = floatingIoPoints.filter((point) => point.kind === 'input');
+  const floatingOutputs = floatingIoPoints.filter((point) => point.kind === 'output');
   const missionAttempt = useMemo(
     () => mission ? evaluateMissionAttempt(mission, plcState, evaluation) : null,
     [evaluation, mission, plcState],
