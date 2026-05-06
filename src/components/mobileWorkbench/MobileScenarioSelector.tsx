@@ -1,7 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/theme';
 
 export type MobileScenarioId = 'conveyor' | 'tank' | 'motorStarter';
 
@@ -22,6 +22,9 @@ const scenarioOptions: ScenarioOption[] = [
 type Props = { activeScenario: MobileScenarioId; onSelectScenario: (id: MobileScenarioId) => void };
 
 export const MobileScenarioSelector = memo(function MobileScenarioSelector({ activeScenario, onSelectScenario }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
+
   return (
     <View style={styles.column}>
       {scenarioOptions.map((scenario) => {
@@ -46,30 +49,32 @@ export const MobileScenarioSelector = memo(function MobileScenarioSelector({ act
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
   column: { gap: spacing.sm },
   card: {
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
     borderRadius: 12,
     padding: spacing.md,
-    shadowColor: colors.background,
+    shadowColor: c.background,
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 8,
   },
-  cardActive: { borderColor: colors.cyan, backgroundColor: colors.cyanSoft },
+  cardActive: { borderColor: c.cyan, backgroundColor: c.cyanSoft },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  icon: { color: colors.textMuted, fontSize: 26, width: 28, textAlign: 'center' },
-  iconActive: { color: colors.cyanGlow },
+  icon: { color: c.textMuted, fontSize: 26, width: 28, textAlign: 'center' },
+  iconActive: { color: c.cyanGlow },
   meta: { flex: 1, gap: 2 },
-  title: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  titleActive: { color: colors.cyanGlow },
-  description: { color: colors.textMuted, fontSize: 12 },
+  title: { color: c.text, fontWeight: '700', fontSize: 15 },
+  titleActive: { color: c.cyanGlow },
+  description: { color: c.textMuted, fontSize: 12 },
   statusBadge: { borderRadius: 999, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  statusOn: { borderColor: colors.cyan, backgroundColor: colors.cyanSoft },
-  statusOff: { borderColor: colors.borderStrong, backgroundColor: colors.surfaceElevated },
-  statusText: { color: colors.text, fontSize: 10, fontWeight: '700' },
-  tags: { marginTop: spacing.xs, color: colors.textDim, fontSize: 11, letterSpacing: 0.2 },
-});
+  statusOn: { borderColor: c.cyan, backgroundColor: c.cyanSoft },
+  statusOff: { borderColor: c.borderStrong, backgroundColor: c.surfaceElevated },
+  statusText: { color: c.text, fontSize: 10, fontWeight: '700' },
+  tags: { marginTop: spacing.xs, color: c.textDim, fontSize: 11, letterSpacing: 0.2 },
+  });
+}

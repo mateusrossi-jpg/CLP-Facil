@@ -1,7 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/theme';
 
 type MobileSimulationControlsProps = {
   autoScan?: boolean;
@@ -24,6 +24,8 @@ export const MobileSimulationControls = memo(function MobileSimulationControls({
   onToggleEdit = noop,
   onToggleHint = noop,
 }: MobileSimulationControlsProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const editMode = mode === 'edit';
   return (
     <View style={styles.stack}>
@@ -67,16 +69,17 @@ export const MobileSimulationControls = memo(function MobileSimulationControls({
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>["colors"]) {
+  return StyleSheet.create({
   stack: {
     gap: spacing.xs,
   },
   statusRow: {
     minHeight: 32,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
@@ -95,15 +98,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   runtimeLedRun: {
-    borderColor: colors.green,
-    backgroundColor: colors.green,
+    borderColor: c.green,
+    backgroundColor: c.green,
   },
   runtimeLedEdit: {
-    borderColor: colors.amber,
-    backgroundColor: colors.amber,
+    borderColor: c.amber,
+    backgroundColor: c.amber,
   },
   statusLabel: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -113,17 +116,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   statusEdit: {
-    color: colors.amber,
+    color: c.amber,
   },
   statusSimulate: {
-    color: colors.green,
+    color: c.green,
   },
   scanFlowStrip: {
     minHeight: 28,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,20 +134,20 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   scanFlowStripRun: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   scanFlowStep: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 9,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   scanFlowStepRun: {
-    color: colors.green,
+    color: c.green,
   },
   scanFlowArrow: {
-    color: colors.textDim,
+    color: c.textDim,
     fontSize: 10,
     fontWeight: '900',
   },
@@ -155,26 +158,26 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     minHeight: 50,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.xs,
   },
   primaryButton: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyan,
+    borderColor: c.cyan,
+    backgroundColor: c.cyan,
   },
   primaryText: {
-    color: colors.background,
+    color: c.background,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   primaryHint: {
-    color: colors.background,
+    color: c.background,
     fontSize: 9,
     fontWeight: '900',
     marginTop: 2,
@@ -182,31 +185,31 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   buttonText: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0.3,
   },
   buttonHint: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 9,
     fontWeight: '800',
     marginTop: 2,
     textTransform: 'uppercase',
   },
   autoOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   autoTextOn: {
-    color: colors.green,
+    color: c.green,
   },
   editOn: {
-    borderColor: colors.amber,
-    backgroundColor: colors.amberSoft,
+    borderColor: c.amber,
+    backgroundColor: c.amberSoft,
   },
   editTextOn: {
-    color: colors.amber,
+    color: c.amber,
   },
   pressed: {
     opacity: 0.72,
@@ -214,4 +217,5 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.48,
   },
-});
+  });
+}

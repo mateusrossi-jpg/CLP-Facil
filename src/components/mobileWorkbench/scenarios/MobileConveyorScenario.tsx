@@ -1,11 +1,13 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
+import { useAppTheme } from '../../../theme/theme';
 
 type Props = { tags: Record<string, boolean> };
 
 export const MobileConveyorScenario = memo(function MobileConveyorScenario({ tags }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const motorOn = tags['Q0.0'];
   const sensorOn = tags['I0.2'];
   const stopOn = tags['I0.1'];
@@ -43,35 +45,37 @@ export const MobileConveyorScenario = memo(function MobileConveyorScenario({ tag
   );
 });
 
-const styles = StyleSheet.create({
-  scene: { backgroundColor: colors.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+  scene: { backgroundColor: c.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: c.border },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  title: { color: colors.text, fontWeight: '700' },
+  title: { color: c.text, fontWeight: '700' },
   badge: { borderRadius: 999, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  badgeRun: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  badgeAlarm: { borderColor: colors.red, backgroundColor: colors.redSoft },
-  badgeStop: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
-  badgeText: { color: colors.text, fontSize: 10, fontWeight: '700' },
-  floor: { backgroundColor: colors.backgroundSoft, borderRadius: 10, borderWidth: 1, borderColor: colors.borderStrong, padding: spacing.sm, overflow: 'hidden' },
-  beltTop: { height: 6, backgroundColor: colors.slate },
-  beltTrack: { height: 58, backgroundColor: '#182133', borderLeftWidth: 2, borderRightWidth: 2, borderColor: colors.borderStrong, justifyContent: 'center' },
-  beltTrackOn: { borderColor: colors.green, shadowColor: colors.green, shadowOpacity: 0.2, shadowRadius: 6 },
+  badgeRun: { borderColor: c.green, backgroundColor: c.greenSoft },
+  badgeAlarm: { borderColor: c.red, backgroundColor: c.redSoft },
+  badgeStop: { borderColor: c.amber, backgroundColor: c.amberSoft },
+  badgeText: { color: c.text, fontSize: 10, fontWeight: '700' },
+  floor: { backgroundColor: c.backgroundSoft, borderRadius: 10, borderWidth: 1, borderColor: c.borderStrong, padding: spacing.sm, overflow: 'hidden' },
+  beltTop: { height: 6, backgroundColor: c.slate },
+  beltTrack: { height: 58, backgroundColor: c.navy, borderLeftWidth: 2, borderRightWidth: 2, borderColor: c.borderStrong, justifyContent: 'center' },
+  beltTrackOn: { borderColor: c.green, shadowColor: c.green, shadowOpacity: 0.2, shadowRadius: 6 },
   rollersRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xs },
-  roller: { width: 16, height: 8, borderRadius: 5, backgroundColor: colors.inactive },
-  rollerOn: { backgroundColor: colors.greenSoft },
-  beltFace: { height: 10, backgroundColor: '#0d1525', marginBottom: spacing.xs },
-  box: { position: 'absolute', left: 42, top: 28, width: 38, height: 30, borderRadius: 6, borderWidth: 1, borderColor: colors.amber, backgroundColor: colors.amberSoft, justifyContent: 'center', alignItems: 'center' },
-  boxDetected: { backgroundColor: colors.amber },
-  motor: { position: 'absolute', left: spacing.sm, bottom: spacing.xs, width: 66, height: 26, borderRadius: 13, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.inactive, justifyContent: 'center', alignItems: 'center' },
-  motorOn: { backgroundColor: colors.greenSoft, borderColor: colors.green },
+  roller: { width: 16, height: 8, borderRadius: 5, backgroundColor: c.inactive },
+  rollerOn: { backgroundColor: c.greenSoft },
+  beltFace: { height: 10, backgroundColor: c.black, marginBottom: spacing.xs },
+  box: { position: 'absolute', left: 42, top: 28, width: 38, height: 30, borderRadius: 6, borderWidth: 1, borderColor: c.amber, backgroundColor: c.amberSoft, justifyContent: 'center', alignItems: 'center' },
+  boxDetected: { backgroundColor: c.amber },
+  motor: { position: 'absolute', left: spacing.sm, bottom: spacing.xs, width: 66, height: 26, borderRadius: 13, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.inactive, justifyContent: 'center', alignItems: 'center' },
+  motorOn: { backgroundColor: c.greenSoft, borderColor: c.green },
   sensorBlock: { position: 'absolute', right: 72, bottom: spacing.xs, alignItems: 'center', gap: 2 },
-  sensorDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.inactive },
-  sensorDotOn: { backgroundColor: colors.cyanGlow },
-  beam: { position: 'absolute', right: 88, top: 32, width: 60, height: 2, backgroundColor: colors.inactive },
-  beamOn: { backgroundColor: colors.cyanGlow },
+  sensorDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: c.inactive },
+  sensorDotOn: { backgroundColor: c.cyanGlow },
+  beam: { position: 'absolute', right: 88, top: 32, width: 60, height: 2, backgroundColor: c.inactive },
+  beamOn: { backgroundColor: c.cyanGlow },
   tower: { position: 'absolute', right: spacing.sm, top: spacing.xs, alignItems: 'center', gap: 3 },
-  light: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.inactive },
-  greenOn: { backgroundColor: colors.green },
-  redOn: { backgroundColor: colors.red },
-  labelMini: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
-});
+  light: { width: 14, height: 14, borderRadius: 7, backgroundColor: c.inactive },
+  greenOn: { backgroundColor: c.green },
+  redOn: { backgroundColor: c.red },
+  labelMini: { color: c.textMuted, fontSize: 10, fontWeight: '600' },
+  });
+}

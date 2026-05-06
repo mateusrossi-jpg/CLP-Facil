@@ -1,15 +1,17 @@
-import { ComponentProps, memo, useState } from 'react';
+import { ComponentProps, memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MobileBlockQuickEditor } from './MobileBlockQuickEditor';
 import { SmartphoneSimulationPanelWrapper } from './mobileWorkbench/SmartphoneSimulationPanelWrapper';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelEnhanced } from './SmartphoneSimulationPanelEnhanced';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/theme';
 
 type SmartphoneSimulationPanelProps = ComponentProps<typeof SmartphoneSimulationPanelEnhanced>;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel(props: SmartphoneSimulationPanelProps) {
   const [advancedOpen, setAdvancedOpen] = useState(Boolean(props.showAdvancedDiagnostics));
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const activeMission = props.mission ?? undefined;
   const runtimeMode = props.mode === 'edit' ? 'EDITOR' : props.autoScan ? 'AUTO' : 'SCAN';
 
@@ -17,16 +19,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
     <View style={styles.stack}>
       <View style={styles.workbenchHeader}>
         <View style={styles.workbenchCopy}>
-          <Text style={styles.workbenchEyebrow}>PLC Simulator</Text>
-          <Text style={styles.workbenchTitle}>Programa Ladder + I/O + Scan</Text>
-          <Text style={styles.workbenchText}>Use como simulador direto: toque nas entradas, clique nos blocos para editar tags e rode o scan na mesma bancada.</Text>
-          <View style={styles.flowRow}>
-            <Text style={styles.flowChip}>I/O</Text>
-            <Text style={styles.flowArrow}>→</Text>
-            <Text style={styles.flowChip}>Ladder</Text>
-            <Text style={styles.flowArrow}>→</Text>
-            <Text style={styles.flowChip}>Q</Text>
-          </View>
+          <Text style={styles.workbenchEyebrow}>Simulador Ladder</Text>
+          <Text style={styles.workbenchTitle}>I/O + Programa + Scan</Text>
         </View>
         <Text style={[styles.workbenchMode, props.mode === 'edit' && styles.workbenchModeEdit]}>{runtimeMode}</Text>
       </View>
@@ -104,15 +98,16 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
   stack: {
     gap: spacing.md,
   },
   workbenchHeader: {
-    borderColor: colors.border,
+    borderColor: '#CBD5E1',
     borderWidth: 1,
-    borderRadius: 16,
-    backgroundColor: colors.background,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -124,50 +119,21 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   workbenchEyebrow: {
-    color: colors.cyan,
-    fontSize: 10,
+    color: '#334155',
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   workbenchTitle: {
-    color: colors.text,
-    fontSize: 16,
+    color: '#0F172A',
+    fontSize: 18,
     fontWeight: '900',
     marginTop: 3,
   },
-  workbenchText: {
-    color: colors.textMuted,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '800',
-    marginTop: 5,
-  },
-  flowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  flowChip: {
-    color: colors.cyan,
-    borderColor: colors.cyan,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    fontSize: 9,
-    fontWeight: '900',
-    overflow: 'hidden',
-  },
-  flowArrow: {
-    color: colors.textDim,
-    fontSize: 10,
-    fontWeight: '900',
-  },
   workbenchMode: {
-    color: colors.background,
-    backgroundColor: colors.green,
+    color: '#FFFFFF',
+    backgroundColor: '#16A34A',
     borderRadius: 999,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
@@ -176,14 +142,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   workbenchModeEdit: {
-    backgroundColor: colors.amber,
+    backgroundColor: '#2563EB',
   },
   advancedButton: {
     minHeight: 54,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,32 +157,32 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   advancedButtonOpen: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   advancedCopy: {
     flex: 1,
     minWidth: 0,
   },
   advancedTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   advancedTitleOpen: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   advancedText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
     marginTop: 2,
   },
   advancedPill: {
-    color: colors.cyan,
-    borderColor: colors.cyan,
+    color: c.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
@@ -225,10 +191,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   advancedPillOpen: {
-    color: colors.background,
-    backgroundColor: colors.cyan,
+    color: c.background,
+    backgroundColor: c.cyan,
   },
   pressed: {
     opacity: 0.72,
   },
-});
+  });
+}

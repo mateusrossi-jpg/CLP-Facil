@@ -26,6 +26,10 @@ import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
 import { SimulatorDialectPanel } from './src/components/SimulatorDialectPanel';
 import { SmartphoneSimulationPanel } from './src/components/SmartphoneSimulationPanel';
+import { MobileHardwareExportPanel } from './src/components/mobileWorkbench/MobileHardwareExportPanel';
+import { MobileRuntimeAnimationLayer } from './src/components/mobileWorkbench/MobileRuntimeAnimationLayer';
+import { MobileScenarioLab } from './src/components/mobileWorkbench/MobileScenarioLab';
+import { PremiumAppShell, PremiumDashboardItem, PremiumMainRoute, PremiumSimulatorHome } from './src/components/premium';
 import { directStartWithSealProject } from './src/data/defaultProjects';
 import { EditorExampleProject, educationalEditorExamples } from './src/data/editorExampleProjects';
 import { createLessonEditorProject } from './src/data/lessonEditorProjects';
@@ -42,10 +46,11 @@ import { PlcMission } from './src/lessons/missionTypes';
 import { plcMissionTracks } from './src/lessons/plcMissions';
 import { evaluateMissionAttempt } from './src/lessons/missionValidation';
 import { colors } from './src/theme/colors';
+import { AppThemeProvider, ThemeMode } from './src/theme/theme';
 import { PlcProfileId } from './src/plcProfiles/plcProfiles';
 import { spacing } from './src/theme/spacing';
 
-type Mode = 'home' | 'learn' | 'lesson' | 'simulate' | 'reference' | 'projects' | 'hardware' | 'pro';
+type Mode = 'home' | 'simulate' | 'lab' | 'hardware' | 'settings' | 'learn' | 'lesson' | 'reference' | 'projects' | 'pro';
 
 export default function App() {
   const { width } = useWindowDimensions();
@@ -53,6 +58,7 @@ export default function App() {
   const initial = useMemo(() => createInitialState(project), [project]);
   const desktopLayout = width >= 1280;
   const [mode, setMode] = useState<Mode>('home');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [practiceLesson, setPracticeLesson] = useState<Lesson | null>(null);
   const [activePlcMission, setActivePlcMission] = useState<PlcMission | null>(null);
@@ -86,6 +92,23 @@ export default function App() {
   const editingLocked = editorMode === 'simulate';
   const compactSimulator = width < 980;
   const showAds = shouldShowAds(proAccess.isPro, adsAccess);
+  const premiumRoute: PremiumMainRoute = mode === 'simulate'
+    ? 'simulate'
+    : mode === 'lab'
+      ? 'lab'
+      : mode === 'hardware'
+        ? 'hardware'
+        : mode === 'home'
+          ? 'home'
+          : 'settings';
+  const premiumStatusItems: PremiumDashboardItem[] = [
+    { label: 'Ladder', value: `${editorProject.rungs.length} rung(s)`, detail: editorMode === 'simulate' ? 'modo RUN' : 'modo EDIT', tone: 'green' },
+    { label: 'I/O', value: `${editorProject.projectVariables?.length ?? 0} tags`, detail: 'entradas, saídas e memórias', tone: 'cyan' },
+    { label: 'Scan', value: `#${editorEvaluation.scanNumber ?? 0}`, detail: autoScan ? 'AUTO ativo' : 'manual pronto', tone: 'green' },
+    { label: 'HMI/SCADA', value: 'Integrado', detail: 'painéis no fluxo avançado', tone: 'purple' },
+    { label: '2.5D', value: 'Pronto', detail: 'esteira, tanque e motor', tone: 'amber' },
+    { label: 'ESP32/OpenPLC', value: 'Exportável', detail: 'Arduino, ST, ESP-IDF e JSON', tone: 'cyan' },
+  ];
   const activeNav: BottomNavKey = mode === 'learn' || mode === 'lesson'
     ? 'learn'
     : mode === 'simulate'
@@ -223,6 +246,30 @@ export default function App() {
     if (key === 'pro') {
       setMode('pro');
     }
+  }
+
+  function handlePremiumRoute(route: PremiumMainRoute) {
+    if (route === 'simulate') {
+      openSimulator();
+      return;
+    }
+    if (route === 'home') {
+      setMode('home');
+      return;
+    }
+    if (route === 'lab') {
+      setMode('lab');
+      return;
+    }
+    if (route === 'hardware') {
+      setMode('hardware');
+      return;
+    }
+    setMode('settings');
+  }
+
+  function toggleThemeMode() {
+    setThemeMode((current) => current === 'dark' ? 'light' : 'dark');
   }
 
   function openLesson(lesson: Lesson) {
@@ -863,38 +910,24 @@ export default function App() {
   const focusedExamples = educationalEditorExamples.filter((example) => focusedExampleIds.has(example.id));
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ExpoStatusBar style="dark" />
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={[styles.container, desktopLayout && styles.containerDesktop, compactSimulator && mode === 'simulate' && styles.containerCompact]}>
+    <AppThemeProvider mode={themeMode}>
+      <ExpoStatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      <StatusBar barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'} />
+      <PremiumAppShell
+        route={premiumRoute}
+        themeMode={themeMode}
+        onRouteChange={handlePremiumRoute}
+        onToggleTheme={toggleThemeMode}
+      >
         {mode === 'home' ? (
-          <>
-            <HomeHero />
-            <LaunchQuickStartPanel
-              examples={focusedExamples}
-              onOpenExample={(example) => openEducationalExample(example, true)}
-              onOpenLearn={() => setMode('learn')}
-              onOpenReference={() => setMode('reference')}
-              onOpenHardware={() => setMode('hardware')}
-            />
-            <AppCard
-              title="Ver exemplos"
-              description="Exemplos curtos e práticos: selo, intertravamento, temporizador, contador e parada de emergência."
-              badge="Prático"
-              tone="cyan"
-              icon={<Text style={styles.homeIcon}>EXP</Text>}
-              onPress={() => setMode('learn')}
-            />
-            <AppCard
-              title="Abrir Simulador"
-              description="Simulador Ladder mobile-first com Ladder, I/O e scan no mesmo fluxo visual."
-              badge="Principal"
-              tone="green"
-              icon={<Text style={styles.homeIcon}>CLP</Text>}
-              onPress={openSimulator}
-            />
-            <Text style={styles.footer}>CLP Fácil é um simulador Ladder mobile-first para criar, testar e exportar lógicas de automação.</Text>
-          </>
+          <PremiumSimulatorHome
+            themeMode={themeMode}
+            statusItems={premiumStatusItems}
+            onOpenSimulator={openSimulator}
+            onOpenLab={() => setMode('lab')}
+            onOpenHardware={() => setMode('hardware')}
+            onToggleTheme={toggleThemeMode}
+          />
         ) : null}
 
         {mode === 'learn' ? (
@@ -973,10 +1006,61 @@ export default function App() {
           </>
         ) : null}
 
+        {mode === 'lab' ? (
+          <>
+            <MobileRuntimeAnimationLayer
+              mode={editorMode}
+              autoScan={autoScan}
+              evaluation={editorEvaluation}
+              hasLogic={editorProject.rungs.length > 0}
+            />
+            <MobileScenarioLab editorProject={editorProject} plcState={editorEvaluation.state} evaluation={editorEvaluation} />
+          </>
+        ) : null}
+
         {mode === 'hardware' ? (
           <>
-            <AppHeader title="Hardware" subtitle="Exportação e pinagem ficam separadas da simulação. Abra um projeto salvo/carregado e depois escolha placa, pinos e código." />
-            <HardwareExportPanel editorProject={editorProject} />
+            <MobileHardwareExportPanel editorProject={editorProject} />
+          </>
+        ) : null}
+
+        {mode === 'settings' ? (
+          <>
+            <View style={styles.pagePanel}>
+              <View style={styles.panelHeader}>
+                <View style={styles.panelHeaderText}>
+                  <Text style={styles.panelTitle}>Configurações</Text>
+                  <Text style={styles.panelSubtitle}>Tema, reset e recursos avançados ficam fora do fluxo principal do simulador.</Text>
+                </View>
+                <Text style={styles.panelBadge}>{themeMode === 'dark' ? 'Dark' : 'Light'}</Text>
+              </View>
+              <View style={styles.purchaseActions}>
+                <Pressable onPress={toggleThemeMode} style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}>
+                  <Text style={styles.primaryActionText}>{themeMode === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'}</Text>
+                </Pressable>
+                <Pressable onPress={resetSimulation} style={({ pressed }) => [styles.restoreAction, pressed && styles.pressed]}>
+                  <Text style={styles.restoreActionText}>Resetar bancada</Text>
+                </Pressable>
+              </View>
+            </View>
+            <View style={styles.pagePanel}>
+              <Text style={styles.panelTitle}>Avançado</Text>
+              <Text style={styles.panelSubtitle}>Conteúdo educacional, exemplos, referência técnica e licença continuam disponíveis, mas não dominam a experiência principal.</Text>
+              <View style={styles.accountActions}>
+                <Pressable onPress={() => setMode('learn')} style={({ pressed }) => [styles.restoreAction, pressed && styles.pressed]}>
+                  <Text style={styles.restoreActionText}>Aprender</Text>
+                </Pressable>
+                <Pressable onPress={() => setMode('projects')} style={({ pressed }) => [styles.restoreAction, pressed && styles.pressed]}>
+                  <Text style={styles.restoreActionText}>Projetos</Text>
+                </Pressable>
+                <Pressable onPress={() => setMode('reference')} style={({ pressed }) => [styles.restoreAction, pressed && styles.pressed]}>
+                  <Text style={styles.restoreActionText}>Referência</Text>
+                </Pressable>
+                <Pressable onPress={() => setMode('pro')} style={({ pressed }) => [styles.restoreAction, pressed && styles.pressed]}>
+                  <Text style={styles.restoreActionText}>Licença</Text>
+                </Pressable>
+              </View>
+            </View>
           </>
         ) : null}
 
@@ -1090,117 +1174,57 @@ export default function App() {
                   <Pressable onPress={resetSimulation} style={({ pressed }) => [styles.simulatorGhostButton, pressed && styles.pressed]}>
                     <Text style={styles.simulatorGhostText}>Reset</Text>
                   </Pressable>
-                  <Pressable onPress={() => setMode(activePlcMission ? 'learn' : 'projects')} style={({ pressed }) => [styles.simulatorExitButton, pressed && styles.pressed]}>
-                    <Text style={styles.simulatorExitText}>{activePlcMission ? 'Aprender' : 'Projetos'}</Text>
+                  <Pressable onPress={() => setMode('settings')} style={({ pressed }) => [styles.simulatorExitButton, pressed && styles.pressed]}>
+                    <Text style={styles.simulatorExitText}>Config.</Text>
                   </Pressable>
                 </View>
               </View>
 
-              
-            {!compactSimulator ? (
-              <SimulatorDialectPanel
+            <SmartphoneSimulationPanel
               editorProject={editorProject}
+              plcState={editorEvaluation.state}
+              evaluation={editorEvaluation}
               selectedProfile={selectedPlcProfile}
               onSelectProfile={setSelectedPlcProfile}
-              compact={compactSimulator}
+              mission={activePlcMission}
+              mode={editorMode}
+              autoScan={autoScan}
+              onRunScan={runEditorScan}
+              onToggleAutoScan={() => setAutoScan((current) => !current)}
+              onSetValue={setEditorValue}
+              onChangeMode={changeEditorMode}
+              onSelectRungId={selectEditorRung}
+              onSelectBlockId={(blockId) => selectEditorBlock(blockId, true)}
+              onChangeBlockVariable={(variable) => updateSelectedBlockVariable(variable, true)}
+              onChangeBlockName={(name) => updateSelectedBlockText('name', name, true)}
+              onChangeContactMode={(mode) => updateSelectedBlockContactMode(mode, true)}
+              onChangeCoilMode={(mode) => updateSelectedBlockCoilMode(mode, true)}
+              onChangeTimerMode={(mode) => updateSelectedBlockTimerMode(mode, true)}
+              onChangeCounterMode={(mode) => updateSelectedBlockCounterMode(mode, true)}
+              onChangeCompareMode={(mode) => updateSelectedBlockCompareMode(mode, true)}
+              onChangeMathMode={(mode) => updateSelectedBlockMathMode(mode, true)}
+              onChangeSourceA={(value) => updateSelectedBlockOperand('sourceA', value, true)}
+              onChangeSourceB={(value) => updateSelectedBlockOperand('sourceB', value, true)}
+              onChangeDestination={(value) => updateSelectedBlockOperand('destination', value, true)}
+              onChangeDownSource={(value) => updateSelectedBlockOperand('downSource', value, true)}
+              onChangeResetSource={(value) => updateSelectedBlockOperand('resetSource', value, true)}
+              onChangePresetMs={(presetMs) => updateSelectedBlockPresetMs(presetMs, true)}
+              onChangePreset={(preset) => updateSelectedBlockPreset(preset, true)}
+              onAddContact={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'series', undefined, true)}
+              onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
+              onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
+              onAddCounter={() => addComponentToEditor(findSimulatorComponent('counter-ctu'), 'coil', undefined, true)}
+              onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
+              onAddRung={addNewRung}
+              onRemoveRung={removeSelectedRung}
+              onRemoveBlock={() => removeSelectedEditorBlock(true)}
+              onAdvanceMission={nextPlcMission(activePlcMission) ? openNextPlcMission : undefined}
             />
-            ) : null}
-            {compactSimulator ? (
-              <SmartphoneSimulationPanel
-                editorProject={editorProject}
-                plcState={editorEvaluation.state}
-                evaluation={editorEvaluation}
-                selectedProfile={selectedPlcProfile}
-                onSelectProfile={setSelectedPlcProfile}
-                mission={activePlcMission}
-                mode={editorMode}
-                autoScan={autoScan}
-                onRunScan={runEditorScan}
-                onToggleAutoScan={() => setAutoScan((current) => !current)}
-                onSetValue={setEditorValue}
-                onChangeMode={changeEditorMode}
-                onSelectRungId={selectEditorRung}
-                onSelectBlockId={(blockId) => selectEditorBlock(blockId, true)}
-                onChangeBlockVariable={(variable) => updateSelectedBlockVariable(variable, true)}
-                onChangeBlockName={(name) => updateSelectedBlockText('name', name, true)}
-                onChangeContactMode={(mode) => updateSelectedBlockContactMode(mode, true)}
-                onChangeCoilMode={(mode) => updateSelectedBlockCoilMode(mode, true)}
-                onChangeTimerMode={(mode) => updateSelectedBlockTimerMode(mode, true)}
-                onChangeCounterMode={(mode) => updateSelectedBlockCounterMode(mode, true)}
-                onChangeCompareMode={(mode) => updateSelectedBlockCompareMode(mode, true)}
-                onChangeMathMode={(mode) => updateSelectedBlockMathMode(mode, true)}
-                onChangeSourceA={(value) => updateSelectedBlockOperand('sourceA', value, true)}
-                onChangeSourceB={(value) => updateSelectedBlockOperand('sourceB', value, true)}
-                onChangeDestination={(value) => updateSelectedBlockOperand('destination', value, true)}
-                onChangeDownSource={(value) => updateSelectedBlockOperand('downSource', value, true)}
-                onChangeResetSource={(value) => updateSelectedBlockOperand('resetSource', value, true)}
-                onChangePresetMs={(presetMs) => updateSelectedBlockPresetMs(presetMs, true)}
-                onChangePreset={(preset) => updateSelectedBlockPreset(preset, true)}
-                onAddContact={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'series', undefined, true)}
-                onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
-                onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
-                onAddCounter={() => addComponentToEditor(findSimulatorComponent('counter-ctu'), 'coil', undefined, true)}
-                onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
-                onAddRung={addNewRung}
-                onRemoveRung={removeSelectedRung}
-                onRemoveBlock={() => removeSelectedEditorBlock(true)}
-                onAdvanceMission={nextPlcMission(activePlcMission) ? openNextPlcMission : undefined}
-              />
-            ) : null}
-            {!compactSimulator ? (
-              <PlcWorkbench
-                editor={editorProject}
-                state={editorEvaluation.state}
-                evaluation={editorEvaluation}
-                mode={editorMode}
-                autoScan={autoScan}
-                locked={editingLocked}
-                message={editorMessage}
-                onSelectZone={selectEditorZone}
-                onSelectBlock={selectEditorBlock}
-                onSelectComponent={addComponentToEditor}
-                onToggleInput={toggleEditorInput}
-                onSetValue={setEditorValue}
-                onRunScan={runEditorScan}
-                onToggleAutoScan={() => editingLocked && setAutoScan((current) => !current)}
-                onCheckCircuit={checkCircuit}
-                onChangeMode={changeEditorMode}
-                onSelectRung={selectEditorRung}
-                onAddRung={addNewRung}
-                onRemoveRung={removeSelectedRung}
-                onAddVariable={addEditorVariable}
-                onRemoveVariable={removeEditorVariable}
-              />
-            ) : null}
-              {!compactSimulator && !editingLocked ? (
-                <SelectedBlockEditor
-                  block={selectedEditorBlock}
-                  variables={editorVariableSuggestions}
-                  onChangeVariable={updateSelectedBlockVariable}
-                  onChangeName={(name) => updateSelectedBlockText('name', name)}
-                  onChangeDescription={(description) => updateSelectedBlockText('description', description)}
-                  onChangeContactMode={updateSelectedBlockContactMode}
-                  onChangeCoilMode={updateSelectedBlockCoilMode}
-                  onChangeTimerMode={updateSelectedBlockTimerMode}
-                  onChangeCounterMode={updateSelectedBlockCounterMode}
-                  onChangeCompareMode={updateSelectedBlockCompareMode}
-                  onChangeMathMode={updateSelectedBlockMathMode}
-                  onChangeSourceA={(value) => updateSelectedBlockOperand('sourceA', value)}
-                  onChangeSourceB={(value) => updateSelectedBlockOperand('sourceB', value)}
-                  onChangeDestination={(value) => updateSelectedBlockOperand('destination', value)}
-                  onChangeDownSource={(value) => updateSelectedBlockOperand('downSource', value)}
-                  onChangeResetSource={(value) => updateSelectedBlockOperand('resetSource', value)}
-                  onChangePresetMs={updateSelectedBlockPresetMs}
-                  onChangePreset={updateSelectedBlockPreset}
-                  onRemove={removeSelectedEditorBlock}
-                />
-              ) : null}
             </View>
           </>
         ) : null}
-        {mode !== 'simulate' ? <BottomNavigation active={activeNav} onChange={handleBottomNav} compact={false} /> : null}
-      </ScrollView>
-    </SafeAreaView>
+      </PremiumAppShell>
+    </AppThemeProvider>
   );
 }
 

@@ -1,11 +1,13 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
+import { useAppTheme } from '../../../theme/theme';
 
 type Props = { tags: Record<string, boolean> };
 
 export const MobileTankScenario = memo(function MobileTankScenario({ tags }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const pumpOn = tags['Q0.0'];
   const valveOn = tags['Q0.1'];
   const sensorLow = tags['I0.0'];
@@ -44,32 +46,34 @@ export const MobileTankScenario = memo(function MobileTankScenario({ tags }: Pro
   );
 });
 
-const styles = StyleSheet.create({
-  scene: { backgroundColor: colors.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+  scene: { backgroundColor: c.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: c.border },
   headRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  title: { color: colors.text, fontWeight: '700' },
+  title: { color: c.text, fontWeight: '700' },
   badge: { borderRadius: 999, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  badgeNormal: { borderColor: colors.cyan, backgroundColor: colors.cyanSoft },
-  badgeAlarm: { borderColor: colors.red, backgroundColor: colors.redSoft },
-  badgeText: { color: colors.text, fontSize: 10, fontWeight: '700' },
+  badgeNormal: { borderColor: c.cyan, backgroundColor: c.cyanSoft },
+  badgeAlarm: { borderColor: c.red, backgroundColor: c.redSoft },
+  badgeText: { color: c.text, fontSize: 10, fontWeight: '700' },
   layout: { flexDirection: 'row', gap: spacing.sm },
-  tankShell: { flex: 1, backgroundColor: colors.backgroundSoft, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 10, padding: spacing.xs },
-  tankTop: { height: 6, borderRadius: 3, backgroundColor: colors.slate, marginHorizontal: 8, marginBottom: 4 },
-  tankBody: { height: 96, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 8, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: '#091122' },
-  liquid: { width: '100%', backgroundColor: colors.blueSoft, borderTopWidth: 1, borderTopColor: colors.cyanGlow },
-  panelText: { color: colors.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'center' },
-  pipePanel: { width: 106, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 10, backgroundColor: colors.backgroundSoft, padding: spacing.xs, justifyContent: 'space-between' },
-  pipe: { height: 8, borderRadius: 4, backgroundColor: colors.inactive },
-  pipeOn: { backgroundColor: colors.green },
-  valve: { height: 28, borderRadius: 8, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.inactive, justifyContent: 'center', alignItems: 'center' },
-  valveOn: { backgroundColor: colors.greenSoft, borderColor: colors.green },
-  pump: { height: 30, borderRadius: 8, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.inactive, justifyContent: 'center', alignItems: 'center' },
-  pumpOn: { backgroundColor: colors.cyanSoft, borderColor: colors.cyan },
+  tankShell: { flex: 1, backgroundColor: c.backgroundSoft, borderWidth: 1, borderColor: c.borderStrong, borderRadius: 10, padding: spacing.xs },
+  tankTop: { height: 6, borderRadius: 3, backgroundColor: c.slate, marginHorizontal: 8, marginBottom: 4 },
+  tankBody: { height: 96, borderWidth: 1, borderColor: c.borderStrong, borderRadius: 8, overflow: 'hidden', justifyContent: 'flex-end', backgroundColor: c.navy },
+  liquid: { width: '100%', backgroundColor: c.blueSoft, borderTopWidth: 1, borderTopColor: c.cyanGlow },
+  panelText: { color: c.textDim, fontSize: 11, marginTop: spacing.xs, textAlign: 'center' },
+  pipePanel: { width: 106, borderWidth: 1, borderColor: c.borderStrong, borderRadius: 10, backgroundColor: c.backgroundSoft, padding: spacing.xs, justifyContent: 'space-between' },
+  pipe: { height: 8, borderRadius: 4, backgroundColor: c.inactive },
+  pipeOn: { backgroundColor: c.green },
+  valve: { height: 28, borderRadius: 8, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.inactive, justifyContent: 'center', alignItems: 'center' },
+  valveOn: { backgroundColor: c.greenSoft, borderColor: c.green },
+  pump: { height: 30, borderRadius: 8, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.inactive, justifyContent: 'center', alignItems: 'center' },
+  pumpOn: { backgroundColor: c.cyanSoft, borderColor: c.cyan },
   sensorRow: { marginTop: spacing.sm, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  sensorChip: { borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: colors.surface },
-  sensorOn: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  siren: { borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: colors.surface },
-  sirenOn: { borderColor: colors.red, backgroundColor: colors.redSoft },
-  sensorText: { color: colors.text, fontSize: 10, fontWeight: '700' },
-  labelMini: { color: colors.textMuted, fontSize: 10, fontWeight: '600' },
-});
+  sensorChip: { borderWidth: 1, borderColor: c.borderStrong, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: c.surface },
+  sensorOn: { borderColor: c.green, backgroundColor: c.greenSoft },
+  siren: { borderWidth: 1, borderColor: c.borderStrong, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 3, backgroundColor: c.surface },
+  sirenOn: { borderColor: c.red, backgroundColor: c.redSoft },
+  sensorText: { color: c.text, fontSize: 10, fontWeight: '700' },
+  labelMini: { color: c.textMuted, fontSize: 10, fontWeight: '600' },
+  });
+}

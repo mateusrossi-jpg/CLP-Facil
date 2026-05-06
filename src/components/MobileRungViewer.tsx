@@ -4,8 +4,8 @@ import { EditorBlock, EditorProjectState, EditorRung } from '../engine/editorTyp
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorRungTrace, traceEditorRung } from '../engine/editorScanTrace';
 import { PlcState } from '../engine/projectTypes';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { colors } from '../theme/colors';
 
 type MobileRungViewMode = 'ladder' | 'flow' | 'list';
 type MobileRungScope = 'individual' | 'compiled';
