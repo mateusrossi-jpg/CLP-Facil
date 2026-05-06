@@ -6,6 +6,7 @@ import { MobileAdvancedDetails } from './MobileAdvancedDetails';
 import { MobileEnergyFlow } from './MobileEnergyFlow';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobilePowerLadderPreview } from './MobilePowerLadderPreview';
+import { MobileRuntimeHud } from './MobileRuntimeHud';
 import { MobileWorkbenchHeader } from './MobileWorkbenchHeader';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -62,6 +63,14 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         onChangeMode={props.onChangeMode}
         onToggleAutoScan={props.onToggleAutoScan}
         onRunScan={props.onRunScan}
+      />
+
+      <MobileRuntimeHud
+        editorProject={props.editorProject}
+        plcState={props.plcState}
+        evaluation={props.evaluation}
+        mode={props.mode}
+        autoScan={props.autoScan}
       />
 
       <MobileEnergyFlow
