@@ -13,6 +13,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
   return (
     <View style={styles.stack}>
+      <View style={styles.workbenchHeader}>
+        <View style={styles.workbenchCopy}>
+          <Text style={styles.workbenchEyebrow}>Bancada de trabalho</Text>
+          <Text style={styles.workbenchTitle}>Editor e simulador no mesmo lugar</Text>
+          <Text style={styles.workbenchText}>Monte a rung, toque nas entradas, rode Scan e ajuste os blocos sem trocar de aba.</Text>
+        </View>
+        <Text style={styles.workbenchMode}>{props.mode === 'edit' ? 'EDITAR' : 'SIMULAR'}</Text>
+      </View>
+
       <MobilePlcExperience
         editorProject={props.editorProject}
         plcState={props.plcState}
@@ -20,7 +29,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         autoScan={props.autoScan}
         mode={props.mode}
         mission={activeMission}
-        missionTitle={activeMission?.title ?? 'Simulação livre'}
+        missionTitle={activeMission?.title ?? 'Bancada livre'}
         initialWorkspaceMode={activeMission ? 'guided' : 'free'}
         onSetValue={props.onSetValue}
         onRunScan={props.onRunScan}
@@ -60,15 +69,15 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
       >
         <View style={styles.advancedCopy}>
           <Text style={[styles.advancedTitle, advancedOpen && styles.advancedTitleOpen]}>
-            {advancedOpen ? 'Ocultar avançado' : 'Avançado'}
+            {advancedOpen ? 'Ocultar detalhes' : 'Detalhes avançados'}
           </Text>
-          <Text style={styles.advancedText}>Diagnósticos, CPU, scan, memória, force, relatório e painel compacto antigo ficam aqui.</Text>
+          <Text style={styles.advancedText}>CPU, scan, memória, force, relatório e diagnóstico ficam recolhidos fora da bancada principal.</Text>
         </View>
         <Text style={[styles.advancedPill, advancedOpen && styles.advancedPillOpen]}>{advancedOpen ? 'Fechar' : 'Abrir'}</Text>
       </Pressable>
 
       {advancedOpen ? (
-        <SmartphoneSimulationPanelEnhanced {...props} showAdvancedDiagnostics />
+        <SmartphoneSimulationPanelEnhanced {...props} showAdvancedDiagnostics embeddedDiagnosticsOnly />
       ) : null}
     </View>
   );
@@ -77,6 +86,51 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 const styles = StyleSheet.create({
   stack: {
     gap: spacing.md,
+  },
+  workbenchHeader: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceElevated,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  workbenchCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  workbenchEyebrow: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  workbenchTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 4,
+  },
+  workbenchText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '800',
+    marginTop: 6,
+  },
+  workbenchMode: {
+    color: colors.background,
+    backgroundColor: colors.cyan,
+    borderRadius: 999,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    fontSize: 10,
+    fontWeight: '900',
   },
   advancedButton: {
     minHeight: 58,
