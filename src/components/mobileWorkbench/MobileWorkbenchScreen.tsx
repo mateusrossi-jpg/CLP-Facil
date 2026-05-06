@@ -140,9 +140,9 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         onAddCoil={props.onAddCoil}
         onAddTimer={props.onAddTimer}
         onAddCounter={props.onAddCounter}
-        onAddBranch={props.onAddParallelBranch}
-        onRemoveBlock={props.onDeleteBlock}
-        onRemoveRung={props.onDeleteRung}
+        onAddBranch={props.onAddBranch}
+        onRemoveBlock={props.onRemoveBlock}
+        onRemoveRung={props.onRemoveRung}
       />
 
       <MobileBlockQuickEditor
