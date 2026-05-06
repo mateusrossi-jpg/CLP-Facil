@@ -775,16 +775,25 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.background,
     overflow: 'hidden',
-    paddingVertical: spacing.xs,
   },
   programRungLane: {
     backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderLeftWidth: 2,
+    borderRightColor: 'transparent',
+    borderRightWidth: 2,
   },
   programRungSeparator: {
-    marginTop: spacing.md,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
   },
   programRungLaneSelected: {
-    backgroundColor: colors.cyanSoft,
+    borderTopColor: colors.cyan,
+    borderTopWidth: 1,
+    borderBottomColor: colors.cyan,
+    borderBottomWidth: 1,
+    borderLeftColor: colors.cyan,
+    borderRightColor: colors.cyan,
   },
   programRungHeader: {
     minHeight: 42,
