@@ -4,6 +4,7 @@ import { MobileBlockQuickEditor } from '../MobileBlockQuickEditor';
 import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileAdvancedDetails } from './MobileAdvancedDetails';
 import { MobileEnergyFlow } from './MobileEnergyFlow';
+import { MobileIdeToolDock } from './MobileIdeToolDock';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobilePowerLadderPreview } from './MobilePowerLadderPreview';
 import { MobileRuntimeHud } from './MobileRuntimeHud';
@@ -107,6 +108,17 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
       ) : null}
 
       <MobilePlcExperience {...props} />
+
+      <MobileIdeToolDock
+        mode={props.mode}
+        onAddContact={props.onAddContact}
+        onAddCoil={props.onAddCoil}
+        onAddTimer={props.onAddTimer}
+        onAddCounter={props.onAddCounter}
+        onAddBranch={props.onAddParallelBranch}
+        onRemoveBlock={props.onDeleteBlock}
+        onRemoveRung={props.onDeleteRung}
+      />
 
       <MobileBlockQuickEditor
         project={props.editorProject}
