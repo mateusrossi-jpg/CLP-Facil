@@ -853,7 +853,14 @@ export default function App() {
     ])
     .find((block) => block.id === editorProject.selectedBlockId) ?? null;
   const editorVariableSuggestions = editorProject.projectVariables ?? [];
-  const availableLessons = lessons.filter((lesson) => lesson.status === 'available');
+  const focusedExampleIds = new Set([
+    'seal-start-model',
+    'reversing-motor-model',
+    'ton-delay-model',
+    'ctu-counter-model',
+    'direct-start-model',
+  ]);
+  const focusedExamples = educationalEditorExamples.filter((example) => focusedExampleIds.has(example.id));
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -864,102 +871,50 @@ export default function App() {
           <>
             <HomeHero />
             <LaunchQuickStartPanel
-              examples={educationalEditorExamples}
+              examples={focusedExamples}
               onOpenExample={(example) => openEducationalExample(example, true)}
               onOpenLearn={() => setMode('learn')}
               onOpenReference={() => setMode('reference')}
               onOpenHardware={() => setMode('hardware')}
             />
-            <LearningPathPanel />
             <AppCard
-              title="Aprenda"
-              description="Lições guiadas e exemplos passo a passo sobre comandos elétricos e lógica Ladder."
-              badge="Livre"
+              title="Ver exemplos"
+              description="Exemplos curtos e práticos: selo, intertravamento, temporizador, contador e parada de emergência."
+              badge="Prático"
               tone="cyan"
-              icon={<Text style={styles.homeIcon}>Aula</Text>}
+              icon={<Text style={styles.homeIcon}>EXP</Text>}
               onPress={() => setMode('learn')}
             />
             <AppCard
-              title="Simular"
-              description="Monte, edite e simule seus projetos Ladder com canvas visual, scans e diagnóstico."
-              badge="Editor"
+              title="Abrir Simulador"
+              description="Simulador Ladder mobile-first com Ladder, I/O e scan no mesmo fluxo visual."
+              badge="Principal"
               tone="green"
               icon={<Text style={styles.homeIcon}>CLP</Text>}
               onPress={openSimulator}
             />
-            <AppCard
-              title="Pro"
-              description="Ferramentas avançadas, diagnósticos, modelos completos e roteiro de evolução do laboratório."
-              badge="Avançado"
-              tone="amber"
-              icon={<Text style={[styles.homeIcon, styles.homeIconAmber]}>Plus</Text>}
-              onPress={() => handleBottomNav('pro')}
-            />
-            <View style={styles.featureStrip}>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>▦</Text>
-                <Text style={styles.featureTitle}>SCANS</Text>
-                <Text style={styles.featureText}>+100ms</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>◴</Text>
-                <Text style={styles.featureTitle}>TEMPORIZADORES</Text>
-                <Text style={styles.featureText}>TON / TOF</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>#</Text>
-                <Text style={styles.featureTitle}>CONTADORES</Text>
-                <Text style={styles.featureText}>CTU / CTD</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>┤├</Text>
-                <Text style={styles.featureTitle}>LADDER</Text>
-                <Text style={styles.featureText}>Visual</Text>
-              </View>
-            </View>
-            <Text style={styles.footer}>Easy-CLP: aprenda, simule e automatize. Do básico ao avançado, no seu celular.</Text>
+            <Text style={styles.footer}>CLP Fácil é um simulador Ladder mobile-first para criar, testar e exportar lógicas de automação.</Text>
           </>
         ) : null}
 
         {mode === 'learn' ? (
           <>
-            <AppHeader title="Modo Aprender" subtitle="Siga uma missão curta por vez. O app conduz você da ideia até a simulação." />
-            <AdPlaceholder placement="bannerLearning" visible={showAds} />
-            <PlcMissionPathPanel
-              tracks={plcMissionTracks}
-              activeMissionId={activePlcMission?.id}
-              completedMissionIds={completedMissionIds}
-              onOpenMission={openPlcMission}
-            />
-            <AppCard
-              title={showLessonLibrary ? 'Ocultar aulas de apoio' : 'Ver aulas de apoio'}
-              description="Abra a biblioteca quando quiser revisar teoria, padrões Ladder e erros comuns. A jornada principal continua pelas missões."
-              badge={showLessonLibrary ? 'Aberta' : 'Opcional'}
-              tone="cyan"
-              onPress={() => setShowLessonLibrary((current) => !current)}
-            />
-            {showLessonLibrary ? (
-              <>
-                {learningModules.map((module) => {
-                  const moduleLessons = lessons.filter((lesson) => lesson.moduleId === module.id);
-                  return (
-                    <View key={module.id} style={styles.moduleBlock}>
-                      <View style={styles.moduleHeader}>
-                        <Text style={styles.moduleTitle}>{module.title}</Text>
-                        <Text style={[styles.moduleStatus, module.status === 'planned' && styles.moduleStatusPlanned]}>
-                          {module.status === 'available' ? 'Livre' : 'Futuro'}
-                        </Text>
-                      </View>
-                      <Text style={styles.moduleDescription}>{module.description}</Text>
-                      {moduleLessons.map((lesson) => (
-                        <LessonCard key={lesson.id} lesson={lesson} onPress={() => openLesson(lesson)} />
-                      ))}
-                    </View>
-                  );
-                })}
-              </>
-            ) : null}
-            <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
+            <AppHeader title="Exemplos" subtitle="Demonstrações práticas para abrir direto no simulador." />
+            <View style={styles.projectGrid}>
+              {focusedExamples.map((example) => (
+                <Pressable key={example.id} onPress={() => openEducationalExample(example)} style={({ pressed }) => [styles.projectTile, pressed && styles.pressed]}>
+                  <View style={styles.projectTileHeader}>
+                    <Text style={styles.projectTileTitle}>{example.title}</Text>
+                    <Text style={styles.projectDifficulty}>{example.difficulty}</Text>
+                  </View>
+                  <Text style={styles.projectTileDescription}>{example.description}</Text>
+                  <View style={styles.projectTileFooter}>
+                    <Text style={styles.projectMeta}>{example.project.rungs.length} linhas</Text>
+                    <Text style={styles.openProjectText}>Abrir no simulador</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
           </>
         ) : null}
 
