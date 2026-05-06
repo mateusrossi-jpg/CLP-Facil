@@ -14,15 +14,20 @@ type MobileIoDockProps = {
 
 export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState, onSetValue }: MobileIoDockProps) {
   const points = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
-  const inputs = points.filter((point) => point.kind === 'input').slice(0, 6);
-  const outputs = points.filter((point) => point.kind === 'output').slice(0, 6);
+  const inputs = points.filter((point) => point.kind === 'input').slice(0, 8);
+  const outputs = points.filter((point) => point.kind === 'output').slice(0, 8);
 
   return (
-    <View style={styles.card}>
+    <View style={styles.panel}>
+      <View style={styles.panelHeader}>
+        <Text style={styles.panelTitle}>I/O</Text>
+        <Text style={styles.panelHint}>entradas clicáveis • saídas ao vivo</Text>
+      </View>
+
       <View style={styles.group}>
         <View style={styles.groupHeader}>
           <Text style={styles.groupTitle}>Entradas</Text>
-          <Text style={styles.groupHint}>toque para acionar</Text>
+          <Text style={styles.groupHint}>toque ON/OFF</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inputRail}>
           {inputs.length === 0 ? (
@@ -37,9 +42,10 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
                 onPress={() => onSetValue?.(input.address, !active)}
                 style={({ pressed }) => [styles.inputButton, active && styles.inputButtonOn, !editable && styles.disabled, pressed && editable && styles.pressed]}
               >
+                <View style={[styles.ioLamp, active && styles.ioLampOn]} />
                 <Text style={[styles.address, active && styles.addressOn]}>{input.address}</Text>
                 <Text style={styles.name} numberOfLines={1}>{input.name}</Text>
-                <Text style={[styles.state, active && styles.stateOn]}>{mobileIoValueLabel(input.value)}</Text>
+                <Text style={[styles.statePill, active && styles.statePillOn]}>{mobileIoValueLabel(input.value)}</Text>
               </Pressable>
             );
           })}
@@ -48,22 +54,22 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
 
       <View style={styles.group}>
         <View style={styles.groupHeader}>
-          <Text style={styles.groupTitle}>Saidas</Text>
-          <Text style={styles.groupHint}>resultado</Text>
+          <Text style={styles.groupTitle}>Saídas</Text>
+          <Text style={styles.groupHint}>resultado do scan</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.outputRail}>
           {outputs.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhuma saida Q/O encontrada.</Text>
+            <Text style={styles.emptyText}>Nenhuma saída Q/O encontrada.</Text>
           ) : outputs.map((output) => {
             const active = isMobileIoActive(output.value);
             return (
-              <View key={output.id} style={[styles.outputRow, active && styles.outputRowOn]}>
-                <View style={[styles.lamp, active && styles.lampOn]} />
+              <View key={output.id} style={[styles.outputTile, active && styles.outputTileOn]}>
+                <View style={[styles.outputLamp, active && styles.outputLampOn]} />
                 <View style={styles.outputCopy}>
                   <Text style={[styles.address, active && styles.addressOn]}>{output.address}</Text>
                   <Text style={styles.name} numberOfLines={1}>{output.name}</Text>
                 </View>
-                <Text style={[styles.state, active && styles.stateOn]}>{mobileIoValueLabel(output.value)}</Text>
+                <Text style={[styles.statePill, active && styles.statePillOn]}>{mobileIoValueLabel(output.value)}</Text>
               </View>
             );
           })}
@@ -74,13 +80,31 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
 });
 
 const styles = StyleSheet.create({
-  card: {
+  panel: {
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
+    borderRadius: 14,
+    backgroundColor: colors.background,
     padding: spacing.sm,
     gap: spacing.sm,
+  },
+  panelHeader: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  panelTitle: {
+    color: colors.cyan,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  panelHint: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '800',
   },
   group: {
     gap: spacing.xs,
@@ -93,14 +117,15 @@ const styles = StyleSheet.create({
   },
   groupTitle: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   groupHint: {
     color: colors.textDim,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
+    textTransform: 'uppercase',
   },
   inputRail: {
     flexDirection: 'row',
@@ -108,14 +133,16 @@ const styles = StyleSheet.create({
     paddingRight: spacing.xs,
   },
   inputButton: {
-    width: 132,
-    minHeight: 66,
+    width: 104,
+    minHeight: 78,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 12,
     backgroundColor: colors.surfaceElevated,
-    padding: spacing.sm,
+    padding: spacing.xs,
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 3,
   },
   inputButtonOn: {
     borderColor: colors.green,
@@ -126,19 +153,19 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingRight: spacing.xs,
   },
-  outputRow: {
-    width: 184,
-    minHeight: 52,
+  outputTile: {
+    width: 144,
+    minHeight: 58,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 12,
     backgroundColor: colors.surfaceElevated,
-    padding: spacing.sm,
+    padding: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  outputRowOn: {
+  outputTileOn: {
     borderColor: colors.green,
     backgroundColor: colors.greenSoft,
   },
@@ -146,7 +173,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  lamp: {
+  ioLamp: {
     width: 14,
     height: 14,
     borderRadius: 999,
@@ -154,7 +181,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: colors.surface,
   },
-  lampOn: {
+  ioLampOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.green,
+  },
+  outputLamp: {
+    width: 16,
+    height: 16,
+    borderRadius: 999,
+    borderColor: colors.textDim,
+    borderWidth: 1,
+    backgroundColor: colors.surface,
+  },
+  outputLampOn: {
     borderColor: colors.green,
     backgroundColor: colors.green,
   },
@@ -169,18 +208,27 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
+    marginTop: 1,
+    textAlign: 'center',
+  },
+  statePill: {
+    color: colors.textMuted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    fontSize: 9,
+    fontWeight: '900',
+    overflow: 'hidden',
     marginTop: 2,
   },
-  state: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '900',
-    marginTop: 4,
-  },
-  stateOn: {
-    color: colors.green,
+  statePillOn: {
+    color: colors.background,
+    borderColor: colors.green,
+    backgroundColor: colors.green,
   },
   emptyText: {
     color: colors.textMuted,
