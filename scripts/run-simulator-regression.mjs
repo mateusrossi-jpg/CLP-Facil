@@ -21,6 +21,7 @@ const { runSafetyRegressionSuite } = require('/tmp/easy-clp-sim-test/safety/safe
 const { runReleaseRegressionSuite } = require('/tmp/easy-clp-sim-test/release/releaseRegression.js');
 const { runStoreListingRegressionSuite } = require('/tmp/easy-clp-sim-test/release/storeListingRegression.js');
 const { runChangeTestingScheduleRegressionSuite } = require('/tmp/easy-clp-sim-test/release/changeTestingScheduleRegression.js');
+const { runPlcSimulatorMarketRisksRegressionSuite } = require('/tmp/easy-clp-sim-test/release/plcSimulatorMarketRisksRegression.js');
 const { runPerformanceRegressionSuite } = require('/tmp/easy-clp-sim-test/performance/performanceRegression.js');
 const { runCodeContrastRegressionSuite } = require('/tmp/easy-clp-sim-test/theme/codeContrastRegression.js');
 const { runMissionValidationRegressionSuite } = require('/tmp/easy-clp-sim-test/lessons/missionValidationRegression.js');
@@ -62,6 +63,7 @@ const results = [
   ...runReleaseRegressionSuite(),
   ...runStoreListingRegressionSuite(),
   ...runChangeTestingScheduleRegressionSuite(),
+  ...runPlcSimulatorMarketRisksRegressionSuite(),
   ...runPerformanceRegressionSuite(),
   ...runCodeContrastRegressionSuite(),
   ...runMissionValidationRegressionSuite(),

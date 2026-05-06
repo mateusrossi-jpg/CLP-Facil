@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { criticalMarketRisks, plcSimulatorMarketRisks } from '../release/plcSimulatorMarketRisks';
 import { criticalReleaseStages, releaseChecklistStages, releaseStatusLabel } from '../release/releaseChecklist';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -18,6 +19,7 @@ function statusTextTone(status: string) {
 
 export const ReleaseReadinessPanel = memo(function ReleaseReadinessPanel() {
   const criticalCount = criticalReleaseStages().length;
+  const highlightedMarketRisks = criticalMarketRisks().slice(0, 4);
 
   return (
     <View style={styles.card}>
@@ -35,6 +37,24 @@ export const ReleaseReadinessPanel = memo(function ReleaseReadinessPanel() {
       <View style={styles.summaryBox}>
         <Text style={styles.summaryTitle}>Ordem recomendada</Text>
         <Text style={styles.summaryText}>Estabilizar o simulador, validar visual no celular, testar exemplos, confirmar Hardware, revisar referência/segurança e só depois preparar loja e beta.</Text>
+      </View>
+
+      <View style={styles.marketBox}>
+        <View style={styles.marketHeader}>
+          <View style={styles.headerText}>
+            <Text style={styles.marketTitle}>Radar de robustez</Text>
+            <Text style={styles.marketText}>{plcSimulatorMarketRisks.length} guardrails derivados de dores publicas de simuladores Ladder mobile.</Text>
+          </View>
+          <Text style={styles.marketBadge}>LOCAL</Text>
+        </View>
+        <View style={styles.marketGrid}>
+          {highlightedMarketRisks.map((risk) => (
+            <View key={risk.id} style={styles.marketRiskCard}>
+              <Text style={styles.marketRiskArea}>{risk.area.replace(/_/g, ' ')}</Text>
+              <Text style={styles.marketRiskText}>{risk.guardrail}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.stageList}>
@@ -142,6 +162,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '800',
+  },
+  marketBox: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: colors.cyanSoft,
+    gap: spacing.sm,
+  },
+  marketHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  marketTitle: {
+    color: colors.cyan,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  marketText: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '800',
+    marginTop: 3,
+  },
+  marketBadge: {
+    color: colors.cyan,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    fontSize: 9,
+    fontWeight: '900',
+    backgroundColor: colors.surface,
+  },
+  marketGrid: {
+    gap: spacing.xs,
+  },
+  marketRiskCard: {
+    borderColor: colors.borderStrong,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  marketRiskArea: {
+    color: colors.gold,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    marginBottom: 3,
+  },
+  marketRiskText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
   },
   stageList: {
     gap: spacing.md,

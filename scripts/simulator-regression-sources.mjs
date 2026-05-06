@@ -19,6 +19,8 @@ export const simulatorRegressionSources = [
   'src/release/releaseRegression.ts',
   'src/release/storeListingRegression.ts',
   'src/release/changeTestingScheduleRegression.ts',
+  'src/release/plcSimulatorMarketRisks.ts',
+  'src/release/plcSimulatorMarketRisksRegression.ts',
   'src/performance/performanceRegression.ts',
   'src/theme/codeContrastRegression.ts',
   'src/lessons/missionValidationRegression.ts',
