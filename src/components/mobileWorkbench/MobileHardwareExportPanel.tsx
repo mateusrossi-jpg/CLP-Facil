@@ -12,20 +12,23 @@ const boards: { value: HardwareBoard; label: string }[] = [
 ];
 
 export const MobileHardwareExportPanel = memo(function MobileHardwareExportPanel({ editorProject }: Props) {
-  const [format, setFormat] = useState<HardwareExportFormat>('esphome');
+  const [format, setFormat] = useState<HardwareExportFormat>('arduinoEsp32');
   const [board, setBoard] = useState<HardwareBoard>('esp32dev');
   const tags = useMemo(() => collectHardwareTags(editorProject), [editorProject]);
   const code = useMemo(() => generateHardwareExportCode(editorProject, format, tags, board), [editorProject, format, tags, board]);
-  return <View style={styles.card}><Text style={styles.title}>Exportar para Hardware</Text><Text style={styles.description}>Gere uma base para testar esta lógica em ESPHome, Home Assistant, ESP32, Arduino, OpenPLC ou placa própria.</Text><Text style={styles.warning}>Revise GPIOs, cargas, relés, proteções, fonte, isolamento, optoacopladores e nível lógico antes de ligar hardware real.</Text><Text style={styles.warning}>Relés podem operar como active_low ou active_high. Nenhum deploy automático é executado.</Text>
-    <Row title="Plataforma">{['esphome','homeAssistant','arduinoEsp32','openPlcSt','espIdf','json'].map((f)=><Action key={f} label={labelOf(f as HardwareExportFormat)} active={format===f} onPress={()=>setFormat(f as HardwareExportFormat)} />)}</Row>
+  const copyCode = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) navigator.clipboard.writeText(code).catch(() => undefined);
+  };
+  return <View style={styles.card}><Text style={styles.title}>Exportar para Hardware</Text><Text style={styles.description}>Gere uma base profissional para ESP32, OpenPLC e bancada maker sem cloud.</Text><Text style={styles.warning}>ATENÇÃO: Código base educacional/didático. Revise GPIOs, relés, cargas, proteção elétrica, isolamento, fonte, fail-safe e nível lógico antes de ligar hardware real.</Text><Text style={styles.warning}>Evite GPIO 0, 2, 12 e 15 em projetos iniciais. Saídas iniciam em LOW/fail-safe OFF.</Text>
+    <Row title="Plataforma">{['arduinoEsp32','openPlcSt','espIdf','json'].map((f)=><Action key={f} label={labelOf(f as HardwareExportFormat)} active={format===f} onPress={()=>setFormat(f as HardwareExportFormat)} />)}</Row>
     <Row title="Placa">{boards.map((b)=><Action key={b.value} label={b.label} active={board===b.value} onPress={()=>setBoard(b.value)} />)}</Row>
-    <View style={styles.tableHeader}><Text style={styles.headCell}>TAG</Text><Text style={styles.headCell}>Tipo</Text><Text style={styles.headCell}>GPIO sugerido</Text><Text style={styles.headCell}>Descrição</Text></View>
-    {tags.map((r)=><View key={r.tag} style={styles.row}><Text style={styles.cell}>{r.tag}</Text><Text style={styles.cell}>{r.type}</Text><Text style={styles.cell}>GPIO{r.gpio}</Text><Text style={styles.cell}>{r.description}</Text></View>)}
-    <View style={styles.actions}><Action label='Gerar ESPHome' active={format==='esphome'} onPress={()=>setFormat('esphome')} /><Action label='Gerar Home Assistant' active={format==='homeAssistant'} onPress={()=>setFormat('homeAssistant')} /><Action label='Gerar Arduino ESP32' active={format==='arduinoEsp32'} onPress={()=>setFormat('arduinoEsp32')} /><Action label='Gerar OpenPLC' active={format==='openPlcSt'} onPress={()=>setFormat('openPlcSt')} /><Action label='Gerar ESP-IDF' active={format==='espIdf'} onPress={()=>setFormat('espIdf')} /><Action label='Gerar JSON' active={format==='json'} onPress={()=>setFormat('json')} /><Action label='Copiar código' active={false} onPress={() => {}} /></View>
+    <View style={styles.tableHeader}><Text style={styles.headCell}>TAG</Text><Text style={styles.headCell}>GPIO</Text><Text style={styles.headCell}>OpenPLC</Text><Text style={styles.headCell}>Descrição</Text></View>
+    {tags.map((r)=><View key={r.tag} style={styles.row}><Text style={styles.cell}>{r.tag}</Text><Text style={styles.cell}>GPIO{r.gpio}</Text><Text style={styles.cell}>{r.scope === 'input' ? `%IX0.${tags.filter((x) => x.scope === 'input').findIndex((x) => x.tag === r.tag)}` : `%QX0.${tags.filter((x) => x.scope === 'output').findIndex((x) => x.tag === r.tag)}`}</Text><Text style={styles.cell}>{r.description}</Text></View>)}
+    <View style={styles.actions}><Action label='Copiar código' active={false} onPress={copyCode} /></View>
     <View style={styles.codeBox}><Text style={styles.code}>{code}</Text></View></View>;
 });
 
-const labelOf = (f: HardwareExportFormat) => ({esphome:'ESPHome YAML',homeAssistant:'Home Assistant YAML',arduinoEsp32:'Arduino ESP32',openPlcSt:'OpenPLC ST',espIdf:'ESP-IDF',json:'JSON genérico'}[f]);
+const labelOf = (f: HardwareExportFormat) => ({arduinoEsp32:'Arduino ESP32',openPlcSt:'OpenPLC ESP32',espIdf:'ESP32 Nativo / ESP-IDF',json:'JSON técnico'}[f]);
 const Action = ({ label, onPress, active }: { label: string; onPress: () => void; active: boolean }) => <Pressable onPress={onPress} style={[styles.button, active && styles.buttonActive]}><Text style={[styles.buttonText, active && styles.buttonTextActive]}>{label}</Text></Pressable>;
 const Row = ({ title, children }: { title: string; children: ReactNode }) => <View><Text style={styles.section}>{title}</Text><View style={styles.actions}>{children}</View></View>;
 
