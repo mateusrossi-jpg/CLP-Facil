@@ -8,6 +8,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
 type MobileRungViewMode = 'ladder' | 'flow' | 'list';
+type MobileRungScope = 'individual' | 'compiled';
 
 type MobileRungViewerProps = {
   editorProject: EditorProjectState;
@@ -224,6 +225,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   onSelectBlock,
 }: MobileRungViewerProps) {
   const [viewMode, setViewMode] = useState<MobileRungViewMode>('ladder');
+  const [rungScope, setRungScope] = useState<MobileRungScope>('individual');
   const [ladderZoom, setLadderZoom] = useState(0.92);
   const safeIndex = Math.min(Math.max(rungIndex, 0), Math.max(editorProject.rungs.length - 1, 0));
   const rung = editorProject.rungs[safeIndex];
@@ -231,9 +233,10 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   const rungTrace = useMemo(() => rung ? traceEditorRung(rung, plcState, evaluation.runtime) : null, [evaluation.runtime, plcState, rung]);
   const conductingBlocks = useMemo(() => rung ? conductiveBlockIds(rung, rungTrace) : new Set<string>(), [rung, rungTrace]);
   const blocks = useMemo(() => rung ? flattenRung(rung) : [], [rung]);
-  const branches = rung ? branchesForRung(rung) : [];
   const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
   const outputActive = outputBlock ? blockActive(outputBlock, plcState, rungActive) : false;
+  const compiledMode = rungScope === 'compiled';
+  const energizedCount = editorProject.rungs.filter((item) => evaluation.rungResults?.[item.id]).length;
 
   if (!rung) {
     return (
@@ -247,18 +250,34 @@ export const MobileRungViewer = memo(function MobileRungViewer({
     <View style={[styles.card, rungActive && styles.cardOn]}>
       <View style={styles.header}>
         <View style={styles.rungCopy}>
-          <Text style={styles.eyebrow}>Rung {safeIndex + 1} de {editorProject.rungs.length}</Text>
-          <Text style={styles.title}>{rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
+          <Text style={styles.eyebrow}>{compiledMode ? 'Programa completo' : `Rung ${safeIndex + 1} de ${editorProject.rungs.length}`}</Text>
+          <Text style={styles.title}>{compiledMode ? `${editorProject.rungs.length} rungs no mesmo bloco` : rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
         </View>
         <View style={[styles.statusPill, rungActive && styles.statusPillOn]}>
-          <Text style={[styles.statusText, rungActive && styles.statusTextOn]}>{rungActive ? 'TRUE' : 'FALSE'}</Text>
+          <Text style={[styles.statusText, rungActive && styles.statusTextOn]}>{compiledMode ? `${energizedCount}/${editorProject.rungs.length}` : rungActive ? 'TRUE' : 'FALSE'}</Text>
         </View>
       </View>
 
+      <View style={styles.scopeRow}>
+        {([
+          ['individual', 'Rung'],
+          ['compiled', 'Programa'],
+        ] as [MobileRungScope, string][]).map(([scope, label]) => {
+          const selected = rungScope === scope;
+          return (
+            <Pressable key={scope} onPress={() => setRungScope(scope)} style={[styles.scopeButton, selected && styles.scopeButtonOn]}>
+              <Text style={[styles.scopeText, selected && styles.scopeTextOn]}>{label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <View style={styles.navRow}>
-        <Pressable disabled={safeIndex === 0} onPress={() => onSelectRungIndex?.(safeIndex - 1)} style={[styles.navButton, safeIndex === 0 && styles.disabled]}>
-          <Text style={styles.navText}>Anterior</Text>
-        </Pressable>
+        {!compiledMode ? (
+          <Pressable disabled={safeIndex === 0} onPress={() => onSelectRungIndex?.(safeIndex - 1)} style={[styles.navButton, safeIndex === 0 && styles.disabled]}>
+            <Text style={styles.navText}>Anterior</Text>
+          </Pressable>
+        ) : null}
         <View style={styles.modeRow}>
           {(['ladder', 'flow', 'list'] as MobileRungViewMode[]).map((mode) => {
             const selected = viewMode === mode;
@@ -269,12 +288,15 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             );
           })}
         </View>
-        <Pressable disabled={safeIndex >= editorProject.rungs.length - 1} onPress={() => onSelectRungIndex?.(safeIndex + 1)} style={[styles.navButton, safeIndex >= editorProject.rungs.length - 1 && styles.disabled]}>
-          <Text style={styles.navText}>Proxima</Text>
-        </Pressable>
+        {!compiledMode ? (
+          <Pressable disabled={safeIndex >= editorProject.rungs.length - 1} onPress={() => onSelectRungIndex?.(safeIndex + 1)} style={[styles.navButton, safeIndex >= editorProject.rungs.length - 1 && styles.disabled]}>
+            <Text style={styles.navText}>Proxima</Text>
+          </Pressable>
+        ) : null}
       </View>
 
-      <View style={[styles.outputSummary, outputActive && styles.outputSummaryOn]}>
+      {!compiledMode ? (
+        <View style={[styles.outputSummary, outputActive && styles.outputSummaryOn]}>
         <View style={styles.outputSummaryCopy}>
           <Text style={styles.outputSummaryLabel}>Carga / saida</Text>
           <Text style={[styles.outputSummaryTitle, outputActive && styles.blockAddressOn]} numberOfLines={1}>
@@ -283,6 +305,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         </View>
         <Text style={[styles.outputSummaryState, outputActive && styles.blockAddressOn]}>{outputActive ? 'ON' : 'OFF'}</Text>
       </View>
+      ) : null}
 
       {viewMode === 'ladder' ? (
         <>
@@ -300,45 +323,104 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             </Pressable>
           </View>
         </View>
-        <MobileLadderCanvas
-          rung={rung}
-          rungActive={rungActive}
-          plcState={plcState}
-          conductingBlocks={conductingBlocks}
-          zoom={ladderZoom}
-          onSelectBlock={onSelectBlock}
-        />
+        {compiledMode ? (
+          <View style={styles.compiledProgramBox}>
+            {editorProject.rungs.map((item, index) => {
+              const itemActive = Boolean(evaluation.rungResults?.[item.id]);
+              const itemTrace = traceEditorRung(item, plcState, evaluation.runtime);
+              const itemConducting = conductiveBlockIds(item, itemTrace);
+              const itemOutput = item.coilBlock;
+              const itemOutputActive = itemOutput ? blockActive(itemOutput, plcState, itemActive) : false;
+              return (
+                <View key={item.id} style={[styles.compiledRung, item.id === rung.id && styles.compiledRungSelected]}>
+                  <Pressable onPress={() => onSelectRungIndex?.(index)} style={({ pressed }) => [styles.compiledRungHeader, pressed && styles.pressed]}>
+                    <View style={styles.compiledRungCopy}>
+                      <Text style={styles.compiledRungIndex}>Rung {index + 1}</Text>
+                      <Text style={styles.compiledRungTitle} numberOfLines={1}>{item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
+                    </View>
+                    <Text style={[styles.compiledRungState, itemActive && styles.blockAddressOn]}>{itemActive ? 'TRUE' : 'FALSE'}</Text>
+                  </Pressable>
+                  <View style={[styles.compiledLoadSummary, itemOutputActive && styles.outputSummaryOn]}>
+                    <Text style={[styles.compiledLoadText, itemOutputActive && styles.blockAddressOn]} numberOfLines={1}>
+                      {itemOutput ? `${blockAddress(itemOutput)} • ${itemOutput.name}` : 'Sem carga/saida'}
+                    </Text>
+                    <Text style={[styles.compiledLoadState, itemOutputActive && styles.blockAddressOn]}>{itemOutputActive ? 'ON' : 'OFF'}</Text>
+                  </View>
+                  <MobileLadderCanvas
+                    rung={item}
+                    rungActive={itemActive}
+                    plcState={plcState}
+                    conductingBlocks={itemConducting}
+                    zoom={ladderZoom}
+                    onSelectBlock={onSelectBlock}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <MobileLadderCanvas
+            rung={rung}
+            rungActive={rungActive}
+            plcState={plcState}
+            conductingBlocks={conductingBlocks}
+            zoom={ladderZoom}
+            onSelectBlock={onSelectBlock}
+          />
+        )}
         </>
       ) : null}
 
       {viewMode === 'flow' ? (
         <View style={styles.flowStack}>
-          {blocks.map((block, index) => (
-            <View key={`${block.id}-${index}`} style={styles.flowRow}>
-              <Text style={styles.flowIndex}>{index + 1}</Text>
-              <BlockChip block={block} active={block.role === 'contact' ? conductingBlocks.has(block.id) : blockActive(block, plcState, rungActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
-            </View>
-          ))}
+          {(compiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
+            const itemActive = Boolean(evaluation.rungResults?.[item.id]);
+            const itemTrace = traceEditorRung(item, plcState, evaluation.runtime);
+            const itemConducting = conductiveBlockIds(item, itemTrace);
+            const itemBlocks = flattenRung(item);
+            return (
+              <View key={item.id} style={compiledMode && styles.compiledTextRung}>
+                {compiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
+                {itemBlocks.map((block, index) => (
+                  <View key={`${block.id}-${index}`} style={styles.flowRow}>
+                    <Text style={styles.flowIndex}>{index + 1}</Text>
+                    <BlockChip block={block} active={block.role === 'contact' ? itemConducting.has(block.id) : blockActive(block, plcState, itemActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
+                  </View>
+                ))}
+              </View>
+            );
+          })}
         </View>
       ) : null}
 
       {viewMode === 'list' ? (
         <View style={styles.flowStack}>
-          {blocks.map((block, index) => {
-            const closed = traceContactClosed(block, rungTrace);
-            const active = block.role === 'contact' ? conductingBlocks.has(block.id) : blockActive(block, plcState, rungActive);
-            const stateLabel = block.role === 'contact'
-              ? active ? 'CONDUZ' : closed ? 'FECHADO' : 'ABERTO'
-              : active ? 'ON' : 'OFF';
+          {(compiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
+            const itemActive = Boolean(evaluation.rungResults?.[item.id]);
+            const itemTrace = traceEditorRung(item, plcState, evaluation.runtime);
+            const itemConducting = conductiveBlockIds(item, itemTrace);
+            const itemBlocks = flattenRung(item);
             return (
-              <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, closed && !active && styles.listRowClosed, active && styles.listRowOn]}>
-                <Text style={styles.flowIndex}>{index + 1}</Text>
-                <View style={styles.listCopy}>
-                  <Text style={[styles.listTitle, active && styles.blockAddressOn]}>{blockAddress(block)} • {block.name}</Text>
-                  <Text style={styles.listMeta}>{block.role} {block.contactMode ?? block.coilMode ?? block.timerMode ?? block.counterMode ?? ''}</Text>
-                </View>
-                <Text style={[styles.listState, closed && !active && styles.listStateClosed, active && styles.blockAddressOn]}>{stateLabel}</Text>
-              </Pressable>
+              <View key={item.id} style={compiledMode && styles.compiledTextRung}>
+                {compiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
+                {itemBlocks.map((block, index) => {
+                  const closed = traceContactClosed(block, itemTrace);
+                  const active = block.role === 'contact' ? itemConducting.has(block.id) : blockActive(block, plcState, itemActive);
+                  const stateLabel = block.role === 'contact'
+                    ? active ? 'CONDUZ' : closed ? 'FECHADO' : 'ABERTO'
+                    : active ? 'ON' : 'OFF';
+                  return (
+                    <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, closed && !active && styles.listRowClosed, active && styles.listRowOn]}>
+                      <Text style={styles.flowIndex}>{index + 1}</Text>
+                      <View style={styles.listCopy}>
+                        <Text style={[styles.listTitle, active && styles.blockAddressOn]}>{blockAddress(block)} • {block.name}</Text>
+                        <Text style={styles.listMeta}>{block.role} {block.contactMode ?? block.coilMode ?? block.timerMode ?? block.counterMode ?? ''}</Text>
+                      </View>
+                      <Text style={[styles.listState, closed && !active && styles.listStateClosed, active && styles.blockAddressOn]}>{stateLabel}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             );
           })}
         </View>
@@ -408,6 +490,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+  },
+  scopeRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.background,
+    padding: 3,
+  },
+  scopeButton: {
+    flex: 1,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+  },
+  scopeButtonOn: {
+    backgroundColor: colors.cyanSoft,
+  },
+  scopeText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  scopeTextOn: {
+    color: colors.cyan,
   },
   navButton: {
     borderColor: colors.border,
@@ -585,6 +696,78 @@ const styles = StyleSheet.create({
   mobileAbsoluteBlock: {
     position: 'absolute',
   },
+  compiledProgramBox: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    padding: spacing.xs,
+    gap: spacing.sm,
+  },
+  compiledRung: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    padding: spacing.xs,
+    gap: spacing.xs,
+  },
+  compiledRungSelected: {
+    borderColor: colors.cyan,
+  },
+  compiledRungHeader: {
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  compiledRungCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  compiledRungIndex: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  compiledRungTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  compiledRungState: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  compiledLoadSummary: {
+    minHeight: 32,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceElevated,
+    paddingHorizontal: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  compiledLoadText: {
+    flex: 1,
+    minWidth: 0,
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  compiledLoadState: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
   blockChip: {
     minWidth: 96,
     minHeight: 70,
@@ -627,6 +810,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   flowStack: {
+    gap: spacing.xs,
+  },
+  compiledTextRung: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    padding: spacing.xs,
     gap: spacing.xs,
   },
   flowRow: {
