@@ -5,6 +5,7 @@ import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileAdvancedDetails } from './MobileAdvancedDetails';
 import { MobileEnergyFlow } from './MobileEnergyFlow';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
+import { MobilePowerLadderPreview } from './MobilePowerLadderPreview';
 import { MobileWorkbenchHeader } from './MobileWorkbenchHeader';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -70,11 +71,19 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
       />
 
       {!showEmptyState ? (
-        <MobileLiveBlockStrip
-          editorProject={props.editorProject}
-          plcState={props.plcState}
-          evaluation={props.evaluation}
-        />
+        <>
+          <MobilePowerLadderPreview
+            editorProject={props.editorProject}
+            plcState={props.plcState}
+            evaluation={props.evaluation}
+          />
+
+          <MobileLiveBlockStrip
+            editorProject={props.editorProject}
+            plcState={props.plcState}
+            evaluation={props.evaluation}
+          />
+        </>
       ) : null}
 
       {showEmptyState ? (
