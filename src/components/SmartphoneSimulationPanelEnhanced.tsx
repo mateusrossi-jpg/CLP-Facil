@@ -1,5 +1,5 @@
 import { ComponentProps, memo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { PlcBenchTestPlanCard } from './PlcBenchTestPlanCard';
 import { PlcCommissioningChecklistCard } from './PlcCommissioningChecklistCard';
 import { PlcCpuStatusCard } from './PlcCpuStatusCard';
@@ -70,6 +70,8 @@ const noop = () => undefined;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanelEnhanced(props: SmartphoneSimulationPanelEnhancedProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [pipExpanded, setPipExpanded] = useState(false);
+  const { width, height } = useWindowDimensions();
   const scanNumber = props.evaluation.scanNumber || 0;
   const lastScanMs = props.evaluation.runtime?.scanStepMs ?? 100;
   const autoScan = Boolean(props.autoScan);
@@ -78,6 +80,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onSetValue = props.onSetValue ?? noop;
   const activeMission = props.mission ?? undefined;
   const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics || advancedOpen);
+  const pipWidth = Math.min(width - spacing.md * 2, pipExpanded ? 720 : 430);
+  const pipMaxHeight = Math.max(360, Math.min(height * (pipExpanded ? 0.82 : 0.58), 720));
   const fixedPanelProps: FixedPanelProps = {
     ...props,
     autoScan,
@@ -128,14 +132,30 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 
       <Pressable onPress={() => setAdvancedOpen((current) => !current)} style={({ pressed }) => [styles.analysisButton, advancedOpen && styles.analysisButtonOn, pressed && styles.pressed]}>
         <View style={styles.analysisCopy}>
-          <Text style={[styles.analysisTitle, advancedOpen && styles.analysisTitleOn]}>{advancedOpen ? 'Ocultar analises' : 'Analises sob demanda'}</Text>
-          <Text style={styles.analysisText}>CPU, scan, memória, force, segurança, relatório, rubrica e trace.</Text>
+          <Text style={[styles.analysisTitle, advancedOpen && styles.analysisTitleOn]}>{advancedOpen ? 'PiP de analises aberto' : 'Analises em PiP'}</Text>
+          <Text style={styles.analysisText}>CPU, scan, memória, force, segurança, relatório, rubrica e trace sem ocupar a tela principal.</Text>
         </View>
-        <Text style={[styles.analysisPill, advancedOpen && styles.analysisPillOn]}>{advancedOpen ? 'Fechar' : 'Abrir'}</Text>
+        <Text style={[styles.analysisPill, advancedOpen && styles.analysisPillOn]}>{advancedOpen ? 'Fechar' : 'Abrir PiP'}</Text>
       </Pressable>
 
       {showAdvancedDiagnostics ? (
-        <>
+        <View style={[styles.analysisPip, { width: pipWidth, maxHeight: pipMaxHeight }]}>
+          <View style={styles.pipHeader}>
+            <View style={styles.analysisCopy}>
+              <Text style={styles.pipTitle}>Analises sob demanda</Text>
+              <Text style={styles.pipSubtitle}>Redimensione e consulte sem sair da simulacao.</Text>
+            </View>
+            <View style={styles.pipActions}>
+              <Pressable onPress={() => setPipExpanded((current) => !current)} style={({ pressed }) => [styles.pipActionButton, pipExpanded && styles.pipActionButtonOn, pressed && styles.pressed]}>
+                <Text style={[styles.pipActionText, pipExpanded && styles.pipActionTextOn]}>{pipExpanded ? 'Compacto' : 'Grande'}</Text>
+              </Pressable>
+              <Pressable onPress={() => setAdvancedOpen(false)} style={({ pressed }) => [styles.pipCloseButton, pressed && styles.pressed]}>
+                <Text style={styles.pipCloseText}>Fechar</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <ScrollView style={styles.pipScroll} contentContainerStyle={styles.pipContent} showsVerticalScrollIndicator>
           <PlcSimulationSection
             title="CPU"
             subtitle="Resumo técnico, estado RUN/STOP, tempo de ciclo e watchdog"
@@ -296,7 +316,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
       >
         <SmartphoneSimulationPanelFixed {...fixedPanelProps} />
       </PlcSimulationSection>
-        </>
+          </ScrollView>
+        </View>
       ) : null}
     </View>
   );
@@ -305,6 +326,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
 const styles = StyleSheet.create({
   stack: {
     gap: spacing.md,
+    position: 'relative',
   },
   innerStack: {
     gap: spacing.md,
@@ -358,6 +380,94 @@ const styles = StyleSheet.create({
   analysisPillOn: {
     color: colors.background,
     backgroundColor: colors.cyan,
+  },
+  analysisPip: {
+    position: 'absolute',
+    right: spacing.sm,
+    bottom: spacing.sm,
+    zIndex: 40,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 18,
+    backgroundColor: colors.background,
+    shadowColor: colors.background,
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
+    overflow: 'hidden',
+  },
+  pipHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    backgroundColor: colors.surfaceElevated,
+    padding: spacing.sm,
+  },
+  pipTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  pipSubtitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  pipActions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  pipActionButton: {
+    minHeight: 32,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  pipActionButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  pipActionText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  pipActionTextOn: {
+    color: colors.cyan,
+  },
+  pipCloseButton: {
+    minHeight: 32,
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.redSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  pipCloseText: {
+    color: colors.red,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  pipScroll: {
+    backgroundColor: colors.background,
+  },
+  pipContent: {
+    gap: spacing.sm,
+    padding: spacing.sm,
+    paddingBottom: spacing.md,
   },
   pressed: {
     opacity: 0.72,
