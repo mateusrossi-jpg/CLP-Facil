@@ -16,13 +16,19 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
   const points = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
   const inputs = points.filter((point) => point.kind === 'input').slice(0, 8);
   const outputs = points.filter((point) => point.kind === 'output').slice(0, 8);
+  const activeInputs = inputs.filter((input) => isMobileIoActive(input.value)).length;
+  const activeOutputs = outputs.filter((output) => isMobileIoActive(output.value)).length;
 
   return (
     <View style={styles.panel}>
       <View style={styles.panelHeader}>
         <Text style={styles.panelTitle}>I/O</Text>
-        <Text style={styles.panelHint}>entradas clicáveis • saídas ao vivo</Text>
+        <View style={styles.counterCluster}>
+          <Text style={[styles.counterPill, activeInputs > 0 && styles.counterPillOn]}>I {activeInputs}/{inputs.length}</Text>
+          <Text style={[styles.counterPill, activeOutputs > 0 && styles.counterPillOn]}>Q {activeOutputs}/{outputs.length}</Text>
+        </View>
       </View>
+      <Text style={styles.panelHint}>entradas clicáveis • saídas ao vivo</Text>
 
       <View style={styles.group}>
         <View style={styles.groupHeader}>
@@ -105,6 +111,28 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 10,
     fontWeight: '800',
+    marginTop: -spacing.xs,
+  },
+  counterCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  counterPill: {
+    color: colors.textMuted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 10,
+    fontWeight: '900',
+    overflow: 'hidden',
+  },
+  counterPillOn: {
+    color: colors.background,
+    borderColor: colors.green,
+    backgroundColor: colors.green,
   },
   group: {
     gap: spacing.xs,
