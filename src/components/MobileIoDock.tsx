@@ -11,9 +11,9 @@ type MobileIoDockProps = {
   onSetValue?: (variable: string, value: boolean | number) => void;
 };
 
-type MobileIoKind = 'input' | 'output';
+export type MobileIoKind = 'input' | 'output';
 
-type MobileIoPoint = {
+export type MobileIoPoint = {
   id: string;
   address: string;
   name: string;
@@ -60,7 +60,7 @@ function addPoint(points: Map<string, MobileIoPoint>, address: string | undefine
   });
 }
 
-function collectIoPoints(project: EditorProjectState, state: PlcState): MobileIoPoint[] {
+export function collectMobileIoPoints(project: EditorProjectState, state: PlcState): MobileIoPoint[] {
   const points = new Map<string, MobileIoPoint>();
 
   for (const variable of project.projectVariables ?? []) {
@@ -79,18 +79,18 @@ function collectIoPoints(project: EditorProjectState, state: PlcState): MobileIo
   return Array.from(points.values()).sort((left, right) => left.address.localeCompare(right.address));
 }
 
-function isActive(value: boolean | number | undefined): boolean {
+export function isMobileIoActive(value: boolean | number | undefined): boolean {
   if (typeof value === 'number') return value !== 0;
   return Boolean(value);
 }
 
-function valueLabel(value: boolean | number | undefined): string {
+export function mobileIoValueLabel(value: boolean | number | undefined): string {
   if (typeof value === 'number') return String(value);
-  return isActive(value) ? 'ON' : 'OFF';
+  return isMobileIoActive(value) ? 'ON' : 'OFF';
 }
 
 export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState, onSetValue }: MobileIoDockProps) {
-  const points = useMemo(() => collectIoPoints(editorProject, plcState), [editorProject, plcState]);
+  const points = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
   const inputs = points.filter((point) => point.kind === 'input').slice(0, 6);
   const outputs = points.filter((point) => point.kind === 'output').slice(0, 6);
 
@@ -105,7 +105,7 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
           {inputs.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma entrada I encontrada.</Text>
           ) : inputs.map((input) => {
-            const active = isActive(input.value);
+            const active = isMobileIoActive(input.value);
             const editable = typeof input.value !== 'number';
             return (
               <Pressable
@@ -116,7 +116,7 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
               >
                 <Text style={[styles.address, active && styles.addressOn]}>{input.address}</Text>
                 <Text style={styles.name} numberOfLines={1}>{input.name}</Text>
-                <Text style={[styles.state, active && styles.stateOn]}>{valueLabel(input.value)}</Text>
+                <Text style={[styles.state, active && styles.stateOn]}>{mobileIoValueLabel(input.value)}</Text>
               </Pressable>
             );
           })}
@@ -132,7 +132,7 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
           {outputs.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma saida Q/O encontrada.</Text>
           ) : outputs.map((output) => {
-            const active = isActive(output.value);
+            const active = isMobileIoActive(output.value);
             return (
               <View key={output.id} style={[styles.outputRow, active && styles.outputRowOn]}>
                 <View style={[styles.lamp, active && styles.lampOn]} />
@@ -140,7 +140,7 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
                   <Text style={[styles.address, active && styles.addressOn]}>{output.address}</Text>
                   <Text style={styles.name} numberOfLines={1}>{output.name}</Text>
                 </View>
-                <Text style={[styles.state, active && styles.stateOn]}>{valueLabel(output.value)}</Text>
+                <Text style={[styles.state, active && styles.stateOn]}>{mobileIoValueLabel(output.value)}</Text>
               </View>
             );
           })}

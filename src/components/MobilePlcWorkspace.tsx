@@ -7,7 +7,7 @@ import { PlcMission } from '../lessons/missionTypes';
 import { evaluateMissionAttempt } from '../lessons/missionValidation';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
-import { MobileIoDock } from './MobileIoDock';
+import { collectMobileIoPoints, isMobileIoActive, MobileIoDock, mobileIoValueLabel } from './MobileIoDock';
 import { MobileRungViewer } from './MobileRungViewer';
 import { MobileSimulationControls } from './MobileSimulationControls';
 import { EditorRunMode } from './EditorModeToggle';
@@ -213,12 +213,16 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [showFloatingIo, setShowFloatingIo] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const selectedBlock = useMemo(
     () => projectBlocks(editorProject).find((block) => block.id === selectedBlockId) ?? null,
     [editorProject, selectedBlockId],
   );
   const activeOutputs = useMemo(() => activeOutputCount(plcState), [plcState]);
+  const floatingIoPoints = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
+  const floatingInputs = floatingIoPoints.filter((point) => point.kind === 'input').slice(0, 12);
+  const floatingOutputs = floatingIoPoints.filter((point) => point.kind === 'output').slice(0, 12);
   const missionAttempt = useMemo(
     () => mission ? evaluateMissionAttempt(mission, plcState, evaluation) : null,
     [evaluation, mission, plcState],
@@ -398,6 +402,66 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           }
         }}
       />
+
+      <Pressable onPress={() => setShowFloatingIo((current) => !current)} style={({ pressed }) => [styles.floatingIoButton, showFloatingIo && styles.floatingIoButtonOn, pressed && styles.pressed]}>
+        <Text style={[styles.floatingIoButtonText, showFloatingIo && styles.floatingIoButtonTextOn]}>I/O</Text>
+      </Pressable>
+
+      {showFloatingIo ? (
+        <View style={styles.floatingIoPanel}>
+          <View style={styles.floatingIoHeader}>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.eyebrow}>I/O flutuante</Text>
+              <Text style={styles.floatingIoTitle}>Acione entradas e confira saidas sem sair do programa.</Text>
+            </View>
+            <Pressable onPress={() => setShowFloatingIo(false)} style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>
+              <Text style={styles.closeText}>Fechar</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.floatingIoGroup}>
+            <Text style={styles.floatingIoGroupTitle}>Entradas</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.floatingIoRail}>
+              {floatingInputs.length === 0 ? (
+                <Text style={styles.emptyFloatingIo}>Nenhuma entrada I.</Text>
+              ) : floatingInputs.map((input) => {
+                const active = isMobileIoActive(input.value);
+                const editable = typeof input.value !== 'number';
+                return (
+                  <Pressable
+                    key={input.id}
+                    disabled={!editable}
+                    onPress={() => onSetValue(input.address, !active)}
+                    style={({ pressed }) => [styles.floatingIoChip, active && styles.floatingIoChipOn, !editable && styles.disabledChip, pressed && editable && styles.pressed]}
+                  >
+                    <Text style={[styles.floatingIoAddress, active && styles.floatingIoAddressOn]}>{input.address}</Text>
+                    <Text style={styles.floatingIoName} numberOfLines={1}>{input.name}</Text>
+                    <Text style={[styles.floatingIoState, active && styles.floatingIoAddressOn]}>{mobileIoValueLabel(input.value)}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          <View style={styles.floatingIoGroup}>
+            <Text style={styles.floatingIoGroupTitle}>Saidas</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.floatingIoRail}>
+              {floatingOutputs.length === 0 ? (
+                <Text style={styles.emptyFloatingIo}>Nenhuma saida Q/O.</Text>
+              ) : floatingOutputs.map((output) => {
+                const active = isMobileIoActive(output.value);
+                return (
+                  <View key={output.id} style={[styles.floatingIoChip, styles.floatingOutputChip, active && styles.floatingIoChipOn]}>
+                    <Text style={[styles.floatingIoAddress, active && styles.floatingIoAddressOn]}>{output.address}</Text>
+                    <Text style={styles.floatingIoName} numberOfLines={1}>{output.name}</Text>
+                    <Text style={[styles.floatingIoState, active && styles.floatingIoAddressOn]}>{mobileIoValueLabel(output.value)}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      ) : null}
 
       {showHint && !mission ? (
         <View style={styles.hintBox}>
@@ -651,6 +715,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 
 const styles = StyleSheet.create({
   workspace: {
+    position: 'relative',
     borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 20,
@@ -1135,6 +1200,116 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     paddingHorizontal: spacing.sm,
+  },
+  floatingIoButton: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: 84,
+    zIndex: 30,
+    minWidth: 44,
+    minHeight: 34,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  floatingIoButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  floatingIoButtonText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  floatingIoButtonTextOn: {
+    color: colors.cyan,
+  },
+  floatingIoPanel: {
+    position: 'absolute',
+    right: spacing.md,
+    left: spacing.md,
+    bottom: 128,
+    zIndex: 40,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  floatingIoHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  floatingIoTitle: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  floatingIoGroup: {
+    gap: spacing.xs,
+  },
+  floatingIoGroupTitle: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  floatingIoRail: {
+    gap: spacing.xs,
+    paddingRight: spacing.sm,
+  },
+  floatingIoChip: {
+    minWidth: 92,
+    minHeight: 56,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    padding: spacing.xs,
+    justifyContent: 'center',
+  },
+  floatingOutputChip: {
+    minWidth: 106,
+  },
+  floatingIoChipOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  floatingIoAddress: {
+    color: colors.text,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  floatingIoAddressOn: {
+    color: colors.green,
+  },
+  floatingIoName: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  floatingIoState: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  emptyFloatingIo: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    paddingVertical: spacing.sm,
   },
   inlineEditorFields: {
     flexDirection: 'row',

@@ -20,7 +20,7 @@ type MobileRungViewerProps = {
   onSelectBlock?: (block: EditorBlock) => void;
 };
 
-const MIN_LADDER_ZOOM = 0.78;
+const MIN_LADDER_ZOOM = 0.58;
 const MAX_LADDER_ZOOM = 1.22;
 
 function normalize(value: string | undefined): string {
@@ -410,7 +410,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current - 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>-</Text>
             </Pressable>
-            <Pressable onPress={() => setLadderZoom(0.84)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setLadderZoom(compiledMode ? 0.68 : 0.84)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
               <Text style={styles.zoomValueText}>{Math.round(ladderZoom * 100)}%</Text>
             </Pressable>
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current + 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
