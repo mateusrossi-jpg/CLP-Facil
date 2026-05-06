@@ -42,9 +42,15 @@ function rungHasParallel(rung: EditorRung): boolean {
   return rung.parallelBlocks.length > 0 || (rung.parallelBranches ?? []).some((branch) => branch.blocks.length > 0);
 }
 
+function scanCursorLeft(scanNumber: number, rungIndex: number): string {
+  const step = (scanNumber + rungIndex) % 6;
+  return `${8 + step * 16}%`;
+}
+
 export const MobilePowerLadderPreview = memo(function MobilePowerLadderPreview({ editorProject, plcState, evaluation }: MobilePowerLadderPreviewProps) {
   const visibleRungs = useMemo(() => editorProject.rungs.slice(0, 4), [editorProject.rungs]);
   const energizedCount = visibleRungs.filter((rung) => Boolean(evaluation.rungResults?.[rung.id])).length;
+  const scanNumber = evaluation.scanNumber ?? 0;
 
   if (visibleRungs.length === 0) return null;
 
@@ -55,7 +61,10 @@ export const MobilePowerLadderPreview = memo(function MobilePowerLadderPreview({
           <Text style={styles.eyebrow}>Power Ladder</Text>
           <Text style={styles.title}>Fios e bobinas ao vivo</Text>
         </View>
-        <Text style={[styles.counter, energizedCount > 0 && styles.counterOn]}>{energizedCount}/{visibleRungs.length} TRUE</Text>
+        <View style={styles.scanBadgeGroup}>
+          <Text style={[styles.counter, energizedCount > 0 && styles.counterOn]}>{energizedCount}/{visibleRungs.length} TRUE</Text>
+          <Text style={styles.scanBadge}>SCAN #{scanNumber}</Text>
+        </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
@@ -63,6 +72,7 @@ export const MobilePowerLadderPreview = memo(function MobilePowerLadderPreview({
           const rungActive = Boolean(evaluation.rungResults?.[rung.id]);
           const outputActive = rung.coilBlock ? stateActive(plcState, rung.coilBlock.variable || rung.coilBlock.destination) || rungActive : rungActive;
           const previewBlocks = seriesPreviewBlocks(rung);
+          const showPulse = rungActive && scanNumber > 0;
           return (
             <View key={rung.id} style={[styles.rungCard, rungActive && styles.rungCardOn]}>
               <View style={styles.rungHeader}>
@@ -71,6 +81,7 @@ export const MobilePowerLadderPreview = memo(function MobilePowerLadderPreview({
               </View>
 
               <View style={styles.ladderLineRow}>
+                {showPulse ? <View style={[styles.scanCursor, { left: scanCursorLeft(scanNumber, rungIndex) }]} /> : null}
                 <View style={[styles.railVertical, rungActive && styles.railVerticalOn]} />
                 <View style={[styles.wire, rungActive && styles.wireOn]} />
                 {previewBlocks.map((block) => {
@@ -137,6 +148,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginTop: 2,
   },
+  scanBadgeGroup: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
   counter: {
     color: colors.textMuted,
     fontSize: 11,
@@ -144,6 +159,11 @@ const styles = StyleSheet.create({
   },
   counterOn: {
     color: colors.green,
+  },
+  scanBadge: {
+    color: colors.cyan,
+    fontSize: 9,
+    fontWeight: '900',
   },
   rail: {
     flexDirection: 'row',
@@ -185,9 +205,21 @@ const styles = StyleSheet.create({
     color: colors.green,
   },
   ladderLineRow: {
+    position: 'relative',
     minHeight: 86,
     flexDirection: 'row',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  scanCursor: {
+    position: 'absolute',
+    top: 8,
+    width: 18,
+    height: 70,
+    borderRadius: 999,
+    backgroundColor: colors.cyan,
+    opacity: 0.28,
+    zIndex: 10,
   },
   railVertical: {
     width: 4,
@@ -219,6 +251,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 4,
     gap: 2,
+    zIndex: 20,
   },
   blockNodeOn: {
     borderColor: colors.green,
@@ -235,6 +268,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 4,
     gap: 2,
+    zIndex: 20,
   },
   coilNodeOn: {
     borderColor: colors.green,
@@ -277,6 +311,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 2,
+    zIndex: 20,
   },
   parallelBadgeOn: {
     borderColor: colors.green,
