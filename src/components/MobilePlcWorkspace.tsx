@@ -12,7 +12,6 @@ import { collectMobileIoPoints, isMobileIoActive, mobileIoValueLabel } from '../
 import { MobileIoDock } from './MobileIoDock';
 import { MobileRungViewer } from './MobileRungViewer';
 import { MobileSimulationControls } from './MobileSimulationControls';
-import { MobileHardwareExportPanel } from './mobileWorkbench/MobileHardwareExportPanel';
 import { EditorRunMode } from './EditorModeToggle';
 
 type MobilePlcWorkspaceProps = {
@@ -871,7 +870,6 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       ) : null}
 
-      <MobileHardwareExportPanel editorProject={editorProject} />
 
       <MobileSimulationControls
         autoScan={autoScan}

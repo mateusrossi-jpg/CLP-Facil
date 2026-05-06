@@ -1,7 +1,7 @@
 import { ComponentProps, memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MobileBlockQuickEditor } from './MobileBlockQuickEditor';
-import { MobilePlcExperience } from './MobilePlcExperience';
+import { SmartphoneSimulationPanelWrapper } from './mobileWorkbench/SmartphoneSimulationPanelWrapper';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelEnhanced } from './SmartphoneSimulationPanelEnhanced';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
@@ -31,7 +31,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         <Text style={[styles.workbenchMode, props.mode === 'edit' && styles.workbenchModeEdit]}>{runtimeMode}</Text>
       </View>
 
-      <MobilePlcExperience
+      <SmartphoneSimulationPanelWrapper
         editorProject={props.editorProject}
         plcState={props.plcState}
         evaluation={props.evaluation}
