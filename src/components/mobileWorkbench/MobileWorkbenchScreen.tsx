@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { MobileBlockQuickEditor } from '../MobileBlockQuickEditor';
 import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileAdvancedDetails } from './MobileAdvancedDetails';
+import { MobileEnergyFlow } from './MobileEnergyFlow';
 import { MobileWorkbenchHeader } from './MobileWorkbenchHeader';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -59,6 +60,12 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         onChangeMode={props.onChangeMode}
         onToggleAutoScan={props.onToggleAutoScan}
         onRunScan={props.onRunScan}
+      />
+
+      <MobileEnergyFlow
+        editorProject={props.editorProject}
+        plcState={props.plcState}
+        evaluation={props.evaluation}
       />
 
       {showEmptyState ? (
