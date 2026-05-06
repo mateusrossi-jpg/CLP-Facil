@@ -21,8 +21,6 @@ import { MotorIndicator } from './src/components/MotorIndicator';
 import { OutputIndicator } from './src/components/OutputIndicator';
 import { PlcWorkbench } from './src/components/PlcWorkbench';
 import { PlcMissionPathPanel } from './src/components/PlcMissionPathPanel';
-import { PlcProfilePanel } from './src/components/PlcProfilePanel';
-import { CommunicationProtocolsPanel } from './src/components/CommunicationProtocolsPanel';
 import { ReferenceHubPanel } from './src/components/ReferenceHubPanel';
 import { HardwareExportPanel } from './src/components/HardwareExportPanel';
 import { SelectedBlockEditor } from './src/components/SelectedBlockEditor';
@@ -973,6 +971,18 @@ export default function App() {
           </>
         ) : null}
 
+        {mode === 'reference' ? (
+          <>
+            <AppHeader title="Referência" subtitle="Consulta técnica separada do simulador: dialetos, mobile, tags, rotinas, protocolos, segurança e publicação." />
+            <ReferenceHubPanel
+              editorProject={editorProject}
+              selectedPlcProfile={selectedPlcProfile}
+              onSelectPlcProfile={setSelectedPlcProfile}
+            />
+            <AppCard title="Voltar para o início" description="Retornar ao fluxo principal do app." onPress={() => setMode('home')} />
+          </>
+        ) : null}
+
         {mode === 'projects' ? (
           <>
             <AppHeader title="Projetos" subtitle="Modelos prontos para abrir no simulador, estudar a lógica e adaptar para novas práticas." />
@@ -1125,8 +1135,8 @@ export default function App() {
                   <Pressable onPress={resetSimulation} style={({ pressed }) => [styles.simulatorGhostButton, pressed && styles.pressed]}>
                     <Text style={styles.simulatorGhostText}>Reset</Text>
                   </Pressable>
-                  <Pressable onPress={() => setMode('projects')} style={({ pressed }) => [styles.simulatorExitButton, pressed && styles.pressed]}>
-                    <Text style={styles.simulatorExitText}>Sair</Text>
+                  <Pressable onPress={() => setMode(activePlcMission ? 'learn' : 'projects')} style={({ pressed }) => [styles.simulatorExitButton, pressed && styles.pressed]}>
+                    <Text style={styles.simulatorExitText}>{activePlcMission ? 'Aprender' : 'Projetos'}</Text>
                   </Pressable>
                 </View>
               </View>

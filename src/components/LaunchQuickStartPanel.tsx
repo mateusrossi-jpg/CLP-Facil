@@ -72,7 +72,7 @@ export function LaunchQuickStartPanel({
 
       <View style={styles.actionRow}>
         <Pressable onPress={onOpenLearn} style={styles.actionButton}>
-          <Text style={styles.actionText}>Ver biblioteca</Text>
+          <Text style={styles.actionText}>Aprender guiado</Text>
         </Pressable>
         <Pressable onPress={onOpenReference} style={styles.actionButton}>
           <Text style={styles.actionText}>Referência CLP</Text>
