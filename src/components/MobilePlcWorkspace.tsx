@@ -6,7 +6,7 @@ import { EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, Edit
 import { PlcState } from '../engine/projectTypes';
 import { PlcMission } from '../lessons/missionTypes';
 import { evaluateMissionAttempt } from '../lessons/missionValidation';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/theme';
 import { spacing } from '../theme/spacing';
 import { collectMobileIoPoints, isMobileIoActive, mobileIoValueLabel } from '../simulation/mobileIoPoints';
 import { MobileIoDock } from './MobileIoDock';
@@ -248,6 +248,9 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 }: MobilePlcWorkspaceProps) {
   const workspaceRef = useRef<View>(null);
   const rungDropRef = useRef<View>(null);
+  const theme = useAppTheme();
+  const c = theme.colors;
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const workspaceBoundsRef = useRef<DragBounds | null>(null);
   const rungDropBoundsRef = useRef<DragBounds | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -667,7 +670,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                 value={selectedBlock.variable || selectedBlock.destination || ''}
                 onChangeText={(value) => onChangeBlockVariable?.(normalizeVariableInput(value))}
                 placeholder="I0.0, Q0.0, M0.0, T0 ou C0"
-                placeholderTextColor={colors.textDim}
+                placeholderTextColor={c.textDim}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 style={styles.editorInput}
@@ -678,7 +681,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                 value={selectedBlock.name}
                 onChangeText={(value) => onChangeBlockName?.(value)}
                 placeholder="Nome do componente"
-                placeholderTextColor={colors.textDim}
+                placeholderTextColor={c.textDim}
                 style={styles.editorInput}
               />
 
@@ -719,7 +722,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.sourceA ?? ''}
                       onChangeText={(value) => onChangeSourceA?.(normalizeVariableInput(value))}
                       placeholder="A: N0 ou 10"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -728,7 +731,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.sourceB ?? ''}
                       onChangeText={(value) => onChangeSourceB?.(normalizeVariableInput(value))}
                       placeholder="B: N1 ou 20"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -765,7 +768,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.sourceA ?? ''}
                       onChangeText={(value) => onChangeSourceA?.(normalizeVariableInput(value))}
                       placeholder="A"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -774,7 +777,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.sourceB ?? ''}
                       onChangeText={(value) => onChangeSourceB?.(normalizeVariableInput(value))}
                       placeholder="B"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -784,7 +787,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                     value={selectedBlock.destination ?? ''}
                     onChangeText={(value) => onChangeDestination?.(normalizeVariableInput(value))}
                     placeholder="Destino: N1"
-                    placeholderTextColor={colors.textDim}
+                    placeholderTextColor={c.textDim}
                     autoCapitalize="characters"
                     autoCorrect={false}
                     style={styles.editorInput}
@@ -806,7 +809,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                     value={String(selectedBlock.presetMs ?? '')}
                     onChangeText={(value) => onChangePresetMs?.(Number(value.replace(/\D/g, '')) || 0)}
                     placeholder="Preset em ms"
-                    placeholderTextColor={colors.textDim}
+                    placeholderTextColor={c.textDim}
                     keyboardType="numeric"
                     style={styles.editorInput}
                   />
@@ -827,7 +830,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                     value={String(selectedBlock.preset ?? '')}
                     onChangeText={(value) => onChangePreset?.(Number(value.replace(/\D/g, '')) || 0)}
                     placeholder="Preset de contagem"
-                    placeholderTextColor={colors.textDim}
+                    placeholderTextColor={c.textDim}
                     keyboardType="numeric"
                     style={styles.editorInput}
                   />
@@ -836,7 +839,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.downSource ?? ''}
                       onChangeText={(value) => onChangeDownSource?.(normalizeVariableInput(value))}
                       placeholder="Down: I0.1"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -845,7 +848,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                       value={selectedBlock.resetSource ?? ''}
                       onChangeText={(value) => onChangeResetSource?.(normalizeVariableInput(value))}
                       placeholder="Reset: M0.0"
-                      placeholderTextColor={colors.textDim}
+                      placeholderTextColor={c.textDim}
                       autoCapitalize="characters"
                       autoCorrect={false}
                       style={[styles.editorInput, styles.inlineEditorInput]}
@@ -891,19 +894,20 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>["colors"]) {
+  return StyleSheet.create({
   workspace: {
     position: 'relative',
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 20,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     padding: spacing.md,
     gap: spacing.sm,
   },
   workspaceCanvas: {
-    borderColor: colors.border,
-    backgroundColor: colors.black,
+    borderColor: c.border,
+    backgroundColor: c.black,
   },
   workspaceDesk: {
     padding: spacing.sm,
@@ -920,14 +924,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   eyebrow: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0,
   },
   title: {
-    color: colors.text,
+    color: c.text,
     fontSize: 17,
     lineHeight: 22,
     fontWeight: '900',
@@ -940,61 +944,61 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statusPill: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   runPill: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   autoPill: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   statusText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   runText: {
-    color: colors.green,
+    color: c.green,
   },
   autoText: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   scanRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.sm,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
   },
   scanText: {
-    color: colors.text,
+    color: c.text,
     fontSize: 11,
     fontWeight: '900',
   },
   warningText: {
-    color: colors.amber,
+    color: c.amber,
   },
   missionBox: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     gap: spacing.xs,
   },
   missionBoxDone: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   missionHeader: {
     flexDirection: 'row',
@@ -1007,82 +1011,82 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   missionLabel: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   missionObjective: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '900',
     marginTop: 2,
   },
   missionProgressPill: {
-    borderColor: colors.borderStrong,
+    borderColor: c.borderStrong,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
   },
   missionProgressPillDone: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   missionProgressText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   missionProgressTextDone: {
-    color: colors.green,
+    color: c.green,
   },
   missionFeedback: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
   },
   missionFeedbackDone: {
-    color: colors.text,
+    color: c.text,
   },
   missionStory: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '700',
   },
   coachStepBox: {
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: colors.cyanSoft,
+    backgroundColor: c.cyanSoft,
     padding: spacing.sm,
     gap: 2,
   },
   coachStepBoxDone: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   coachStepLabel: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 9,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   coachStepLabelDone: {
-    color: colors.green,
+    color: c.green,
   },
   coachStepTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '900',
   },
   coachStepText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
@@ -1096,86 +1100,86 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   componentLabel: {
-    color: colors.textDim,
+    color: c.textDim,
     fontSize: 9,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   componentChip: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
   inlineDetailsButton: {
     alignSelf: 'flex-start',
     minHeight: 30,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
   },
   inlineDetailsText: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
   },
   nextMissionButton: {
     minHeight: 38,
-    borderColor: colors.green,
+    borderColor: c.green,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.greenSoft,
+    backgroundColor: c.greenSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
     marginTop: spacing.xs,
   },
   nextMissionText: {
-    color: colors.green,
+    color: c.green,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   hintBox: {
-    borderColor: colors.amber,
+    borderColor: c.amber,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.amberSoft,
+    backgroundColor: c.amberSoft,
     padding: spacing.sm,
     gap: 3,
   },
   hintTitle: {
-    color: colors.amber,
+    color: c.amber,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   hintText: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '800',
   },
   editorDock: {
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 16,
-    backgroundColor: colors.cyanSoft,
+    backgroundColor: c.cyanSoft,
     padding: spacing.sm,
     gap: spacing.sm,
   },
   editorDockDesk: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   editorDockHeader: {
     flexDirection: 'row',
@@ -1184,7 +1188,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   editorDockTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '900',
@@ -1194,12 +1198,12 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     borderWidth: 1,
     borderRadius: 18,
-    backgroundColor: colors.surfaceGlass,
+    backgroundColor: c.surfaceGlass,
     padding: spacing.xs,
     gap: spacing.xs,
   },
   editorCanvasTrayOpen: {
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   editorCanvasTrayHeader: {
     flexDirection: 'row',
@@ -1208,39 +1212,39 @@ const styles = StyleSheet.create({
   },
   editorRoundButton: {
     minHeight: 34,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.black,
+    backgroundColor: c.black,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   editorRoundButtonOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   editorRoundButtonText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   editorRoundButtonTextOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   editorIconButton: {
     flex: 1,
     minHeight: 34,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.cyanSoft,
+    backgroundColor: c.cyanSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   editorIconButtonText: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1248,16 +1252,16 @@ const styles = StyleSheet.create({
   editorIconDangerButton: {
     flex: 1,
     minHeight: 34,
-    borderColor: colors.red,
+    borderColor: c.red,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.redSoft,
+    backgroundColor: c.redSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   editorIconDangerText: {
-    color: colors.red,
+    color: c.red,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1268,25 +1272,25 @@ const styles = StyleSheet.create({
   },
   editorDockButton: {
     minHeight: 32,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   editorDockButtonOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.background,
+    borderColor: c.cyan,
+    backgroundColor: c.background,
   },
   editorDockButtonText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   editorDockButtonTextOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   toolRail: {
     gap: spacing.xs,
@@ -1295,40 +1299,40 @@ const styles = StyleSheet.create({
   toolTile: {
     width: 92,
     minHeight: 62,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.black,
+    backgroundColor: c.black,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xs,
   },
   toolTileOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.background,
+    borderColor: c.cyan,
+    backgroundColor: c.background,
   },
   toolTileDragging: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   toolSymbol: {
-    color: colors.text,
+    color: c.text,
     fontSize: 15,
     fontWeight: '900',
     fontFamily: 'monospace',
   },
   toolSymbolOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   toolLabel: {
-    color: colors.text,
+    color: c.text,
     fontSize: 10,
     fontWeight: '900',
     marginTop: 4,
     textAlign: 'center',
   },
   toolHint: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 9,
     fontWeight: '800',
     marginTop: 2,
@@ -1336,10 +1340,10 @@ const styles = StyleSheet.create({
   },
   dropZone: {
     minHeight: 46,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surfaceGlass,
+    backgroundColor: c.surfaceGlass,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
@@ -1347,21 +1351,21 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   dropZoneOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   dropZoneIcon: {
     width: 48,
     height: 34,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dropZoneIconText: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 13,
     fontWeight: '900',
     fontFamily: 'monospace',
@@ -1371,12 +1375,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   dropZoneTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 11,
     fontWeight: '900',
   },
   dropZoneText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '800',
@@ -1389,73 +1393,73 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   rungDropTargetActive: {
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
   },
   rungDropTargetOver: {
-    borderColor: colors.green,
+    borderColor: c.green,
   },
   rungDropOverlay: {
     position: 'absolute',
     top: spacing.sm,
     right: spacing.sm,
     zIndex: 20,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
   rungDropOverlayOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   rungDropOverlayText: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
   },
   rungDropOverlayTextOn: {
-    color: colors.green,
+    color: c.green,
   },
   dragGhost: {
     position: 'absolute',
     zIndex: 120,
     width: 112,
     minHeight: 72,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.sm,
     opacity: 0.94,
   },
   dragGhostOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   dragGhostSymbol: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 15,
     fontWeight: '900',
     fontFamily: 'monospace',
   },
   dragGhostSymbolOn: {
-    color: colors.green,
+    color: c.green,
   },
   dragGhostLabel: {
-    color: colors.text,
+    color: c.text,
     fontSize: 10,
     fontWeight: '900',
     marginTop: 4,
   },
   editorToolbox: {
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 16,
-    backgroundColor: colors.cyanSoft,
+    backgroundColor: c.cyanSoft,
     padding: spacing.sm,
     gap: spacing.sm,
   },
@@ -1466,22 +1470,22 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   editorToolboxTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '900',
     marginTop: 2,
   },
   freePill: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
   freePillText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
@@ -1491,25 +1495,25 @@ const styles = StyleSheet.create({
   },
   categoryChip: {
     minHeight: 34,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   categoryChipOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.background,
+    borderColor: c.cyan,
+    backgroundColor: c.background,
   },
   categoryText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   categoryTextOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   assemblyGrid: {
     flexDirection: 'row',
@@ -1521,22 +1525,22 @@ const styles = StyleSheet.create({
     flexBasis: '30%',
     minWidth: 92,
     minHeight: 72,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.sm,
   },
   assemblySymbol: {
-    color: colors.text,
+    color: c.text,
     fontSize: 16,
     fontWeight: '900',
     fontFamily: 'monospace',
   },
   assemblyLabel: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '900',
@@ -1544,14 +1548,14 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   editorModeHint: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     padding: spacing.sm,
   },
   editorModeHintText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
@@ -1563,16 +1567,16 @@ const styles = StyleSheet.create({
   rungActionButton: {
     flex: 1,
     minHeight: 38,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   rungActionText: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1581,26 +1585,26 @@ const styles = StyleSheet.create({
   rungRemoveButton: {
     flex: 1,
     minHeight: 38,
-    borderColor: colors.red,
+    borderColor: c.red,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.redSoft,
+    backgroundColor: c.redSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   rungRemoveText: {
-    color: colors.red,
+    color: c.red,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
     textAlign: 'center',
   },
   editorSheet: {
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     gap: spacing.sm,
   },
@@ -1615,22 +1619,22 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   sheetTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 14,
     lineHeight: 19,
     fontWeight: '900',
     marginTop: 2,
   },
   closeButton: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   closeText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
@@ -1643,19 +1647,19 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   fieldText: {
-    color: colors.text,
+    color: c.text,
     fontSize: 10,
     lineHeight: 14,
     fontWeight: '800',
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   inputLabel: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1663,11 +1667,11 @@ const styles = StyleSheet.create({
   },
   editorInput: {
     minHeight: 38,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.surface,
-    color: colors.text,
+    backgroundColor: c.surface,
+    color: c.text,
     fontSize: 12,
     fontWeight: '800',
     paddingHorizontal: spacing.sm,
@@ -1679,25 +1683,25 @@ const styles = StyleSheet.create({
     zIndex: 30,
     minWidth: 44,
     minHeight: 34,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   floatingIoButtonOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   floatingIoButtonText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '900',
   },
   floatingIoButtonTextOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   floatingIoPanel: {
     position: 'absolute',
@@ -1705,10 +1709,10 @@ const styles = StyleSheet.create({
     left: spacing.md,
     bottom: 128,
     zIndex: 40,
-    borderColor: colors.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     gap: spacing.sm,
   },
@@ -1719,7 +1723,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   floatingIoTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '900',
@@ -1729,7 +1733,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   floatingIoGroupTitle: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1741,10 +1745,10 @@ const styles = StyleSheet.create({
   floatingIoChip: {
     minWidth: 92,
     minHeight: 56,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 10,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     padding: spacing.xs,
     justifyContent: 'center',
   },
@@ -1752,32 +1756,32 @@ const styles = StyleSheet.create({
     minWidth: 106,
   },
   floatingIoChipOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   floatingIoAddress: {
-    color: colors.text,
+    color: c.text,
     fontFamily: 'monospace',
     fontSize: 11,
     fontWeight: '900',
   },
   floatingIoAddressOn: {
-    color: colors.green,
+    color: c.green,
   },
   floatingIoName: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '800',
     marginTop: 2,
   },
   floatingIoState: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
     marginTop: 3,
   },
   emptyFloatingIo: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     fontWeight: '800',
     paddingVertical: spacing.sm,
@@ -1797,47 +1801,47 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   paletteChip: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
   },
   paletteChipOn: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   paletteChipAction: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   disabledChip: {
     opacity: 0.55,
   },
   paletteText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '900',
   },
   paletteTextOn: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   paletteTextAction: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   removeBlockButton: {
     minHeight: 40,
-    borderColor: colors.red,
+    borderColor: c.red,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: colors.redSoft,
+    backgroundColor: c.redSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   removeBlockText: {
-    color: colors.red,
+    color: c.red,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -1845,4 +1849,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
-});
+  });
+}

@@ -1,15 +1,17 @@
-import { ComponentProps, memo, useState } from 'react';
+import { ComponentProps, memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MobileBlockQuickEditor } from './MobileBlockQuickEditor';
 import { SmartphoneSimulationPanelWrapper } from './mobileWorkbench/SmartphoneSimulationPanelWrapper';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelEnhanced } from './SmartphoneSimulationPanelEnhanced';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/theme';
 
 type SmartphoneSimulationPanelProps = ComponentProps<typeof SmartphoneSimulationPanelEnhanced>;
 
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel(props: SmartphoneSimulationPanelProps) {
   const [advancedOpen, setAdvancedOpen] = useState(Boolean(props.showAdvancedDiagnostics));
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const activeMission = props.mission ?? undefined;
   const runtimeMode = props.mode === 'edit' ? 'EDITOR' : props.autoScan ? 'AUTO' : 'SCAN';
 
@@ -104,15 +106,16 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
   stack: {
     gap: spacing.md,
   },
   workbenchHeader: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 16,
-    backgroundColor: colors.background,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -124,20 +127,20 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   workbenchEyebrow: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   workbenchTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 16,
     fontWeight: '900',
     marginTop: 3,
   },
   workbenchText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
@@ -150,8 +153,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   flowChip: {
-    color: colors.cyan,
-    borderColor: colors.cyan,
+    color: c.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
@@ -161,13 +164,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   flowArrow: {
-    color: colors.textDim,
+    color: c.textDim,
     fontSize: 10,
     fontWeight: '900',
   },
   workbenchMode: {
-    color: colors.background,
-    backgroundColor: colors.green,
+    color: c.background,
+    backgroundColor: c.green,
     borderRadius: 999,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
@@ -176,14 +179,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   workbenchModeEdit: {
-    backgroundColor: colors.amber,
+    backgroundColor: c.amber,
   },
   advancedButton: {
     minHeight: 54,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,32 +194,32 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   advancedButtonOpen: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
+    borderColor: c.cyan,
+    backgroundColor: c.cyanSoft,
   },
   advancedCopy: {
     flex: 1,
     minWidth: 0,
   },
   advancedTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   advancedTitleOpen: {
-    color: colors.cyan,
+    color: c.cyan,
   },
   advancedText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '800',
     marginTop: 2,
   },
   advancedPill: {
-    color: colors.cyan,
-    borderColor: colors.cyan,
+    color: c.cyan,
+    borderColor: c.cyan,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: spacing.sm,
@@ -225,10 +228,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   advancedPillOpen: {
-    color: colors.background,
-    backgroundColor: colors.cyan,
+    color: c.background,
+    backgroundColor: c.cyan,
   },
   pressed: {
     opacity: 0.72,
   },
-});
+  });
+}

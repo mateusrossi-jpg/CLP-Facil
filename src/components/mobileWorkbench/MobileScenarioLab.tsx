@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../../engine/editorEvaluator';
 import { EditorProjectState } from '../../engine/editorTypes';
 import { PlcState } from '../../engine/projectTypes';
-import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/theme';
 import { MobileScenarioId, MobileScenarioSelector } from './MobileScenarioSelector';
 import { MobileConveyorScenario } from './scenarios/MobileConveyorScenario';
 import { MobileMotorStarterScenario } from './scenarios/MobileMotorStarterScenario';
@@ -47,6 +47,8 @@ function readBoolTag(state: PlcState, address: string): boolean {
 
 export const MobileScenarioLab = memo(function MobileScenarioLab({ editorProject, plcState, evaluation }: Props) {
   const [scenarioId, setScenarioId] = useState<MobileScenarioId>('conveyor');
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const activeTags = scenarioTags[scenarioId];
   const tags = useMemo(
     () =>
@@ -98,24 +100,26 @@ export const MobileScenarioLab = memo(function MobileScenarioLab({ editorProject
   );
 });
 
-const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: spacing.md, gap: spacing.sm },
-  title: { color: colors.text, fontSize: 17, fontWeight: '700' },
-  subtitle: { color: colors.textMuted, fontSize: 12 },
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+  card: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.border, borderRadius: 14, padding: spacing.md, gap: spacing.sm },
+  title: { color: c.text, fontSize: 17, fontWeight: '700' },
+  subtitle: { color: c.textMuted, fontSize: 12 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  badge: { borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surfaceElevated, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  badgeOn: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  badgeWarn: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
-  badgeText: { color: colors.text, fontSize: 11, fontWeight: '600' },
-  section: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.backgroundSoft, padding: spacing.sm, gap: spacing.xs },
-  sectionTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 4 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 4 },
-  headCell: { color: colors.textDim, fontWeight: '700', fontSize: 11 },
-  rowCell: { color: colors.text, fontSize: 12 },
+  badge: { borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surfaceElevated, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  badgeOn: { borderColor: c.green, backgroundColor: c.greenSoft },
+  badgeWarn: { borderColor: c.amber, backgroundColor: c.amberSoft },
+  badgeText: { color: c.text, fontSize: 11, fontWeight: '600' },
+  section: { borderWidth: 1, borderColor: c.border, borderRadius: 10, backgroundColor: c.backgroundSoft, padding: spacing.sm, gap: spacing.xs },
+  sectionTitle: { color: c.text, fontSize: 13, fontWeight: '700' },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: c.border, paddingBottom: 4 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: c.border, paddingVertical: 4 },
+  headCell: { color: c.textDim, fontWeight: '700', fontSize: 11 },
+  rowCell: { color: c.text, fontSize: 12 },
   tagCol: { flex: 1.1 },
   stateCol: { flex: 0.8 },
   funcCol: { flex: 1.6 },
-  on: { color: colors.green },
-  off: { color: colors.inactive },
-});
+  on: { color: c.green },
+  off: { color: c.inactive },
+  });
+}

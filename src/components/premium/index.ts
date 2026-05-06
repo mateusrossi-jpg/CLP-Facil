@@ -3,6 +3,8 @@ export * from './PremiumLayout';
 export * from './PremiumCards';
 export * from './PremiumControls';
 export * from './PremiumAppShell';
+export * from './PremiumDashboard';
+export * from './PremiumSimulatorHome';
 export * from './PremiumRouteContent';
 export * from './PremiumHomeScreen';
 export * from './PremiumLearningScreen';

@@ -1,9 +1,9 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../../engine/editorEvaluator';
 import { EditorRunMode } from '../EditorModeToggle';
-import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/theme';
 
 type Props = {
   mode: EditorRunMode;
@@ -13,9 +13,10 @@ type Props = {
 };
 
 export const MobileRuntimeAnimationLayer = memo(function MobileRuntimeAnimationLayer({ mode, autoScan, evaluation, hasLogic }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   if (!hasLogic) return null;
-  const rungResults = Array.isArray(evaluation.rungResults) ? evaluation.rungResults : [];
-  const energized = rungResults.reduce((count, rung) => count + (rung.active ? 1 : 0), 0);
+  const energized = Object.values(evaluation.rungResults ?? {}).filter(Boolean).length;
   const scan = evaluation.scanNumber ?? 0;
 
   return (
@@ -33,13 +34,17 @@ export const MobileRuntimeAnimationLayer = memo(function MobileRuntimeAnimationL
 });
 
 function Chip({ label }: { label: string }) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   return <Text style={styles.chip}>{label}</Text>;
 }
 
-const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface, padding: spacing.sm, gap: spacing.xs },
-  title: { color: colors.text, fontWeight: '900', fontSize: 13 },
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+  card: { borderWidth: 1, borderColor: c.border, borderRadius: 14, backgroundColor: c.surface, padding: spacing.sm, gap: spacing.xs },
+  title: { color: c.text, fontWeight: '900', fontSize: 13 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { color: colors.cyan, borderWidth: 1, borderColor: colors.cyan, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, fontSize: 10, fontWeight: '900' },
-  text: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
-});
+  chip: { color: c.cyan, borderWidth: 1, borderColor: c.cyan, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, fontSize: 10, fontWeight: '900' },
+  text: { color: c.textMuted, fontSize: 11, fontWeight: '700' },
+  });
+}

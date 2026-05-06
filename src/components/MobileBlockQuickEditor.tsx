@@ -8,8 +8,8 @@ import {
   EditorProjectState,
   EditorTimerMode,
 } from '../engine/editorTypes';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { colors } from '../theme/colors';
 
 type MobileBlockQuickEditorProps = {
   project: EditorProjectState;

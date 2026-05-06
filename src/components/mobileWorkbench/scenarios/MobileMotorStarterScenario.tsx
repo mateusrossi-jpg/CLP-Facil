@@ -1,11 +1,13 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../../theme/colors';
 import { spacing } from '../../../theme/spacing';
+import { useAppTheme } from '../../../theme/theme';
 
 type Props = { tags: Record<string, boolean> };
 
 export const MobileMotorStarterScenario = memo(function MobileMotorStarterScenario({ tags }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const startOn = tags['I0.0'];
   const stopOn = tags['I0.1'];
   const thermalTrip = tags['I0.2'];
@@ -46,31 +48,33 @@ export const MobileMotorStarterScenario = memo(function MobileMotorStarterScenar
   );
 });
 
-const styles = StyleSheet.create({
-  scene: { backgroundColor: colors.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
+function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+  scene: { backgroundColor: c.surfaceElevated, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: c.border },
   headRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  title: { color: colors.text, fontWeight: '700' },
+  title: { color: c.text, fontWeight: '700' },
   badge: { borderRadius: 999, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  badgeRun: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  badgeIdle: { borderColor: colors.amber, backgroundColor: colors.amberSoft },
-  badgeAlarm: { borderColor: colors.red, backgroundColor: colors.redSoft },
-  badgeText: { color: colors.text, fontSize: 10, fontWeight: '700' },
-  panel: { borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 10, backgroundColor: colors.backgroundSoft, padding: spacing.sm, gap: spacing.xs },
-  busBar: { height: 8, backgroundColor: '#223350', borderRadius: 4, borderWidth: 1, borderColor: colors.borderStrong, marginBottom: spacing.xs },
+  badgeRun: { borderColor: c.green, backgroundColor: c.greenSoft },
+  badgeIdle: { borderColor: c.amber, backgroundColor: c.amberSoft },
+  badgeAlarm: { borderColor: c.red, backgroundColor: c.redSoft },
+  badgeText: { color: c.text, fontSize: 10, fontWeight: '700' },
+  panel: { borderWidth: 1, borderColor: c.borderStrong, borderRadius: 10, backgroundColor: c.backgroundSoft, padding: spacing.sm, gap: spacing.xs },
+  busBar: { height: 8, backgroundColor: c.navy, borderRadius: 4, borderWidth: 1, borderColor: c.borderStrong, marginBottom: spacing.xs },
   row: { flexDirection: 'row', gap: spacing.sm },
-  button: { flex: 1, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 9, paddingVertical: spacing.xs, alignItems: 'center' },
-  start: { backgroundColor: colors.greenSoft },
-  stop: { backgroundColor: colors.redSoft },
-  buttonOn: { borderColor: colors.cyan, shadowColor: colors.cyan, shadowOpacity: 0.2, shadowRadius: 5 },
-  buttonLabel: { color: colors.text, fontSize: 12, fontWeight: '700' },
-  module: { flex: 1, height: 42, borderRadius: 9, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
-  contactorOn: { borderColor: colors.green, backgroundColor: colors.greenSoft },
-  thermalTrip: { borderColor: colors.red, backgroundColor: colors.redSoft },
-  motor: { flex: 1, height: 44, borderRadius: 22, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.inactive, justifyContent: 'center', alignItems: 'center' },
-  motorOn: { borderColor: colors.cyan, backgroundColor: colors.cyanSoft },
-  lampPanel: { width: 82, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 9, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface },
-  runLamp: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.inactive, marginBottom: 3 },
-  runLampOn: { backgroundColor: colors.amber },
-  moduleLabel: { color: colors.textMuted, fontSize: 10, fontWeight: '700' },
-  faultText: { marginTop: spacing.xs, color: colors.red, fontWeight: '700', fontSize: 12, textAlign: 'center' },
-});
+  button: { flex: 1, borderWidth: 1, borderColor: c.borderStrong, borderRadius: 9, paddingVertical: spacing.xs, alignItems: 'center' },
+  start: { backgroundColor: c.greenSoft },
+  stop: { backgroundColor: c.redSoft },
+  buttonOn: { borderColor: c.cyan, shadowColor: c.cyan, shadowOpacity: 0.2, shadowRadius: 5 },
+  buttonLabel: { color: c.text, fontSize: 12, fontWeight: '700' },
+  module: { flex: 1, height: 42, borderRadius: 9, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surface, justifyContent: 'center', alignItems: 'center' },
+  contactorOn: { borderColor: c.green, backgroundColor: c.greenSoft },
+  thermalTrip: { borderColor: c.red, backgroundColor: c.redSoft },
+  motor: { flex: 1, height: 44, borderRadius: 22, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.inactive, justifyContent: 'center', alignItems: 'center' },
+  motorOn: { borderColor: c.cyan, backgroundColor: c.cyanSoft },
+  lampPanel: { width: 82, borderWidth: 1, borderColor: c.borderStrong, borderRadius: 9, justifyContent: 'center', alignItems: 'center', backgroundColor: c.surface },
+  runLamp: { width: 14, height: 14, borderRadius: 7, backgroundColor: c.inactive, marginBottom: 3 },
+  runLampOn: { backgroundColor: c.amber },
+  moduleLabel: { color: c.textMuted, fontSize: 10, fontWeight: '700' },
+  faultText: { marginTop: spacing.xs, color: c.red, fontWeight: '700', fontSize: 12, textAlign: 'center' },
+  });
+}

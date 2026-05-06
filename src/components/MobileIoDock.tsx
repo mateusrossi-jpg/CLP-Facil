@@ -3,8 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorProjectState } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
 import { collectMobileIoPoints, isMobileIoActive, mobileIoValueLabel } from '../simulation/mobileIoPoints';
-import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/theme';
 
 type MobileIoDockProps = {
   editorProject: EditorProjectState;
@@ -13,6 +13,8 @@ type MobileIoDockProps = {
 };
 
 export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState, onSetValue }: MobileIoDockProps) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
   const points = useMemo(() => collectMobileIoPoints(editorProject, plcState), [editorProject, plcState]);
   const inputs = points.filter((point) => point.kind === 'input').slice(0, 8);
   const outputs = points.filter((point) => point.kind === 'output').slice(0, 8);
@@ -85,12 +87,13 @@ export const MobileIoDock = memo(function MobileIoDock({ editorProject, plcState
   );
 });
 
-const styles = StyleSheet.create({
+function createStyles(c: ReturnType<typeof useAppTheme>["colors"]) {
+  return StyleSheet.create({
   panel: {
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 14,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     padding: spacing.sm,
     gap: spacing.sm,
   },
@@ -102,13 +105,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   panelTitle: {
-    color: colors.cyan,
+    color: c.cyan,
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 1,
   },
   panelHint: {
-    color: colors.textDim,
+    color: c.textDim,
     fontSize: 10,
     fontWeight: '800',
     marginTop: -spacing.xs,
@@ -119,8 +122,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   counterPill: {
-    color: colors.textMuted,
-    borderColor: colors.border,
+    color: c.textMuted,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
@@ -130,9 +133,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   counterPillOn: {
-    color: colors.background,
-    borderColor: colors.green,
-    backgroundColor: colors.green,
+    color: c.background,
+    borderColor: c.green,
+    backgroundColor: c.green,
   },
   group: {
     gap: spacing.xs,
@@ -144,13 +147,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   groupTitle: {
-    color: colors.text,
+    color: c.text,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   groupHint: {
-    color: colors.textDim,
+    color: c.textDim,
     fontSize: 9,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -163,18 +166,18 @@ const styles = StyleSheet.create({
   inputButton: {
     width: 104,
     minHeight: 78,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     padding: spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
   },
   inputButtonOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   outputRail: {
     flexDirection: 'row',
@@ -184,18 +187,18 @@ const styles = StyleSheet.create({
   outputTile: {
     width: 144,
     minHeight: 58,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     padding: spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
   outputTileOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
+    borderColor: c.green,
+    backgroundColor: c.greenSoft,
   },
   outputCopy: {
     flex: 1,
@@ -205,45 +208,45 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 999,
-    borderColor: colors.textDim,
+    borderColor: c.textDim,
     borderWidth: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   ioLampOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.green,
+    borderColor: c.green,
+    backgroundColor: c.green,
   },
   outputLamp: {
     width: 16,
     height: 16,
     borderRadius: 999,
-    borderColor: colors.textDim,
+    borderColor: c.textDim,
     borderWidth: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   outputLampOn: {
-    borderColor: colors.green,
-    backgroundColor: colors.green,
+    borderColor: c.green,
+    backgroundColor: c.green,
   },
   address: {
-    color: colors.text,
+    color: c.text,
     fontFamily: 'monospace',
     fontSize: 12,
     fontWeight: '900',
   },
   addressOn: {
-    color: colors.green,
+    color: c.green,
   },
   name: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 10,
     fontWeight: '800',
     marginTop: 1,
     textAlign: 'center',
   },
   statePill: {
-    color: colors.textMuted,
-    borderColor: colors.border,
+    color: c.textMuted,
+    borderColor: c.border,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 7,
@@ -254,12 +257,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statePillOn: {
-    color: colors.background,
-    borderColor: colors.green,
-    backgroundColor: colors.green,
+    color: c.background,
+    borderColor: c.green,
+    backgroundColor: c.green,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: c.textMuted,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '700',
@@ -270,4 +273,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.72,
   },
-});
+  });
+}
