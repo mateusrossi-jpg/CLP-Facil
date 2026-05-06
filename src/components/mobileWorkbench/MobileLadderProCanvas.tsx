@@ -40,9 +40,59 @@ function blockSymbol(block: EditorBlock): string {
 function previewBlocks(rung: EditorRung): EditorBlock[] {
   return [
     ...rung.seriesBlocks.slice(0, 4),
-    ...rung.parallelBlocks.slice(0, 1),
     ...(rung.coilBlock ? [rung.coilBlock] : []),
   ];
+}
+
+function branchBlocks(rung: EditorRung): EditorBlock[] {
+  return [
+    ...rung.parallelBlocks,
+    ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
+  ].slice(0, 4);
+}
+
+function blockIsActive(block: EditorBlock, plcState: MobileLadderProCanvasProps['plcState'], rungActive: boolean): boolean {
+  const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
+  return outputLike
+    ? valueOn(plcState, block.variable || block.destination) || rungActive
+    : valueOn(plcState, block.variable || block.sourceA) || (rungActive && block.contactMode !== 'NC');
+}
+
+function CanvasBlock({
+  block,
+  plcState,
+  rungActive,
+  selectedBlockId,
+  onSelectBlockId,
+  compact,
+}: {
+  block: EditorBlock;
+  plcState: MobileLadderProCanvasProps['plcState'];
+  rungActive: boolean;
+  selectedBlockId?: string | null;
+  onSelectBlockId?: (blockId: string) => void;
+  compact?: boolean;
+}) {
+  const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
+  const active = blockIsActive(block, plcState, rungActive);
+  const selectedBlock = selectedBlockId === block.id;
+  return (
+    <Pressable
+      onPress={() => onSelectBlockId?.(block.id)}
+      style={({ pressed }) => [
+        styles.blockNode,
+        compact && styles.blockNodeCompact,
+        outputLike && styles.outputNode,
+        active && styles.blockNodeOn,
+        selectedBlock && styles.blockNodeSelected,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.blockSymbol, compact && styles.blockSymbolCompact, active && styles.blockSymbolOn]}>{blockSymbol(block)}</Text>
+      <Text style={[styles.blockAddress, compact && styles.blockAddressCompact, active && styles.blockAddressOn]} numberOfLines={1}>{blockAddress(block)}</Text>
+      {!compact ? <Text style={styles.blockName} numberOfLines={1}>{block.name}</Text> : null}
+    </Pressable>
+  );
 }
 
 export const MobileLadderProCanvas = memo(function MobileLadderProCanvas({
@@ -64,7 +114,7 @@ export const MobileLadderProCanvas = memo(function MobileLadderProCanvas({
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.eyebrow}>Ladder Canvas PRO</Text>
-          <Text style={styles.title}>Editor visual com snap</Text>
+          <Text style={styles.title}>Editor visual com snap e branch</Text>
         </View>
         <View style={styles.counterPill}>
           <Text style={[styles.counterText, energizedCount > 0 && styles.counterTextOn]}>{energizedCount}/{visibleRungs.length} LIVE</Text>
@@ -80,12 +130,15 @@ export const MobileLadderProCanvas = memo(function MobileLadderProCanvas({
             const rungActive = Boolean(evaluation.rungResults?.[rung.id]);
             const selectedRung = selectedRungId === rung.id;
             const blocks = previewBlocks(rung);
+            const branches = branchBlocks(rung);
+            const hasBranch = branches.length > 0;
             return (
               <Pressable
                 key={rung.id}
                 onPress={() => onSelectRungId?.(rung.id)}
                 style={({ pressed }) => [
                   styles.rungLane,
+                  hasBranch && styles.rungLaneWithBranch,
                   selectedRung && styles.rungLaneSelected,
                   rungActive && styles.rungLaneOn,
                   pressed && styles.pressed,
@@ -95,40 +148,59 @@ export const MobileLadderProCanvas = memo(function MobileLadderProCanvas({
                   <Text style={[styles.rungNumber, selectedRung && styles.rungNumberSelected, rungActive && styles.rungNumberOn]}>{String(rungIndex + 1).padStart(3, '0')}</Text>
                 </View>
 
-                <View style={styles.rungCircuit}>
-                  <View style={[styles.rungWire, rungActive && styles.rungWireOn]} />
-                  <View style={[styles.snapDot, selectedRung && styles.snapDotSelected, rungActive && styles.snapDotOn]} />
+                <View style={styles.rungCircuitWrap}>
+                  <View style={styles.rungCircuit}>
+                    <View style={[styles.rungWire, rungActive && styles.rungWireOn]} />
+                    <View style={[styles.snapDot, selectedRung && styles.snapDotSelected, rungActive && styles.snapDotOn]} />
 
-                  {blocks.length === 0 ? (
-                    <View style={styles.emptyDropZone}>
-                      <Text style={styles.emptyDropText}>+ toque no dock para inserir</Text>
-                    </View>
-                  ) : blocks.map((block, blockIndex) => {
-                    const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
-                    const active = outputLike ? valueOn(plcState, block.variable || block.destination) || rungActive : valueOn(plcState, block.variable || block.sourceA) || (rungActive && block.contactMode !== 'NC');
-                    const selectedBlock = selectedBlockId === block.id;
-                    return (
+                    {blocks.length === 0 ? (
+                      <View style={styles.emptyDropZone}>
+                        <Text style={styles.emptyDropText}>+ toque no dock para inserir</Text>
+                      </View>
+                    ) : blocks.map((block, blockIndex) => (
                       <View key={block.id} style={styles.blockWrap}>
                         {blockIndex > 0 ? <View style={[styles.insertSlot, selectedRung && styles.insertSlotSelected]}><Text style={styles.insertText}>+</Text></View> : null}
-                        <Pressable
-                          onPress={() => onSelectBlockId?.(block.id)}
-                          style={({ pressed }) => [
-                            styles.blockNode,
-                            outputLike && styles.outputNode,
-                            active && styles.blockNodeOn,
-                            selectedBlock && styles.blockNodeSelected,
-                            pressed && styles.pressed,
-                          ]}
-                        >
-                          <Text style={[styles.blockSymbol, active && styles.blockSymbolOn]}>{blockSymbol(block)}</Text>
-                          <Text style={[styles.blockAddress, active && styles.blockAddressOn]} numberOfLines={1}>{blockAddress(block)}</Text>
-                          <Text style={styles.blockName} numberOfLines={1}>{block.name}</Text>
-                        </Pressable>
+                        <CanvasBlock
+                          block={block}
+                          plcState={plcState}
+                          rungActive={rungActive}
+                          selectedBlockId={selectedBlockId}
+                          onSelectBlockId={onSelectBlockId}
+                        />
                       </View>
-                    );
-                  })}
+                    ))}
 
-                  <View style={[styles.snapEnd, selectedRung && styles.snapEndSelected, rungActive && styles.snapEndOn]} />
+                    <View style={[styles.snapEnd, selectedRung && styles.snapEndSelected, rungActive && styles.snapEndOn]} />
+                  </View>
+
+                  {hasBranch ? (
+                    <View style={styles.branchLayer}>
+                      <View style={[styles.branchFork, rungActive && styles.branchForkOn]} />
+                      <View style={[styles.branchMerge, rungActive && styles.branchMergeOn]} />
+                      <View style={[styles.branchWire, rungActive && styles.branchWireOn]} />
+                      <View style={[styles.branchStartDot, rungActive && styles.branchDotOn]} />
+                      <Text style={[styles.branchLabel, rungActive && styles.branchLabelOn]}>BRANCH</Text>
+                      <View style={styles.branchBlocksRow}>
+                        {branches.map((block, index) => (
+                          <View key={block.id} style={styles.branchBlockWrap}>
+                            {index > 0 ? <View style={[styles.branchInsertSlot, selectedRung && styles.insertSlotSelected]}><Text style={styles.insertText}>+</Text></View> : null}
+                            <CanvasBlock
+                              block={block}
+                              plcState={plcState}
+                              rungActive={rungActive}
+                              selectedBlockId={selectedBlockId}
+                              onSelectBlockId={onSelectBlockId}
+                              compact
+                            />
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  ) : selectedRung ? (
+                    <View style={styles.branchGhost}>
+                      <Text style={styles.branchGhostText}>+ Branch paralelo</Text>
+                    </View>
+                  ) : null}
                 </View>
 
                 <View style={styles.rungStateCol}>
@@ -141,7 +213,7 @@ export const MobileLadderProCanvas = memo(function MobileLadderProCanvas({
         </View>
       </ScrollView>
 
-      <Text style={styles.hint}>Selecione a rung, use o dock IDE para inserir peças e toque no bloco para editar TAG/modo.</Text>
+      <Text style={styles.hint}>Branches paralelos agora aparecem com fork, merge e energização independente no canvas.</Text>
     </View>
   );
 });
@@ -198,7 +270,7 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
   },
   canvasArea: {
-    minWidth: 760,
+    minWidth: 820,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 18,
@@ -238,6 +310,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     gap: spacing.sm,
   },
+  rungLaneWithBranch: {
+    minHeight: 142,
+  },
   rungLaneSelected: {
     borderColor: colors.cyan,
     backgroundColor: colors.cyanSoft,
@@ -261,9 +336,12 @@ const styles = StyleSheet.create({
   rungNumberOn: {
     color: colors.green,
   },
-  rungCircuit: {
+  rungCircuitWrap: {
     flex: 1,
-    minWidth: 440,
+    minWidth: 500,
+    gap: spacing.xs,
+  },
+  rungCircuit: {
     minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,6 +446,11 @@ const styles = StyleSheet.create({
     padding: 5,
     gap: 2,
   },
+  blockNodeCompact: {
+    width: 70,
+    minHeight: 46,
+    padding: 4,
+  },
   outputNode: {
     borderRadius: 999,
   },
@@ -385,6 +468,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
   },
+  blockSymbolCompact: {
+    fontSize: 12,
+  },
   blockSymbolOn: {
     color: colors.green,
   },
@@ -394,6 +480,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
   },
+  blockAddressCompact: {
+    fontSize: 9,
+  },
   blockAddressOn: {
     color: colors.green,
   },
@@ -402,6 +491,114 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     textAlign: 'center',
+  },
+  branchLayer: {
+    minHeight: 54,
+    marginLeft: 28,
+    marginRight: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    paddingLeft: 22,
+    paddingRight: 22,
+  },
+  branchFork: {
+    position: 'absolute',
+    left: 0,
+    top: -18,
+    bottom: 22,
+    width: 4,
+    borderRadius: 999,
+    backgroundColor: colors.borderStrong,
+  },
+  branchForkOn: {
+    backgroundColor: colors.green,
+  },
+  branchMerge: {
+    position: 'absolute',
+    right: 0,
+    top: -18,
+    bottom: 22,
+    width: 4,
+    borderRadius: 999,
+    backgroundColor: colors.borderStrong,
+  },
+  branchMergeOn: {
+    backgroundColor: colors.green,
+  },
+  branchWire: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.borderStrong,
+  },
+  branchWireOn: {
+    backgroundColor: colors.green,
+  },
+  branchStartDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.background,
+    marginRight: spacing.xs,
+    zIndex: 20,
+  },
+  branchDotOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.green,
+  },
+  branchLabel: {
+    position: 'absolute',
+    left: 24,
+    top: -2,
+    color: colors.textMuted,
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  branchLabelOn: {
+    color: colors.green,
+  },
+  branchBlocksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  branchBlockWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  branchInsertSlot: {
+    width: 18,
+    height: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  branchGhost: {
+    minHeight: 36,
+    marginLeft: 48,
+    marginRight: 48,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.cyan,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  branchGhostText: {
+    color: colors.cyan,
+    fontSize: 11,
+    fontWeight: '900',
   },
   rungStateCol: {
     width: 116,
