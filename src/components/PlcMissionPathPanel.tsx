@@ -27,10 +27,13 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
     .find((mission) => !completedMissionIds[mission.id]);
   const nextMissionTrack = tracks.find((track) => track.missions.some((mission) => mission.id === nextMission?.id)) ?? tracks[0];
   const [selectedTrackId, setSelectedTrackId] = useState(nextMissionTrack?.id);
+  const [selectedMissionId, setSelectedMissionId] = useState(nextMission?.id ?? nextMissionTrack?.missions[0]?.id);
   const selectedTrack = tracks.find((track) => track.id === selectedTrackId) ?? nextMissionTrack;
+  const selectedMission = tracks.flatMap((track) => track.missions).find((mission) => mission.id === selectedMissionId) ?? nextMission ?? selectedTrack?.missions[0];
   const selectedTrackCompleted = selectedTrack?.missions.filter((mission) => completedMissionIds[mission.id]).length ?? 0;
   const selectedTrackTotal = selectedTrack?.missions.length ?? 0;
   const progressPercent = totalMissions > 0 ? Math.round((completedCount / totalMissions) * 100) : 0;
+  const selectedMissionPassed = Boolean(selectedMission && completedMissionIds[selectedMission.id]);
 
   return (
     <View style={styles.card}>
@@ -49,7 +52,13 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
       </View>
 
       {nextMission ? (
-        <Pressable onPress={() => onOpenMission?.(nextMission)} style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}>
+        <Pressable
+          onPress={() => {
+            setSelectedTrackId(nextMissionTrack?.id);
+            setSelectedMissionId(nextMission.id);
+          }}
+          style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}
+        >
           <View style={styles.continueCopy}>
             <Text style={styles.continueLabel}>Próximo passo</Text>
             <Text style={styles.continueTitle}>{nextMission.title}</Text>
@@ -60,7 +69,7 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
               <Text style={styles.microStep}>3. Rode Scan</Text>
             </View>
           </View>
-          <Text style={styles.continueAction}>Começar</Text>
+          <Text style={styles.continueAction}>Ver</Text>
         </Pressable>
       ) : (
         <View style={styles.continueCardDone}>
@@ -77,7 +86,11 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
           return (
             <Pressable
               key={track.id}
-              onPress={() => setSelectedTrackId(track.id)}
+              onPress={() => {
+                const trackNextMission = track.missions.find((mission) => !completedMissionIds[mission.id]) ?? track.missions[0];
+                setSelectedTrackId(track.id);
+                setSelectedMissionId(trackNextMission?.id);
+              }}
               style={({ pressed }) => [styles.trackTab, selected && styles.trackTabSelected, completed && styles.trackTabDone, pressed && styles.pressed]}
             >
               <Text style={[styles.trackTabIndex, selected && styles.trackTabIndexSelected]}>{completed ? '✓' : trackIndex + 1}</Text>
@@ -108,8 +121,15 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
               return (
                 <Pressable
                   key={mission.id}
-                  onPress={() => onOpenMission?.(mission)}
-                  style={({ pressed }) => [styles.missionRow, completed && styles.missionRowDone, active && styles.missionRowActive, recommended && styles.missionRowRecommended, pressed && styles.pressed]}
+                  onPress={() => setSelectedMissionId(mission.id)}
+                  style={({ pressed }) => [
+                    styles.missionRow,
+                    completed && styles.missionRowDone,
+                    active && styles.missionRowActive,
+                    recommended && styles.missionRowRecommended,
+                    selectedMission?.id === mission.id && styles.missionRowSelected,
+                    pressed && styles.pressed,
+                  ]}
                 >
                   <View style={[styles.missionDot, completed && styles.missionDotDone, active && styles.missionDotActive, recommended && styles.missionDotRecommended]}>
                     <Text style={[styles.missionDotText, (completed || active || recommended) && styles.missionDotTextActive]}>{completed ? '✓' : missionIndex + 1}</Text>
@@ -125,6 +145,38 @@ export const PlcMissionPathPanel = memo(function PlcMissionPathPanel({
               );
             })}
           </View>
+        </View>
+      ) : null}
+
+      {selectedMission ? (
+        <View style={[styles.briefingCard, selectedMissionPassed && styles.briefingCardDone]}>
+          <View style={styles.briefingHeader}>
+            <View style={styles.briefingCopy}>
+              <Text style={[styles.briefingLabel, selectedMissionPassed && styles.briefingLabelDone]}>
+                {selectedMissionPassed ? 'Missão feita' : selectedMission.id === nextMission?.id ? 'Missão recomendada' : 'Briefing da missão'}
+              </Text>
+              <Text style={styles.briefingTitle}>{selectedMission.title}</Text>
+            </View>
+            <Text style={[styles.briefingStatus, selectedMissionPassed && styles.briefingStatusDone]}>
+              {selectedMissionPassed ? 'OK' : 'Prática'}
+            </Text>
+          </View>
+          <Text style={styles.briefingText}>{selectedMission.story}</Text>
+          <View style={styles.briefingObjectiveBox}>
+            <Text style={styles.briefingObjectiveLabel}>Objetivo</Text>
+            <Text style={styles.briefingObjectiveText}>{selectedMission.objective}</Text>
+          </View>
+          <View style={styles.briefingComponentRail}>
+            {selectedMission.availableComponents.slice(0, 6).map((component) => (
+              <Text key={component} style={styles.briefingComponent}>{component}</Text>
+            ))}
+          </View>
+          <Text style={styles.briefingHint}>
+            O app vai validar: {selectedMission.validation[0]?.feedback ?? 'se o resultado esperado apareceu no simulador.'}
+          </Text>
+          <Pressable onPress={() => onOpenMission?.(selectedMission)} style={({ pressed }) => [styles.briefingButton, pressed && styles.pressed]}>
+            <Text style={styles.briefingButtonText}>{selectedMissionPassed ? 'Refazer no simulador' : 'Começar no simulador'}</Text>
+          </Pressable>
         </View>
       ) : null}
     </View>
@@ -384,6 +436,9 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
     backgroundColor: colors.greenSoft,
   },
+  missionRowSelected: {
+    borderColor: colors.cyan,
+  },
   missionDot: {
     width: 26,
     height: 26,
@@ -443,6 +498,122 @@ const styles = StyleSheet.create({
   },
   openTextRecommended: {
     color: colors.green,
+  },
+  briefingCard: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 16,
+    backgroundColor: colors.cyanSoft,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  briefingCardDone: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  briefingHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  briefingCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  briefingLabel: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  briefingLabelDone: {
+    color: colors.green,
+  },
+  briefingTitle: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  briefingStatus: {
+    color: colors.cyan,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  briefingStatusDone: {
+    color: colors.green,
+    borderColor: colors.green,
+  },
+  briefingText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '800',
+  },
+  briefingObjectiveBox: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    gap: 2,
+  },
+  briefingObjectiveLabel: {
+    color: colors.textDim,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  briefingObjectiveText: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
+  },
+  briefingComponentRail: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  briefingComponent: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+  },
+  briefingHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+  },
+  briefingButton: {
+    minHeight: 42,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  briefingButtonText: {
+    color: colors.background,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   pressed: {
     opacity: 0.72,
