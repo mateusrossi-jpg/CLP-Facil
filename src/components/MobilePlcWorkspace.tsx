@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
@@ -51,6 +51,8 @@ type MobilePlcWorkspaceProps = {
 };
 
 const noop = () => undefined;
+
+const editorCategories = ['Comando', 'Contatos', 'Saidas', 'Temporizadores', 'Contadores', 'Matematica'] as const;
 
 function cycleStatus(evaluation: EditorEvaluationResult): string {
   const diagnostics = evaluation.diagnostics?.length ?? 0;
@@ -317,13 +319,71 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       ) : null}
 
-      <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
+      {simulationMode ? (
+        <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
+      ) : (
+        <View style={styles.editorToolbox}>
+          <View style={styles.editorToolboxHeader}>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.eyebrow}>Pinça de montagem</Text>
+              <Text style={styles.editorToolboxTitle}>Escolha uma peça, toque em um bloco para ajustar, e mantenha o Ladder como área principal.</Text>
+            </View>
+            <View style={styles.freePill}>
+              <Text style={styles.freePillText}>Livre</Text>
+            </View>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
+            {editorCategories.map((category, index) => (
+              <View key={category} style={[styles.categoryChip, index === 0 && styles.categoryChipOn]}>
+                <Text style={[styles.categoryText, index === 0 && styles.categoryTextOn]}>{category}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.assemblyGrid}>
+            {[
+              { label: 'Contato', symbol: '--| |--', action: onAddContact },
+              { label: 'Bobina', symbol: '--( )--', action: onAddCoil },
+              { label: 'Timer', symbol: '[TON]', action: onAddTimer },
+              { label: 'Branch', symbol: 'BR', action: onAddBranch },
+            ].map((item) => (
+              <Pressable
+                key={item.label}
+                disabled={!item.action}
+                onPress={() => {
+                  item.action?.();
+                  setEditing(false);
+                }}
+                style={({ pressed }) => [styles.assemblyTile, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
+              >
+                <Text style={styles.assemblySymbol}>{item.symbol}</Text>
+                <Text style={styles.assemblyLabel}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View style={styles.editorModeHint}>
+            <Text style={styles.editorModeHintText}>Toque direto no contato, bobina, timer ou contador para abrir detalhes e remover.</Text>
+          </View>
+
+          <View style={styles.rungActionRow}>
+            <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.rungActionButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
+              <Text style={styles.rungActionText}>Adicionar rung abaixo</Text>
+            </Pressable>
+            <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.rungRemoveButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
+              <Text style={styles.rungRemoveText}>Remover rung</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       <MobileRungViewer
         editorProject={editorProject}
         plcState={plcState}
         evaluation={evaluation}
         rungIndex={rungIndex}
+        selectedBlockId={selectedBlockId}
         onSelectRungIndex={setRungIndex}
         onSelectBlock={(block) => {
           setSelectedBlockId(block.id);
@@ -335,45 +395,6 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           }
         }}
       />
-
-      {editMode ? (
-        <View style={styles.editorToolbox}>
-          <View style={styles.editorToolboxHeader}>
-            <View style={styles.sheetCopy}>
-              <Text style={styles.eyebrow}>Modo editor</Text>
-              <Text style={styles.editorToolboxTitle}>Monte uma rung por vez. Toque em um bloco para editar detalhes.</Text>
-            </View>
-            <Pressable onPress={() => setEditing(true)} style={({ pressed }) => [styles.inlineDetailsButton, pressed && styles.pressed]}>
-              <Text style={styles.inlineDetailsText}>{selectedBlock ? 'Editar bloco' : 'Novo bloco'}</Text>
-            </Pressable>
-          </View>
-          <View style={styles.paletteRow}>
-            {[
-              { label: '+ Contato', action: onAddContact },
-              { label: '+ Bobina', action: onAddCoil },
-              { label: '+ Timer', action: onAddTimer },
-              { label: '+ Branch', action: onAddBranch },
-            ].map((item) => (
-              <Pressable
-                key={item.label}
-                disabled={!item.action}
-                onPress={item.action}
-                style={({ pressed }) => [styles.paletteChip, item.action && styles.paletteChipAction, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
-              >
-                <Text style={[styles.paletteText, item.action && styles.paletteTextAction]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.rungActionRow}>
-            <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.rungActionButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
-              <Text style={styles.rungActionText}>Adicionar rung abaixo</Text>
-            </Pressable>
-            <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.rungRemoveButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
-              <Text style={styles.rungRemoveText}>Remover rung</Text>
-            </Pressable>
-          </View>
-        </View>
-      ) : null}
 
       {showHint && !mission ? (
         <View style={styles.hintBox}>
@@ -930,6 +951,90 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: '900',
     marginTop: 2,
+  },
+  freePill: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  freePillText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  categoryRail: {
+    gap: spacing.xs,
+    paddingRight: spacing.sm,
+  },
+  categoryChip: {
+    minHeight: 34,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  categoryChipOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.background,
+  },
+  categoryText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  categoryTextOn: {
+    color: colors.cyan,
+  },
+  assemblyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  assemblyTile: {
+    flexGrow: 1,
+    flexBasis: '30%',
+    minWidth: 92,
+    minHeight: 72,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.sm,
+  },
+  assemblySymbol: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  assemblyLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '900',
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  editorModeHint: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    padding: spacing.sm,
+  },
+  editorModeHintText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
   },
   rungActionRow: {
     flexDirection: 'row',

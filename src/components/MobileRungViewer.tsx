@@ -15,6 +15,7 @@ type MobileRungViewerProps = {
   plcState: PlcState;
   evaluation: EditorEvaluationResult;
   rungIndex: number;
+  selectedBlockId?: string | null;
   onSelectRungIndex?: (index: number) => void;
   onSelectBlock?: (block: EditorBlock) => void;
 };
@@ -115,7 +116,7 @@ function branchesForRung(rung: EditorRung) {
   }];
 }
 
-function BlockChip({ block, active, mode, zoom = 1, onPress }: { block: EditorBlock; active: boolean; mode: MobileRungViewMode; zoom?: number; onPress?: () => void }) {
+function BlockChip({ block, active, selected, mode, zoom = 1, onPress }: { block: EditorBlock; active: boolean; selected?: boolean; mode: MobileRungViewMode; zoom?: number; onPress?: () => void }) {
   const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
   const symbol = outputLike ? coilSymbol(block) : contactSymbol(block);
   return (
@@ -130,6 +131,7 @@ function BlockChip({ block, active, mode, zoom = 1, onPress }: { block: EditorBl
         },
         outputLike && styles.outputChip,
         active && styles.blockChipOn,
+        selected && styles.blockChipSelected,
         pressed && styles.pressed,
       ]}
     >
@@ -145,6 +147,7 @@ function MobileLadderCanvas({
   rungActive,
   plcState,
   conductingBlocks,
+  selectedBlockId,
   zoom,
   onSelectBlock,
 }: {
@@ -152,6 +155,7 @@ function MobileLadderCanvas({
   rungActive: boolean;
   plcState: PlcState;
   conductingBlocks: Set<string>;
+  selectedBlockId?: string | null;
   zoom: number;
   onSelectBlock?: (block: EditorBlock) => void;
 }) {
@@ -193,7 +197,7 @@ function MobileLadderCanvas({
               <View style={[styles.mobileMainLine, lineColorStyle, { left: branchStartX, top: branchY, width: branchEndX - branchStartX }]} />
               {branch.blocks.map((block, blockIndex) => (
                 <View key={block.id} style={[styles.mobileAbsoluteBlock, { left: branchStartX + blockIndex * stepX - Math.round(blockWidth * 0.42), top: branchY - Math.round(blockHeight * 0.52) }]}>
-                  <BlockChip block={block} active={conductingBlocks.has(block.id)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
+                  <BlockChip block={block} active={conductingBlocks.has(block.id)} selected={selectedBlockId === block.id} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
                 </View>
               ))}
             </View>
@@ -202,13 +206,13 @@ function MobileLadderCanvas({
 
         {rung.seriesBlocks.map((block, index) => (
           <View key={block.id} style={[styles.mobileAbsoluteBlock, { left: startX + index * stepX, top: blockTop }]}>
-            <BlockChip block={block} active={conductingBlocks.has(block.id)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
+            <BlockChip block={block} active={conductingBlocks.has(block.id)} selected={selectedBlockId === block.id} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
           </View>
         ))}
 
         {rung.coilBlock ? (
           <View style={[styles.mobileAbsoluteBlock, { left: coilLeft, top: blockTop }]}>
-            <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} />
+            <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} selected={selectedBlockId === rung.coilBlock.id} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} />
           </View>
         ) : null}
       </View>
@@ -221,6 +225,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   plcState,
   evaluation,
   rungIndex,
+  selectedBlockId,
   onSelectRungIndex,
   onSelectBlock,
 }: MobileRungViewerProps) {
@@ -351,6 +356,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
                     rungActive={itemActive}
                     plcState={plcState}
                     conductingBlocks={itemConducting}
+                    selectedBlockId={selectedBlockId}
                     zoom={ladderZoom}
                     onSelectBlock={onSelectBlock}
                   />
@@ -364,6 +370,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             rungActive={rungActive}
             plcState={plcState}
             conductingBlocks={conductingBlocks}
+            selectedBlockId={selectedBlockId}
             zoom={ladderZoom}
             onSelectBlock={onSelectBlock}
           />
@@ -384,7 +391,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
                 {itemBlocks.map((block, index) => (
                   <View key={`${block.id}-${index}`} style={styles.flowRow}>
                     <Text style={styles.flowIndex}>{index + 1}</Text>
-                    <BlockChip block={block} active={block.role === 'contact' ? itemConducting.has(block.id) : blockActive(block, plcState, itemActive)} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
+                    <BlockChip block={block} active={block.role === 'contact' ? itemConducting.has(block.id) : blockActive(block, plcState, itemActive)} selected={selectedBlockId === block.id} mode={viewMode} onPress={() => onSelectBlock?.(block)} />
                   </View>
                 ))}
               </View>
@@ -410,7 +417,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
                     ? active ? 'CONDUZ' : closed ? 'FECHADO' : 'ABERTO'
                     : active ? 'ON' : 'OFF';
                   return (
-                    <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, closed && !active && styles.listRowClosed, active && styles.listRowOn]}>
+                    <Pressable key={`${block.id}-${index}`} onPress={() => onSelectBlock?.(block)} style={[styles.listRow, closed && !active && styles.listRowClosed, active && styles.listRowOn, selectedBlockId === block.id && styles.listRowSelected]}>
                       <Text style={styles.flowIndex}>{index + 1}</Text>
                       <View style={styles.listCopy}>
                         <Text style={[styles.listTitle, active && styles.blockAddressOn]}>{blockAddress(block)} • {block.name}</Text>
@@ -787,6 +794,11 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
     backgroundColor: colors.background,
   },
+  blockChipSelected: {
+    borderColor: colors.cyan,
+    borderWidth: 2,
+    backgroundColor: colors.cyanSoft,
+  },
   blockAddress: {
     color: colors.text,
     fontFamily: 'monospace',
@@ -845,6 +857,10 @@ const styles = StyleSheet.create({
   listRowOn: {
     borderColor: colors.green,
     backgroundColor: colors.surface,
+  },
+  listRowSelected: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
   },
   listRowClosed: {
     borderColor: colors.borderStrong,
