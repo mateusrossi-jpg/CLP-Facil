@@ -7,6 +7,7 @@ import { MobileEnergyFlow } from './MobileEnergyFlow';
 import { MobileFactoryProcessPanel } from './MobileFactoryProcessPanel';
 import { MobileIdeToolDock } from './MobileIdeToolDock';
 import { MobileLadderProCanvas } from './MobileLadderProCanvas';
+import { MobileLadderSelectionToolbar } from './MobileLadderSelectionToolbar';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobileMiniHmiPanel } from './MobileMiniHmiPanel';
 import { MobileMiniScadaPanel } from './MobileMiniScadaPanel';
@@ -127,6 +128,13 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
             selectedBlockId={props.selectedBlockId}
             onSelectRungId={props.onSelectRungId}
             onSelectBlockId={props.onSelectBlockId}
+          />
+
+          <MobileLadderSelectionToolbar
+            editorProject={props.editorProject}
+            selectedBlockId={props.selectedBlockId}
+            mode={props.mode}
+            onRemoveBlock={props.onRemoveBlock}
           />
         </>
       ) : null}
