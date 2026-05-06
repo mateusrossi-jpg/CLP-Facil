@@ -15,6 +15,7 @@ type MobileRungViewerProps = {
   plcState: PlcState;
   evaluation: EditorEvaluationResult;
   rungIndex: number;
+  canvasMode?: boolean;
   selectedBlockId?: string | null;
   onSelectRungIndex?: (index: number) => void;
   onSelectBlock?: (block: EditorBlock) => void;
@@ -315,6 +316,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   plcState,
   evaluation,
   rungIndex,
+  canvasMode = false,
   selectedBlockId,
   onSelectRungIndex,
   onSelectBlock,
@@ -331,6 +333,8 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
   const outputActive = outputBlock ? blockActive(outputBlock, plcState, rungActive) : false;
   const compiledMode = rungScope === 'compiled';
+  const diagramCompiledMode = canvasMode ? false : compiledMode;
+  const diagramViewMode: MobileRungViewMode = canvasMode ? 'ladder' : viewMode;
   const energizedCount = editorProject.rungs.filter((item) => evaluation.rungResults?.[item.id]).length;
 
   if (!rung) {
@@ -342,18 +346,18 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   }
 
   return (
-    <View style={[styles.card, rungActive && styles.cardOn]}>
-      <View style={styles.header}>
+    <View style={[styles.card, rungActive && styles.cardOn, canvasMode && styles.canvasCard]}>
+      <View style={[styles.header, canvasMode && styles.canvasHeader]}>
         <View style={styles.rungCopy}>
-          <Text style={styles.eyebrow}>{compiledMode ? 'Programa completo' : `Rung ${safeIndex + 1} de ${editorProject.rungs.length}`}</Text>
-          <Text style={styles.title}>{compiledMode ? `${editorProject.rungs.length} rungs no mesmo bloco` : rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
+          <Text style={styles.eyebrow}>{canvasMode ? 'Mesa de edição' : diagramCompiledMode ? 'Programa completo' : `Rung ${safeIndex + 1} de ${editorProject.rungs.length}`}</Text>
+          <Text style={[styles.title, canvasMode && styles.canvasTitle]}>{canvasMode ? `${safeIndex + 1}/${editorProject.rungs.length} • ${rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}` : diagramCompiledMode ? `${editorProject.rungs.length} rungs no mesmo bloco` : rung.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
         </View>
         <View style={[styles.statusPill, rungActive && styles.statusPillOn]}>
-          <Text style={[styles.statusText, rungActive && styles.statusTextOn]}>{compiledMode ? `${energizedCount}/${editorProject.rungs.length}` : rungActive ? 'TRUE' : 'FALSE'}</Text>
+          <Text style={[styles.statusText, rungActive && styles.statusTextOn]}>{diagramCompiledMode ? `${energizedCount}/${editorProject.rungs.length}` : rungActive ? 'TRUE' : 'FALSE'}</Text>
         </View>
       </View>
 
-      <View style={styles.scopeRow}>
+      {!canvasMode ? <View style={styles.scopeRow}>
         {([
           ['individual', 'Rung'],
           ['compiled', 'Programa'],
@@ -372,10 +376,10 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             </Pressable>
           );
         })}
-      </View>
+      </View> : null}
 
-      <View style={styles.navRow}>
-        {!compiledMode ? (
+      {!canvasMode ? <View style={styles.navRow}>
+        {!diagramCompiledMode ? (
           <Pressable disabled={safeIndex === 0} onPress={() => onSelectRungIndex?.(safeIndex - 1)} style={[styles.navButton, safeIndex === 0 && styles.disabled]}>
             <Text style={styles.navText}>Anterior</Text>
           </Pressable>
@@ -390,14 +394,14 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             );
           })}
         </View>
-        {!compiledMode ? (
+        {!diagramCompiledMode ? (
           <Pressable disabled={safeIndex >= editorProject.rungs.length - 1} onPress={() => onSelectRungIndex?.(safeIndex + 1)} style={[styles.navButton, safeIndex >= editorProject.rungs.length - 1 && styles.disabled]}>
             <Text style={styles.navText}>Proxima</Text>
           </Pressable>
         ) : null}
-      </View>
+      </View> : null}
 
-      {!compiledMode ? (
+      {!diagramCompiledMode && !canvasMode ? (
         <View style={[styles.outputSummary, outputActive && styles.outputSummaryOn]}>
         <View style={styles.outputSummaryCopy}>
           <Text style={styles.outputSummaryLabel}>Carga / saida</Text>
@@ -409,23 +413,23 @@ export const MobileRungViewer = memo(function MobileRungViewer({
       </View>
       ) : null}
 
-      {viewMode === 'ladder' ? (
+      {diagramViewMode === 'ladder' ? (
         <>
-        <View style={styles.zoomRow}>
+        {!canvasMode ? <View style={styles.zoomRow}>
           <Text style={styles.zoomHint}>Arraste para o lado</Text>
           <View style={styles.zoomControls}>
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current - 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>-</Text>
             </Pressable>
-            <Pressable onPress={() => setLadderZoom(compiledMode ? 0.62 : 0.76)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setLadderZoom(diagramCompiledMode ? 0.62 : 0.76)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
               <Text style={styles.zoomValueText}>{Math.round(ladderZoom * 100)}%</Text>
             </Pressable>
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current + 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>+</Text>
             </Pressable>
           </View>
-        </View>
-        {compiledMode ? (
+        </View> : null}
+        {diagramCompiledMode ? (
           <MobileProgramSheet
             rungs={editorProject.rungs}
             activeRungId={rung.id}
@@ -450,16 +454,16 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         </>
       ) : null}
 
-      {viewMode === 'flow' ? (
+      {diagramViewMode === 'flow' ? (
         <View style={styles.flowStack}>
-          {(compiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
+          {(diagramCompiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
             const itemActive = Boolean(evaluation.rungResults?.[item.id]);
             const itemTrace = traceEditorRung(item, plcState, evaluation.runtime);
             const itemConducting = conductiveBlockIds(item, itemTrace);
             const itemBlocks = flattenRung(item);
             return (
-              <View key={item.id} style={compiledMode && styles.compiledTextRung}>
-                {compiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
+              <View key={item.id} style={diagramCompiledMode && styles.compiledTextRung}>
+                {diagramCompiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
                 {itemBlocks.map((block, index) => (
                   <View key={`${block.id}-${index}`} style={styles.flowRow}>
                     <Text style={styles.flowIndex}>{index + 1}</Text>
@@ -472,16 +476,16 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         </View>
       ) : null}
 
-      {viewMode === 'list' ? (
+      {diagramViewMode === 'list' ? (
         <View style={styles.flowStack}>
-          {(compiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
+          {(diagramCompiledMode ? editorProject.rungs : [rung]).map((item, rungListIndex) => {
             const itemActive = Boolean(evaluation.rungResults?.[item.id]);
             const itemTrace = traceEditorRung(item, plcState, evaluation.runtime);
             const itemConducting = conductiveBlockIds(item, itemTrace);
             const itemBlocks = flattenRung(item);
             return (
-              <View key={item.id} style={compiledMode && styles.compiledTextRung}>
-                {compiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
+              <View key={item.id} style={diagramCompiledMode && styles.compiledTextRung}>
+                {diagramCompiledMode ? <Text style={styles.compiledRungIndex}>Rung {rungListIndex + 1} • {item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text> : null}
                 {itemBlocks.map((block, index) => {
                   const closed = traceContactClosed(block, itemTrace);
                   const active = block.role === 'contact' ? itemConducting.has(block.id) : blockActive(block, plcState, itemActive);
@@ -517,6 +521,15 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     gap: spacing.sm,
   },
+  canvasCard: {
+    borderColor: 'transparent',
+    borderWidth: 0,
+    borderRadius: 18,
+    backgroundColor: colors.black,
+    padding: 0,
+    gap: spacing.xs,
+    overflow: 'hidden',
+  },
   cardOn: {
     borderColor: colors.green,
     backgroundColor: colors.surface,
@@ -526,6 +539,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  canvasHeader: {
+    minHeight: 42,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceGlass,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    marginBottom: spacing.xs,
   },
   rungCopy: {
     flex: 1,
@@ -544,6 +567,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '900',
     marginTop: 2,
+  },
+  canvasTitle: {
+    fontSize: 13,
+    lineHeight: 17,
   },
   statusPill: {
     borderColor: colors.borderStrong,
@@ -725,12 +752,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   mobileCanvasScroller: {
-    paddingVertical: spacing.xs,
-    paddingRight: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingRight: spacing.md,
+    paddingLeft: spacing.xs,
   },
   mobileCircuitCanvas: {
     position: 'relative',
-    backgroundColor: 'transparent',
+    backgroundColor: colors.black,
     overflow: 'hidden',
   },
   mobileRail: {

@@ -392,7 +392,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   }
 
   return (
-    <View ref={workspaceRef} onLayout={measureDragTargets} style={[styles.workspace, deskLikeEditor && styles.workspaceDesk]}>
+    <View ref={workspaceRef} onLayout={measureDragTargets} style={[styles.workspace, editMode && styles.workspaceCanvas, deskLikeEditor && styles.workspaceDesk]}>
       <View style={styles.topBar}>
         <View style={styles.topCopy}>
           <Text style={styles.eyebrow}>Missao</Text>
@@ -408,12 +408,12 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       </View>
 
-      <View style={styles.scanRow}>
+      {simulationMode ? <View style={styles.scanRow}>
         <Text style={styles.scanText}>Scan #{evaluation.scanNumber || 0}</Text>
         <Text style={[styles.scanText, diagnostics > 0 && styles.warningText]}>{cycleStatus(evaluation)}</Text>
-      </View>
+      </View> : null}
 
-      {mission && !(editMode && deskLikeEditor) ? (
+      {mission && simulationMode ? (
         <View style={[styles.missionBox, missionPassed && styles.missionBoxDone]}>
           <View style={styles.missionHeader}>
             <View style={styles.missionCopy}>
@@ -472,21 +472,57 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 
       {simulationMode ? (
         <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
-      ) : (
-        <View style={[styles.editorDock, deskLikeEditor && styles.editorDockDesk]}>
-          <View style={styles.editorDockHeader}>
-            <View style={styles.sheetCopy}>
-              <Text style={styles.eyebrow}>Modo editor</Text>
-              <Text style={styles.editorDockTitle}>{selectedTool ? `${selectedTool.label}: ${selectedTool.hint}` : 'A rung fica limpa. Abra Peças, escolha e solte na linha.'}</Text>
-            </View>
-            <View style={styles.editorDockActions}>
-              <Pressable onPress={() => setToolboxOpen((current) => !current)} style={({ pressed }) => [styles.editorDockButton, toolboxOpen && styles.editorDockButtonOn, pressed && styles.pressed]}>
-                <Text style={[styles.editorDockButtonText, toolboxOpen && styles.editorDockButtonTextOn]}>Peças</Text>
-              </Pressable>
-              <Pressable onPress={() => setEditorDeskMode((current) => !current)} style={({ pressed }) => [styles.editorDockButton, deskLikeEditor && styles.editorDockButtonOn, pressed && styles.pressed]}>
-                <Text style={[styles.editorDockButtonText, deskLikeEditor && styles.editorDockButtonTextOn]}>{deskLikeEditor ? 'Mesa' : 'Tela'}</Text>
-              </Pressable>
-            </View>
+      ) : null}
+
+      <View
+        ref={rungDropRef}
+        onLayout={measureDragTargets}
+        style={[styles.rungDropTarget, editMode && dragState && styles.rungDropTargetActive, editMode && dragState?.overDrop && styles.rungDropTargetOver]}
+      >
+        <MobileRungViewer
+          editorProject={editorProject}
+          plcState={plcState}
+          evaluation={evaluation}
+          rungIndex={rungIndex}
+          canvasMode={editMode}
+          selectedBlockId={selectedBlockId}
+          onSelectRungIndex={selectVisibleRung}
+          onSelectBlock={(block) => {
+            const blockRungIndex = findBlockRungIndex(editorProject, block.id);
+            if (blockRungIndex >= 0) selectVisibleRung(blockRungIndex);
+            setSelectedBlockId(block.id);
+            onSelectBlockId?.(block.id);
+            if (editMode) {
+              setEditing(true);
+            } else {
+              setShowHint(true);
+            }
+          }}
+        />
+        {editMode && dragState ? (
+          <View pointerEvents="none" style={[styles.rungDropOverlay, dragState.overDrop && styles.rungDropOverlayOn]}>
+            <Text style={[styles.rungDropOverlayText, dragState.overDrop && styles.rungDropOverlayTextOn]}>
+              {dragState.overDrop ? `Solte para inserir na rung ${rungIndex + 1}` : 'Arraste a peça até esta área'}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      {editMode ? (
+        <View style={[styles.editorCanvasTray, toolboxOpen && styles.editorCanvasTrayOpen]}>
+          <View style={styles.editorCanvasTrayHeader}>
+            <Pressable onPress={() => setToolboxOpen((current) => !current)} style={({ pressed }) => [styles.editorRoundButton, toolboxOpen && styles.editorRoundButtonOn, pressed && styles.pressed]}>
+              <Text style={[styles.editorRoundButtonText, toolboxOpen && styles.editorRoundButtonTextOn]}>{toolboxOpen ? 'Ocultar peças' : 'Peças'}</Text>
+            </Pressable>
+            <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.editorIconButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
+              <Text style={styles.editorIconButtonText}>+ Rung</Text>
+            </Pressable>
+            <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.editorIconDangerButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
+              <Text style={styles.editorIconDangerText}>Remover</Text>
+            </Pressable>
+            <Pressable onPress={() => setEditorDeskMode((current) => !current)} style={({ pressed }) => [styles.editorRoundButton, deskLikeEditor && styles.editorRoundButtonOn, pressed && styles.pressed]}>
+              <Text style={[styles.editorRoundButtonText, deskLikeEditor && styles.editorRoundButtonTextOn]}>{deskLikeEditor ? 'Mesa' : 'Tela'}</Text>
+            </Pressable>
           </View>
 
           {toolboxOpen ? (
@@ -522,53 +558,11 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
               })}
             </ScrollView>
           ) : null}
-
-          <View style={styles.rungActionRow}>
-            <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.rungActionButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
-              <Text style={styles.rungActionText}>+ Rung</Text>
-            </Pressable>
-            <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.rungRemoveButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
-              <Text style={styles.rungRemoveText}>Remover rung</Text>
-            </Pressable>
-          </View>
         </View>
-      )}
+      ) : null}
 
-      <View
-        ref={rungDropRef}
-        onLayout={measureDragTargets}
-        style={[styles.rungDropTarget, editMode && dragState && styles.rungDropTargetActive, editMode && dragState?.overDrop && styles.rungDropTargetOver]}
-      >
-        <MobileRungViewer
-          editorProject={editorProject}
-          plcState={plcState}
-          evaluation={evaluation}
-          rungIndex={rungIndex}
-          selectedBlockId={selectedBlockId}
-          onSelectRungIndex={selectVisibleRung}
-          onSelectBlock={(block) => {
-            const blockRungIndex = findBlockRungIndex(editorProject, block.id);
-            if (blockRungIndex >= 0) selectVisibleRung(blockRungIndex);
-            setSelectedBlockId(block.id);
-            onSelectBlockId?.(block.id);
-            if (editMode) {
-              setEditing(true);
-            } else {
-              setShowHint(true);
-            }
-          }}
-        />
-        {editMode && dragState ? (
-          <View pointerEvents="none" style={[styles.rungDropOverlay, dragState.overDrop && styles.rungDropOverlayOn]}>
-            <Text style={[styles.rungDropOverlayText, dragState.overDrop && styles.rungDropOverlayTextOn]}>
-              {dragState.overDrop ? `Solte para inserir na rung ${rungIndex + 1}` : 'Arraste a peça até esta área'}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      {editMode && selectedTool ? (
-        <Pressable onPress={() => insertSelectedTool()} style={({ pressed }) => [styles.dropZone, dragState?.overDrop && styles.dropZoneOn, pressed && styles.pressed]}>
+      {editMode && selectedTool && !dragState ? (
+        <Pressable onPress={() => insertSelectedTool()} style={({ pressed }) => [styles.dropZone, pressed && styles.pressed]}>
           <View style={styles.dropZoneIcon}>
             <Text style={styles.dropZoneIconText}>{selectedTool.symbol}</Text>
           </View>
@@ -906,6 +900,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
+  workspaceCanvas: {
+    borderColor: colors.border,
+    backgroundColor: colors.black,
+  },
   workspaceDesk: {
     padding: spacing.sm,
     gap: spacing.xs,
@@ -1191,6 +1189,78 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginTop: 2,
   },
+  editorCanvasTray: {
+    borderColor: 'transparent',
+    borderWidth: 1,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceGlass,
+    padding: spacing.xs,
+    gap: spacing.xs,
+  },
+  editorCanvasTrayOpen: {
+    borderColor: colors.border,
+  },
+  editorCanvasTrayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  editorRoundButton: {
+    minHeight: 34,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.black,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  editorRoundButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  editorRoundButtonText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  editorRoundButtonTextOn: {
+    color: colors.cyan,
+  },
+  editorIconButton: {
+    flex: 1,
+    minHeight: 34,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.cyanSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  editorIconButtonText: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  editorIconDangerButton: {
+    flex: 1,
+    minHeight: 34,
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.redSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  editorIconDangerText: {
+    color: colors.red,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
   editorDockActions: {
     flexDirection: 'row',
     gap: spacing.xs,
@@ -1222,15 +1292,15 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
   },
   toolTile: {
-    width: 112,
-    minHeight: 72,
+    width: 92,
+    minHeight: 62,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
+    borderRadius: 14,
+    backgroundColor: colors.black,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.sm,
+    padding: spacing.xs,
   },
   toolTileOn: {
     borderColor: colors.cyan,
@@ -1242,7 +1312,7 @@ const styles = StyleSheet.create({
   },
   toolSymbol: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '900',
     fontFamily: 'monospace',
   },
@@ -1251,7 +1321,7 @@ const styles = StyleSheet.create({
   },
   toolLabel: {
     color: colors.text,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '900',
     marginTop: 4,
     textAlign: 'center',
@@ -1264,23 +1334,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   dropZone: {
-    minHeight: 62,
-    borderColor: colors.cyan,
+    minHeight: 46,
+    borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 14,
-    backgroundColor: colors.cyanSoft,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceGlass,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    padding: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   dropZoneOn: {
     borderColor: colors.green,
     backgroundColor: colors.greenSoft,
   },
   dropZoneIcon: {
-    width: 58,
-    height: 42,
+    width: 48,
+    height: 34,
     borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 10,
@@ -1300,13 +1371,13 @@ const styles = StyleSheet.create({
   },
   dropZoneTitle: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
   },
   dropZoneText: {
     color: colors.textMuted,
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: '800',
     marginTop: 2,
   },
