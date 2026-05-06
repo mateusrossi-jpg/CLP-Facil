@@ -123,11 +123,11 @@ function ladderGeometry(rung: EditorRung, zoom: number, widthOverride = 0) {
   const blockHeight = Math.round(72 * zoom);
   const startX = Math.round(58 * zoom);
   const stepX = Math.round(138 * zoom);
-  const mainY = Math.round(92 * zoom);
-  const blockTop = Math.round(56 * zoom);
-  const branchStartY = Math.round(174 * zoom);
-  const branchGapY = Math.round(88 * zoom);
-  const railHeight = Math.max(Math.round(180 * zoom), branchStartY + Math.max(branches.length - 1, 0) * branchGapY + blockHeight + Math.round(40 * zoom));
+  const mainY = Math.round(82 * zoom);
+  const blockTop = Math.round(46 * zoom);
+  const branchStartY = Math.round(152 * zoom);
+  const branchGapY = Math.round(78 * zoom);
+  const railHeight = Math.max(Math.round(150 * zoom), branchStartY + Math.max(branches.length - 1, 0) * branchGapY + blockHeight + Math.round(24 * zoom));
   const coilLeft = startX + Math.max(rung.seriesBlocks.length, 1) * stepX + Math.round(120 * zoom);
   const canvasWidth = Math.max(Math.round(650 * zoom), coilLeft + outputWidth + Math.round(82 * zoom), widthOverride);
   const mainLineLeft = Math.round(18 * zoom);
@@ -201,8 +201,8 @@ function MobileLadderDrawing({
 
   return (
     <View style={[styles.mobileCircuitCanvas, { width: geometry.canvasWidth, height: geometry.railHeight }]}>
-      <View style={[styles.mobileRail, styles.mobileLeftRail, { height: geometry.railHeight - Math.round(28 * zoom) }]} />
-      <View style={[styles.mobileRail, styles.mobileRightRail, { left: geometry.mainLineRight, height: geometry.railHeight - Math.round(28 * zoom) }]} />
+      <View style={[styles.mobileRail, styles.mobileLeftRail, { height: geometry.railHeight - Math.round(24 * zoom) }]} />
+      <View style={[styles.mobileRail, styles.mobileRightRail, { left: geometry.mainLineRight, height: geometry.railHeight - Math.round(24 * zoom) }]} />
       <View style={[styles.mobileMainLine, lineColorStyle, { left: geometry.mainLineLeft, top: geometry.mainY, width: geometry.mainLineRight - geometry.mainLineLeft }]} />
 
       {geometry.branches.map((branch, branchIndex) => {
@@ -728,8 +728,8 @@ const styles = StyleSheet.create({
   },
   mobileRail: {
     position: 'absolute',
-    top: 14,
-    width: 4,
+    top: 12,
+    width: 2,
     borderRadius: 999,
     backgroundColor: colors.inactive,
   },
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
   },
   mobileMainLine: {
     position: 'absolute',
-    height: 3,
+    height: 2,
     borderRadius: 999,
   },
   mobileWire: {
@@ -752,13 +752,13 @@ const styles = StyleSheet.create({
   },
   mobileBranchDrop: {
     position: 'absolute',
-    width: 3,
+    width: 2,
     borderRadius: 999,
   },
   mobileNode: {
     position: 'absolute',
-    width: 8,
-    height: 8,
+    width: 5,
+    height: 5,
     borderRadius: 999,
     backgroundColor: colors.inactive,
   },
