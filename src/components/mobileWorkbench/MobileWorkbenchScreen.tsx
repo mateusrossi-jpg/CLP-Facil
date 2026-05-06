@@ -7,6 +7,7 @@ import { MobileEnergyFlow } from './MobileEnergyFlow';
 import { MobileIdeToolDock } from './MobileIdeToolDock';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobileMiniHmiPanel } from './MobileMiniHmiPanel';
+import { MobileMiniScadaPanel } from './MobileMiniScadaPanel';
 import { MobilePowerLadderPreview } from './MobilePowerLadderPreview';
 import { MobileRuntimeHud } from './MobileRuntimeHud';
 import { MobileWorkbenchHeader } from './MobileWorkbenchHeader';
@@ -81,6 +82,13 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         evaluation={props.evaluation}
         mode={props.mode}
         onSetValue={props.onSetValue}
+      />
+
+      <MobileMiniScadaPanel
+        editorProject={props.editorProject}
+        plcState={props.plcState}
+        evaluation={props.evaluation}
+        mode={props.mode}
       />
 
       <MobileEnergyFlow
