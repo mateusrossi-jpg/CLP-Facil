@@ -337,7 +337,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
               const itemOutput = item.coilBlock;
               const itemOutputActive = itemOutput ? blockActive(itemOutput, plcState, itemActive) : false;
               return (
-                <View key={item.id} style={[styles.compiledRung, item.id === rung.id && styles.compiledRungSelected]}>
+                <View key={item.id} style={[styles.compiledRung, index > 0 && styles.compiledRungDivider, item.id === rung.id && styles.compiledRungSelected]}>
                   <Pressable onPress={() => onSelectRungIndex?.(index)} style={({ pressed }) => [styles.compiledRungHeader, pressed && styles.pressed]}>
                     <View style={styles.compiledRungCopy}>
                       <Text style={styles.compiledRungIndex}>Rung {index + 1}</Text>
@@ -658,10 +658,7 @@ const styles = StyleSheet.create({
   },
   mobileCircuitCanvas: {
     position: 'relative',
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 14,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
     overflow: 'hidden',
   },
   mobileRail: {
@@ -704,23 +701,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   compiledProgramBox: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 14,
-    backgroundColor: colors.background,
-    padding: spacing.xs,
+    backgroundColor: 'transparent',
+    padding: 0,
     gap: spacing.sm,
   },
   compiledRung: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    padding: spacing.xs,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+    paddingVertical: spacing.xs,
     gap: spacing.xs,
   },
+  compiledRungDivider: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingTop: spacing.sm,
+  },
   compiledRungSelected: {
-    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
   },
   compiledRungHeader: {
     minHeight: 34,
