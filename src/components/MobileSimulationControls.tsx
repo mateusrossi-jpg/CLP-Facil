@@ -37,13 +37,21 @@ export const MobileSimulationControls = memo(function MobileSimulationControls({
         </Text>
       </View>
 
+      <View style={[styles.scanFlowStrip, !editMode && styles.scanFlowStripRun]}>
+        <Text style={[styles.scanFlowStep, !editMode && styles.scanFlowStepRun]}>Ler I</Text>
+        <Text style={styles.scanFlowArrow}>→</Text>
+        <Text style={[styles.scanFlowStep, !editMode && styles.scanFlowStepRun]}>Resolver Ladder</Text>
+        <Text style={styles.scanFlowArrow}>→</Text>
+        <Text style={[styles.scanFlowStep, !editMode && styles.scanFlowStepRun]}>Atualizar Q</Text>
+      </View>
+
       <View style={styles.bar}>
         <Pressable disabled={editMode} onPress={onRunScan} style={({ pressed }) => [styles.button, styles.primaryButton, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
           <Text style={styles.primaryText}>SCAN</Text>
           <Text style={styles.primaryHint}>1 ciclo</Text>
         </Pressable>
         <Pressable disabled={editMode} onPress={onToggleAutoScan} style={({ pressed }) => [styles.button, autoScan && styles.autoOn, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
-          <Text style={[styles.buttonText, autoScan && styles.autoTextOn]}>{autoScan ? 'AUTO' : 'AUTO'}</Text>
+          <Text style={[styles.buttonText, autoScan && styles.autoTextOn]}>AUTO</Text>
           <Text style={[styles.buttonHint, autoScan && styles.autoTextOn]}>{autoScan ? 'rodando' : 'parado'}</Text>
         </Pressable>
         <Pressable onPress={onToggleEdit} style={({ pressed }) => [styles.button, editMode && styles.editOn, pressed && styles.pressed]}>
@@ -109,6 +117,36 @@ const styles = StyleSheet.create({
   },
   statusSimulate: {
     color: colors.green,
+  },
+  scanFlowStrip: {
+    minHeight: 28,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  scanFlowStripRun: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  scanFlowStep: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  scanFlowStepRun: {
+    color: colors.green,
+  },
+  scanFlowArrow: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '900',
   },
   bar: {
     flexDirection: 'row',
