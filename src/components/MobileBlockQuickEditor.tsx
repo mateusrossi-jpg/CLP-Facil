@@ -54,6 +54,18 @@ function blockKind(block: EditorBlock): string {
   return 'Contato';
 }
 
+function blockModeLabel(block: EditorBlock): string {
+  return block.contactMode ?? block.coilMode ?? block.timerMode ?? block.counterMode ?? block.role.toUpperCase();
+}
+
+function blockActionLabel(block: EditorBlock): string {
+  if (block.role === 'contact') return 'Lê entrada/memória';
+  if (block.role === 'coil') return 'Escreve saída/memória';
+  if (block.role === 'timer') return 'Temporiza o rung';
+  if (block.role === 'counter') return 'Conta eventos';
+  return 'Processa lógica';
+}
+
 function currentAddress(block: EditorBlock): string {
   return (block.variable || block.destination || block.sourceA || 'TAG').trim().toUpperCase();
 }
@@ -126,6 +138,21 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
         <Pressable onPress={save} style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}>
           <Text style={styles.saveText}>Aplicar</Text>
         </Pressable>
+      </View>
+
+      <View style={styles.inspectorRow}>
+        <View style={styles.inspectorCell}>
+          <Text style={styles.inspectorLabel}>Tipo</Text>
+          <Text style={styles.inspectorValue}>{blockKind(block)}</Text>
+        </View>
+        <View style={styles.inspectorCell}>
+          <Text style={styles.inspectorLabel}>Modo</Text>
+          <Text style={styles.inspectorValue}>{blockModeLabel(block)}</Text>
+        </View>
+        <View style={styles.inspectorCellWide}>
+          <Text style={styles.inspectorLabel}>Função</Text>
+          <Text style={styles.inspectorValue}>{blockActionLabel(block)}</Text>
+        </View>
       </View>
 
       <View style={styles.primaryField}>
@@ -277,6 +304,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
+  },
+  inspectorRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  inspectorCell: {
+    flex: 0.8,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    padding: spacing.xs,
+    gap: 2,
+  },
+  inspectorCellWide: {
+    flex: 1.4,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    padding: spacing.xs,
+    gap: 2,
+  },
+  inspectorLabel: {
+    color: colors.textDim,
+    fontSize: 8,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  inspectorValue: {
+    color: colors.text,
+    fontSize: 10,
+    fontWeight: '900',
   },
   primaryField: {
     gap: 4,
