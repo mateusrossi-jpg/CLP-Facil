@@ -60,6 +60,7 @@ export default function App() {
   const [activePlcMission, setActivePlcMission] = useState<PlcMission | null>(null);
   const [completedMissionIds, setCompletedMissionIds] = useState<Record<string, boolean>>({});
   const [completedPracticeSteps, setCompletedPracticeSteps] = useState<Record<string, boolean>>({});
+  const [showLessonLibrary, setShowLessonLibrary] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState<SimulatorComponent | null>(null);
   const [editorMessage, setEditorMessage] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorRunMode>('edit');
@@ -924,7 +925,7 @@ export default function App() {
 
         {mode === 'learn' ? (
           <>
-            <AppHeader title="Modo Aprender" subtitle="Escolha uma lição, entenda a teoria e depois pratique no simulador quando a lição permitir." />
+            <AppHeader title="Modo Aprender" subtitle="Siga uma missão curta por vez. O app conduz você da ideia até a simulação." />
             <AdPlaceholder placement="bannerLearning" visible={showAds} />
             <PlcMissionPathPanel
               tracks={plcMissionTracks}
@@ -932,23 +933,34 @@ export default function App() {
               completedMissionIds={completedMissionIds}
               onOpenMission={openPlcMission}
             />
-            {learningModules.map((module) => {
-              const moduleLessons = lessons.filter((lesson) => lesson.moduleId === module.id);
-              return (
-                <View key={module.id} style={styles.moduleBlock}>
-                  <View style={styles.moduleHeader}>
-                    <Text style={styles.moduleTitle}>{module.title}</Text>
-                    <Text style={[styles.moduleStatus, module.status === 'planned' && styles.moduleStatusPlanned]}>
-                      {module.status === 'available' ? 'Livre' : 'Futuro'}
-                    </Text>
-                  </View>
-                  <Text style={styles.moduleDescription}>{module.description}</Text>
-                  {moduleLessons.map((lesson) => (
-                    <LessonCard key={lesson.id} lesson={lesson} onPress={() => openLesson(lesson)} />
-                  ))}
-                </View>
-              );
-            })}
+            <AppCard
+              title={showLessonLibrary ? 'Ocultar aulas de apoio' : 'Ver aulas de apoio'}
+              description="Abra a biblioteca quando quiser revisar teoria, padrões Ladder e erros comuns. A jornada principal continua pelas missões."
+              badge={showLessonLibrary ? 'Aberta' : 'Opcional'}
+              tone="cyan"
+              onPress={() => setShowLessonLibrary((current) => !current)}
+            />
+            {showLessonLibrary ? (
+              <>
+                {learningModules.map((module) => {
+                  const moduleLessons = lessons.filter((lesson) => lesson.moduleId === module.id);
+                  return (
+                    <View key={module.id} style={styles.moduleBlock}>
+                      <View style={styles.moduleHeader}>
+                        <Text style={styles.moduleTitle}>{module.title}</Text>
+                        <Text style={[styles.moduleStatus, module.status === 'planned' && styles.moduleStatusPlanned]}>
+                          {module.status === 'available' ? 'Livre' : 'Futuro'}
+                        </Text>
+                      </View>
+                      <Text style={styles.moduleDescription}>{module.description}</Text>
+                      {moduleLessons.map((lesson) => (
+                        <LessonCard key={lesson.id} lesson={lesson} onPress={() => openLesson(lesson)} />
+                      ))}
+                    </View>
+                  );
+                })}
+              </>
+            ) : null}
             <AppCard title="Voltar" description="Retornar para a tela inicial." onPress={() => setMode('home')} />
           </>
         ) : null}
