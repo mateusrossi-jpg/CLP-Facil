@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import {
   EditorBlock,
@@ -80,6 +80,14 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
   const [variable, setVariable] = useState(block?.variable ?? '');
   const [presetMs, setPresetMs] = useState(String(block?.presetMs ?? 1000));
   const [preset, setPreset] = useState(String(block?.preset ?? 1));
+
+  useEffect(() => {
+    setName(block?.name ?? '');
+    setDescription(block?.description ?? '');
+    setVariable(block?.variable ?? '');
+    setPresetMs(String(block?.presetMs ?? 1000));
+    setPreset(String(block?.preset ?? 1));
+  }, [block?.id, block?.name, block?.description, block?.variable, block?.presetMs, block?.preset]);
 
   if (!block) {
     return (
