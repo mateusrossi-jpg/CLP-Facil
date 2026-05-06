@@ -1,4 +1,5 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import type { GestureResponderEvent } from 'react-native';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
@@ -56,6 +57,9 @@ type MobilePlcWorkspaceProps = {
 const noop = () => undefined;
 
 type EditorToolId = 'contact' | 'coil' | 'timer' | 'counter' | 'branch';
+type DragBounds = { x: number; y: number; width: number; height: number };
+type DragPoint = { x: number; y: number };
+type DragState = { toolId: EditorToolId; x: number; y: number; overDrop: boolean };
 
 const editorTools: { id: EditorToolId; label: string; symbol: string; hint: string }[] = [
   { id: 'contact', label: 'Contato', symbol: '--| |--', hint: 'soltar na serie' },
@@ -106,6 +110,16 @@ function findBlockRungIndex(project: EditorProjectState, blockId: string): numbe
 
 function normalizeVariableInput(value: string): string {
   return value.toUpperCase().replace(/\s/g, '');
+}
+
+function eventPoint(event: GestureResponderEvent): DragPoint {
+  const nativeEvent = event.nativeEvent;
+  return { x: nativeEvent.pageX, y: nativeEvent.pageY };
+}
+
+function pointInsideBounds(point: DragPoint, bounds: DragBounds | null): boolean {
+  if (!bounds) return false;
+  return point.x >= bounds.x && point.x <= bounds.x + bounds.width && point.y >= bounds.y && point.y <= bounds.y + bounds.height;
 }
 
 function readBlockValue(block: EditorBlock, state: PlcState): string {
@@ -232,6 +246,13 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onRemoveBlock,
   onAdvanceMission,
 }: MobilePlcWorkspaceProps) {
+  const workspaceRef = useRef<View>(null);
+  const rungDropRef = useRef<View>(null);
+  const workspaceBoundsRef = useRef<DragBounds | null>(null);
+  const rungDropBoundsRef = useRef<DragBounds | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  const dragStartPointRef = useRef<DragPoint | null>(null);
+  const suppressToolPressRef = useRef(false);
   const { width, height } = useWindowDimensions();
   const [localMode, setLocalMode] = useState<EditorRunMode>('simulate');
   const [rungIndex, setRungIndex] = useState(0);
@@ -242,6 +263,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const [toolboxOpen, setToolboxOpen] = useState(false);
   const [selectedToolId, setSelectedToolId] = useState<EditorToolId | null>(null);
   const [editorDeskMode, setEditorDeskMode] = useState(false);
+  const [dragState, setDragState] = useState<DragState | null>(null);
   const selectedBlock = useMemo(
     () => projectBlocks(editorProject).find((block) => block.id === selectedBlockId) ?? null,
     [editorProject, selectedBlockId],
@@ -263,6 +285,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const simulationMode = activeMode === 'simulate';
   const deskLikeEditor = editMode && (editorDeskMode || width > height);
   const selectedTool = editorTools.find((tool) => tool.id === selectedToolId) ?? null;
+  const draggingTool = editorTools.find((tool) => tool.id === dragState?.toolId) ?? null;
   const coachStep = missionCoachStep(mission, plcState, evaluation, missionPassed, editMode);
 
   useEffect(() => {
@@ -289,8 +312,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
     if (rungId) onSelectRungId?.(rungId);
   }
 
-  function insertSelectedTool(toolId = selectedToolId) {
-    if (!toolId) return;
+  function actionForTool(toolId: EditorToolId): (() => void) | undefined {
     const actions: Record<EditorToolId, (() => void) | undefined> = {
       contact: onAddContact,
       coil: onAddCoil,
@@ -298,13 +320,79 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
       counter: onAddCounter,
       branch: onAddBranch,
     };
-    actions[toolId]?.();
+    return actions[toolId];
+  }
+
+  function insertSelectedTool(toolId = selectedToolId) {
+    if (!toolId) return;
+    actionForTool(toolId)?.();
     setSelectedToolId(null);
     setToolboxOpen(false);
   }
 
+  function measureDragTargets() {
+    workspaceRef.current?.measureInWindow((x, y, measureWidth, measureHeight) => {
+      workspaceBoundsRef.current = { x, y, width: measureWidth, height: measureHeight };
+    });
+    rungDropRef.current?.measureInWindow((x, y, measureWidth, measureHeight) => {
+      rungDropBoundsRef.current = { x, y, width: measureWidth, height: measureHeight };
+    });
+  }
+
+  function updateToolDrag(toolId: EditorToolId, event: GestureResponderEvent) {
+    const point = eventPoint(event);
+    const workspaceBounds = workspaceBoundsRef.current;
+    const nextDragState: DragState = {
+      toolId,
+      x: workspaceBounds ? point.x - workspaceBounds.x - 56 : point.x - 56,
+      y: workspaceBounds ? point.y - workspaceBounds.y - 36 : point.y - 36,
+      overDrop: pointInsideBounds(point, rungDropBoundsRef.current),
+    };
+    dragStateRef.current = nextDragState;
+    setDragState(nextDragState);
+  }
+
+  function beginToolDrag(toolId: EditorToolId, event: GestureResponderEvent) {
+    if (!actionForTool(toolId)) return;
+    const point = eventPoint(event);
+    suppressToolPressRef.current = false;
+    dragStartPointRef.current = point;
+    setToolboxOpen(true);
+    setSelectedToolId(toolId);
+    measureDragTargets();
+    updateToolDrag(toolId, event);
+  }
+
+  function moveToolDrag(toolId: EditorToolId, event: GestureResponderEvent) {
+    const startPoint = dragStartPointRef.current;
+    const point = eventPoint(event);
+    if (startPoint && Math.hypot(point.x - startPoint.x, point.y - startPoint.y) > 8) {
+      suppressToolPressRef.current = true;
+    }
+    updateToolDrag(toolId, event);
+  }
+
+  function finishToolDrag() {
+    const currentDrag = dragStateRef.current;
+    if (currentDrag?.overDrop) {
+      suppressToolPressRef.current = true;
+      insertSelectedTool(currentDrag.toolId);
+    } else if (currentDrag) {
+      setSelectedToolId(currentDrag.toolId);
+    }
+    dragStateRef.current = null;
+    dragStartPointRef.current = null;
+    setDragState(null);
+  }
+
+  function cancelToolDrag() {
+    dragStateRef.current = null;
+    dragStartPointRef.current = null;
+    setDragState(null);
+  }
+
   return (
-    <View style={[styles.workspace, deskLikeEditor && styles.workspaceDesk]}>
+    <View ref={workspaceRef} onLayout={measureDragTargets} style={[styles.workspace, deskLikeEditor && styles.workspaceDesk]}>
       <View style={styles.topBar}>
         <View style={styles.topCopy}>
           <Text style={styles.eyebrow}>Missao</Text>
@@ -404,21 +492,27 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           {toolboxOpen ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRail}>
               {editorTools.map((tool) => {
-                const disabled = !({
-                  contact: onAddContact,
-                  coil: onAddCoil,
-                  timer: onAddTimer,
-                  counter: onAddCounter,
-                  branch: onAddBranch,
-                }[tool.id]);
+                const disabled = !actionForTool(tool.id);
                 const selected = selectedToolId === tool.id;
                 return (
                   <Pressable
                     key={tool.id}
                     disabled={disabled}
-                    onPress={() => setSelectedToolId(tool.id)}
+                    onStartShouldSetResponder={() => !disabled}
+                    onMoveShouldSetResponder={() => !disabled}
+                    onResponderGrant={(event) => beginToolDrag(tool.id, event)}
+                    onResponderMove={(event) => moveToolDrag(tool.id, event)}
+                    onResponderRelease={finishToolDrag}
+                    onResponderTerminate={cancelToolDrag}
+                    onPress={() => {
+                      if (suppressToolPressRef.current) {
+                        suppressToolPressRef.current = false;
+                        return;
+                      }
+                      setSelectedToolId(tool.id);
+                    }}
                     onLongPress={() => insertSelectedTool(tool.id)}
-                    style={({ pressed }) => [styles.toolTile, selected && styles.toolTileOn, disabled && styles.disabledChip, pressed && !disabled && styles.pressed]}
+                    style={({ pressed }) => [styles.toolTile, selected && styles.toolTileOn, dragState?.toolId === tool.id && styles.toolTileDragging, disabled && styles.disabledChip, pressed && !disabled && styles.pressed]}
                   >
                     <Text style={[styles.toolSymbol, selected && styles.toolSymbolOn]}>{tool.symbol}</Text>
                     <Text style={styles.toolLabel}>{tool.label}</Text>
@@ -440,34 +534,47 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       )}
 
-      <MobileRungViewer
-        editorProject={editorProject}
-        plcState={plcState}
-        evaluation={evaluation}
-        rungIndex={rungIndex}
-        selectedBlockId={selectedBlockId}
-        onSelectRungIndex={selectVisibleRung}
-        onSelectBlock={(block) => {
-          const blockRungIndex = findBlockRungIndex(editorProject, block.id);
-          if (blockRungIndex >= 0) selectVisibleRung(blockRungIndex);
-          setSelectedBlockId(block.id);
-          onSelectBlockId?.(block.id);
-          if (editMode) {
-            setEditing(true);
-          } else {
-            setShowHint(true);
-          }
-        }}
-      />
+      <View
+        ref={rungDropRef}
+        onLayout={measureDragTargets}
+        style={[styles.rungDropTarget, editMode && dragState && styles.rungDropTargetActive, editMode && dragState?.overDrop && styles.rungDropTargetOver]}
+      >
+        <MobileRungViewer
+          editorProject={editorProject}
+          plcState={plcState}
+          evaluation={evaluation}
+          rungIndex={rungIndex}
+          selectedBlockId={selectedBlockId}
+          onSelectRungIndex={selectVisibleRung}
+          onSelectBlock={(block) => {
+            const blockRungIndex = findBlockRungIndex(editorProject, block.id);
+            if (blockRungIndex >= 0) selectVisibleRung(blockRungIndex);
+            setSelectedBlockId(block.id);
+            onSelectBlockId?.(block.id);
+            if (editMode) {
+              setEditing(true);
+            } else {
+              setShowHint(true);
+            }
+          }}
+        />
+        {editMode && dragState ? (
+          <View pointerEvents="none" style={[styles.rungDropOverlay, dragState.overDrop && styles.rungDropOverlayOn]}>
+            <Text style={[styles.rungDropOverlayText, dragState.overDrop && styles.rungDropOverlayTextOn]}>
+              {dragState.overDrop ? `Solte para inserir na rung ${rungIndex + 1}` : 'Arraste a peça até esta área'}
+            </Text>
+          </View>
+        ) : null}
+      </View>
 
       {editMode && selectedTool ? (
-        <Pressable onPress={() => insertSelectedTool()} style={({ pressed }) => [styles.dropZone, pressed && styles.pressed]}>
+        <Pressable onPress={() => insertSelectedTool()} style={({ pressed }) => [styles.dropZone, dragState?.overDrop && styles.dropZoneOn, pressed && styles.pressed]}>
           <View style={styles.dropZoneIcon}>
             <Text style={styles.dropZoneIconText}>{selectedTool.symbol}</Text>
           </View>
           <View style={styles.dropZoneCopy}>
             <Text style={styles.dropZoneTitle}>Soltar {selectedTool.label} na rung {rungIndex + 1}</Text>
-            <Text style={styles.dropZoneText}>Toque aqui para inserir. Depois toque no bloco criado para editar tag, tipo e estado.</Text>
+            <Text style={styles.dropZoneText}>Arraste para cima até o Ladder ou toque aqui para inserir. Depois toque no bloco criado para editar.</Text>
           </View>
         </Pressable>
       ) : null}
@@ -778,6 +885,13 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         onToggleEdit={toggleWorkspaceMode}
         onToggleHint={() => setShowHint((current) => !current)}
       />
+
+      {dragState && draggingTool ? (
+        <View pointerEvents="none" style={[styles.dragGhost, dragState.overDrop && styles.dragGhostOn, { left: dragState.x, top: dragState.y }]}>
+          <Text style={[styles.dragGhostSymbol, dragState.overDrop && styles.dragGhostSymbolOn]}>{draggingTool.symbol}</Text>
+          <Text style={styles.dragGhostLabel}>{draggingTool.label}</Text>
+        </View>
+      ) : null}
     </View>
   );
 });
@@ -1122,6 +1236,10 @@ const styles = StyleSheet.create({
     borderColor: colors.cyan,
     backgroundColor: colors.background,
   },
+  toolTileDragging: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
   toolSymbol: {
     color: colors.text,
     fontSize: 16,
@@ -1156,6 +1274,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.sm,
   },
+  dropZoneOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
   dropZoneIcon: {
     width: 58,
     height: 42,
@@ -1187,6 +1309,75 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '800',
     marginTop: 2,
+  },
+  rungDropTarget: {
+    position: 'relative',
+    borderColor: 'transparent',
+    borderWidth: 1,
+    borderRadius: 18,
+  },
+  rungDropTargetActive: {
+    borderColor: colors.cyan,
+  },
+  rungDropTargetOver: {
+    borderColor: colors.green,
+  },
+  rungDropOverlay: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    zIndex: 20,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  rungDropOverlayOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  rungDropOverlayText: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  rungDropOverlayTextOn: {
+    color: colors.green,
+  },
+  dragGhost: {
+    position: 'absolute',
+    zIndex: 120,
+    width: 112,
+    minHeight: 72,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.sm,
+    opacity: 0.94,
+  },
+  dragGhostOn: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  dragGhostSymbol: {
+    color: colors.cyan,
+    fontSize: 15,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  dragGhostSymbolOn: {
+    color: colors.green,
+  },
+  dragGhostLabel: {
+    color: colors.text,
+    fontSize: 10,
+    fontWeight: '900',
+    marginTop: 4,
   },
   editorToolbox: {
     borderColor: colors.cyan,
