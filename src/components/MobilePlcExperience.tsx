@@ -33,7 +33,7 @@ export const MobilePlcExperience = memo(function MobilePlcExperience({
       : `${missionAttempt?.passedRules ?? 0}/${missionAttempt?.totalRules ?? mission.validation.length} regra(s) validadas.`
     : workspaceMode === 'guided'
       ? 'Escolha uma missão para o app guiar objetivo, teste e validação.'
-      : undefined;
+      : 'Modo livre: experimente sem missão obrigatória.';
 
   return (
     <View style={styles.stack}>
