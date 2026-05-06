@@ -1,5 +1,6 @@
 import { ComponentProps, memo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MobileBlockQuickEditor } from './MobileBlockQuickEditor';
 import { MobilePlcExperience } from './MobilePlcExperience';
 import { SmartphoneSimulationPanel as SmartphoneSimulationPanelEnhanced } from './SmartphoneSimulationPanelEnhanced';
 import { colors } from '../theme/colors';
@@ -71,6 +72,18 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onAdvanceMission={props.onAdvanceMission}
       />
 
+      <MobileBlockQuickEditor
+        project={props.editorProject}
+        onUpdateVariable={props.onChangeBlockVariable}
+        onUpdateName={props.onChangeBlockName}
+        onUpdateContactMode={props.onChangeContactMode}
+        onUpdateCoilMode={props.onChangeCoilMode}
+        onUpdateTimerMode={props.onChangeTimerMode}
+        onUpdateCounterMode={props.onChangeCounterMode}
+        onUpdatePresetMs={props.onChangePresetMs}
+        onUpdatePreset={props.onChangePreset}
+      />
+
       <Pressable
         onPress={() => setAdvancedOpen((current) => !current)}
         style={({ pressed }) => [styles.advancedButton, advancedOpen && styles.advancedButtonOpen, pressed && styles.pressed]}
@@ -79,7 +92,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
           <Text style={[styles.advancedTitle, advancedOpen && styles.advancedTitleOpen]}>
             {advancedOpen ? 'Ocultar detalhes' : 'Detalhes avançados'}
           </Text>
-          <Text style={styles.advancedText}>CPU, memória, force, relatório e diagnóstico ficam recolhidos fora da bancada principal.</Text>
+          <Text style={styles.advancedText}>CPU, memória, relatório e diagnóstico ficam recolhidos fora da bancada principal.</Text>
         </View>
         <Text style={[styles.advancedPill, advancedOpen && styles.advancedPillOpen]}>{advancedOpen ? 'Fechar' : 'Abrir'}</Text>
       </Pressable>
