@@ -775,13 +775,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: colors.background,
     overflow: 'hidden',
+    paddingVertical: spacing.xs,
   },
   programRungLane: {
     backgroundColor: 'transparent',
   },
   programRungSeparator: {
-    borderTopColor: colors.borderStrong,
-    borderTopWidth: 1,
+    marginTop: spacing.md,
   },
   programRungLaneSelected: {
     backgroundColor: colors.cyanSoft,

@@ -43,6 +43,7 @@ type MobilePlcWorkspaceProps = {
   onAddContact?: () => void;
   onAddCoil?: () => void;
   onAddTimer?: () => void;
+  onAddCounter?: () => void;
   onAddBranch?: () => void;
   onAddRung?: () => void;
   onRemoveRung?: () => void;
@@ -201,6 +202,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onAddContact,
   onAddCoil,
   onAddTimer,
+  onAddCounter,
   onAddBranch,
   onAddRung,
   onRemoveRung,
@@ -346,6 +348,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
               { label: 'Contato', symbol: '--| |--', action: onAddContact },
               { label: 'Bobina', symbol: '--( )--', action: onAddCoil },
               { label: 'Timer', symbol: '[TON]', action: onAddTimer },
+              { label: 'Contador', symbol: '[CTU]', action: onAddCounter },
               { label: 'Branch', symbol: 'BR', action: onAddBranch },
             ].map((item) => (
               <Pressable
@@ -403,38 +406,29 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
       ) : null}
 
-      {editing ? (
+      {editing && selectedBlock ? (
         <View style={styles.editorSheet}>
           <View style={styles.sheetHeader}>
             <View style={styles.sheetCopy}>
-              <Text style={styles.eyebrow}>Editor simples</Text>
-              <Text style={styles.sheetTitle}>{selectedBlock ? selectedBlock.name : 'Escolha um componente'}</Text>
+              <Text style={styles.eyebrow}>Configurar bloco</Text>
+              <Text style={styles.sheetTitle}>{selectedBlock.name}</Text>
             </View>
             <Pressable
               onPress={() => setEditing(false)}
               style={styles.closeButton}
             >
-              <Text style={styles.closeText}>Fechar</Text>
+              <Text style={styles.closeText}>OK</Text>
             </Pressable>
           </View>
           {selectedBlock ? (
             <View style={styles.editorFields}>
               <View style={styles.fieldGrid}>
-                <Text style={styles.fieldText}>Tipo: {selectedBlock.role}</Text>
+                <Text style={styles.fieldText}>Instrucao: {selectedBlock.role}</Text>
                 <Text style={styles.fieldText}>Modo: {blockMode(selectedBlock)}</Text>
                 <Text style={styles.fieldText}>Estado: {readBlockValue(selectedBlock, plcState)}</Text>
               </View>
 
-              <Text style={styles.inputLabel}>Nome</Text>
-              <TextInput
-                value={selectedBlock.name}
-                onChangeText={(value) => onChangeBlockName?.(value)}
-                placeholder="Nome do componente"
-                placeholderTextColor={colors.textDim}
-                style={styles.editorInput}
-              />
-
-              <Text style={styles.inputLabel}>Endereco / tag</Text>
+              <Text style={styles.inputLabel}>Tag do bloco</Text>
               <TextInput
                 value={selectedBlock.variable || selectedBlock.destination || ''}
                 onChangeText={(value) => onChangeBlockVariable?.(normalizeVariableInput(value))}
@@ -442,6 +436,15 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                 placeholderTextColor={colors.textDim}
                 autoCapitalize="characters"
                 autoCorrect={false}
+                style={styles.editorInput}
+              />
+
+              <Text style={styles.inputLabel}>Nome visivel</Text>
+              <TextInput
+                value={selectedBlock.name}
+                onChangeText={(value) => onChangeBlockName?.(value)}
+                placeholder="Nome do componente"
+                placeholderTextColor={colors.textDim}
                 style={styles.editorInput}
               />
 
@@ -557,7 +560,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 
               {selectedBlock.role === 'timer' ? (
                 <>
-                  <Text style={styles.inputLabel}>Temporizador</Text>
+                  <Text style={styles.inputLabel}>Tipo de temporizador</Text>
                   <View style={styles.paletteRow}>
                     {(['TON', 'TOF', 'TP'] as EditorTimerMode[]).map((mode) => (
                       <Pressable key={mode} onPress={() => onChangeTimerMode?.(mode)} style={[styles.paletteChip, selectedBlock.timerMode === mode && styles.paletteChipOn]}>
@@ -578,7 +581,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 
               {selectedBlock.role === 'counter' ? (
                 <>
-                  <Text style={styles.inputLabel}>Contador</Text>
+                  <Text style={styles.inputLabel}>Tipo de contador</Text>
                   <View style={styles.paletteRow}>
                     {(['CTU', 'CTD', 'CTUD'] as EditorCounterMode[]).map((mode) => (
                       <Pressable key={mode} onPress={() => onChangeCounterMode?.(mode)} style={[styles.paletteChip, selectedBlock.counterMode === mode && styles.paletteChipOn]}>
@@ -617,26 +620,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
                 </>
               ) : null}
             </View>
-          ) : (
-            <Text style={styles.hintText}>Toque em contato, bobina, timer ou contador para editar.</Text>
-          )}
-          <View style={styles.paletteRow}>
-            {[
-              { label: '+ Contato', action: onAddContact },
-              { label: '+ Bobina', action: onAddCoil },
-              { label: '+ Timer', action: onAddTimer },
-              { label: '+ Branch', action: onAddBranch },
-            ].map((item) => (
-              <Pressable
-                key={item.label}
-                disabled={!item.action}
-                onPress={item.action}
-                style={({ pressed }) => [styles.paletteChip, item.action && styles.paletteChipAction, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
-              >
-                <Text style={[styles.paletteText, item.action && styles.paletteTextAction]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
+          ) : null}
           {selectedBlock && onRemoveBlock ? (
             <Pressable
               onPress={() => {
@@ -1077,11 +1061,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   editorSheet: {
-    borderColor: colors.borderStrong,
+    borderColor: colors.cyan,
     borderWidth: 1,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceElevated,
-    padding: spacing.md,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
     gap: spacing.sm,
   },
   sheetHeader: {
@@ -1124,14 +1108,15 @@ const styles = StyleSheet.create({
   },
   fieldText: {
     color: colors.text,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 10,
+    lineHeight: 14,
     fontWeight: '800',
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 10,
-    padding: spacing.sm,
-    backgroundColor: colors.surface,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    backgroundColor: colors.background,
   },
   inputLabel: {
     color: colors.textMuted,
@@ -1141,13 +1126,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   editorInput: {
-    minHeight: 42,
+    minHeight: 38,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 10,
     backgroundColor: colors.surface,
     color: colors.text,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     paddingHorizontal: spacing.sm,
   },

@@ -1183,6 +1183,7 @@ export default function App() {
                 onAddContact={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'series', undefined, true)}
                 onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
                 onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
+                onAddCounter={() => addComponentToEditor(findSimulatorComponent('counter-ctu'), 'coil', undefined, true)}
                 onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
                 onAddRung={addNewRung}
                 onRemoveRung={removeSelectedRung}
