@@ -91,6 +91,83 @@ function readBlockValue(block: EditorBlock, state: PlcState): string {
   return `${address} ${value ? 'ON' : 'OFF'}`;
 }
 
+function readMissionPoint(state: PlcState, address: string | undefined): boolean {
+  const normalized = normalizeVariableInput(address ?? '');
+  if (!normalized) return false;
+  const compact = normalized.replace('.0', '');
+  const dotted = normalized.includes('.') ? normalized : `${normalized}.0`;
+  const value = state[normalized] ?? state[compact] ?? state[dotted];
+  return typeof value === 'number' ? value !== 0 : Boolean(value);
+}
+
+function missionAddressLabel(address: string | undefined, fallback: string): string {
+  const normalized = normalizeVariableInput(address ?? '');
+  return normalized || fallback;
+}
+
+function missionCoachStep(
+  mission: PlcMission | undefined,
+  state: PlcState,
+  evaluation: EditorEvaluationResult,
+  passed: boolean,
+  editMode: boolean,
+): { label: string; title: string; text: string } | null {
+  if (!mission) return null;
+  if (passed) {
+    return {
+      label: 'Concluído',
+      title: 'Você validou a missão',
+      text: 'Revise a explicação final e avance quando estiver confortável com o comportamento.',
+    };
+  }
+  if (editMode) {
+    return {
+      label: 'Agora',
+      title: 'Monte ou ajuste a lógica',
+      text: 'Toque em um bloco para editar. Use Contato, Bobina, Timer ou Branch apenas quando a missão pedir.',
+    };
+  }
+
+  const firstRule = mission.validation[0];
+  if (!firstRule) {
+    return {
+      label: 'Agora',
+      title: 'Teste a missão',
+      text: 'Acione uma entrada, rode Scan e observe se o rung explica o resultado.',
+    };
+  }
+
+  if (firstRule.type === 'output_on_when_input_on') {
+    if (!readMissionPoint(state, firstRule.input)) {
+      return { label: 'Agora', title: `Toque em ${missionAddressLabel(firstRule.input, 'a entrada')}`, text: 'A entrada precisa ficar ON para o contato conduzir.' };
+    }
+    if ((evaluation.scanNumber ?? 0) === 0) {
+      return { label: 'Depois', title: 'Rode um Scan', text: 'O CLP só atualiza a saída depois de ler entradas e resolver a lógica.' };
+    }
+    return { label: 'Observe', title: `Confira ${missionAddressLabel(firstRule.output, 'a saída')}`, text: 'Veja se a saída ficou ON e se o rung mostra caminho energizado.' };
+  }
+
+  if (firstRule.type === 'stop_blocks_output') {
+    if (!readMissionPoint(state, firstRule.stopInput)) {
+      return { label: 'Agora', title: `Acione ${missionAddressLabel(firstRule.stopInput, 'o Stop')}`, text: 'O Stop deve cortar o caminho de energia lógica.' };
+    }
+    return { label: 'Observe', title: `Confirme ${missionAddressLabel(firstRule.output, 'a saída')} OFF`, text: 'Se a saída continuar ON, revise o selo ou algum paralelo indevido.' };
+  }
+
+  if (firstRule.type === 'scan_concept') {
+    if ((evaluation.scanNumber ?? 0) === 0) {
+      return { label: 'Agora', title: 'Rode o primeiro Scan', text: 'Acompanhe entrada, rung e saída mudando na mesma tela.' };
+    }
+    return { label: 'Observe', title: 'Leia o ciclo do CLP', text: 'Entrada lida, programa resolvido e saída atualizada formam um scan.' };
+  }
+
+  return {
+    label: 'Agora',
+    title: 'Faça um teste simples',
+    text: 'Mude uma entrada, rode Scan e compare o resultado com o objetivo da missão.',
+  };
+}
+
 export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   editorProject,
   plcState,
@@ -149,6 +226,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const activeMode = mode ?? localMode;
   const editMode = activeMode === 'edit';
   const simulationMode = activeMode === 'simulate';
+  const coachStep = missionCoachStep(mission, plcState, evaluation, missionPassed, editMode);
 
   function changeWorkspaceMode(nextMode: EditorRunMode) {
     setLocalMode(nextMode);
@@ -198,6 +276,13 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           <Text style={[styles.missionFeedback, missionPassed && styles.missionFeedbackDone]}>
             {missionAttempt?.feedback ?? mission.story}
           </Text>
+          {coachStep ? (
+            <View style={[styles.coachStepBox, missionPassed && styles.coachStepBoxDone]}>
+              <Text style={[styles.coachStepLabel, missionPassed && styles.coachStepLabelDone]}>{coachStep.label}</Text>
+              <Text style={styles.coachStepTitle}>{coachStep.title}</Text>
+              <Text style={styles.coachStepText}>{coachStep.text}</Text>
+            </View>
+          ) : null}
           {showHint ? (
             <>
               {shouldShowMissionStory && mission ? (
@@ -712,6 +797,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '700',
+  },
+  coachStepBox: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.cyanSoft,
+    padding: spacing.sm,
+    gap: 2,
+  },
+  coachStepBoxDone: {
+    borderColor: colors.green,
+    backgroundColor: colors.greenSoft,
+  },
+  coachStepLabel: {
+    color: colors.cyan,
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  coachStepLabelDone: {
+    color: colors.green,
+  },
+  coachStepTitle: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
+  },
+  coachStepText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
   },
   componentRail: {
     flexDirection: 'row',
