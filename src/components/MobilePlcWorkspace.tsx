@@ -10,17 +10,20 @@ import { spacing } from '../theme/spacing';
 import { MobileIoDock } from './MobileIoDock';
 import { MobileRungViewer } from './MobileRungViewer';
 import { MobileSimulationControls } from './MobileSimulationControls';
+import { EditorRunMode } from './EditorModeToggle';
 
 type MobilePlcWorkspaceProps = {
   editorProject: EditorProjectState;
   plcState: PlcState;
   evaluation: EditorEvaluationResult;
   autoScan?: boolean;
+  mode?: EditorRunMode;
   mission?: PlcMission;
   missionTitle?: string;
   onSetValue?: (variable: string, value: boolean | number) => void;
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
+  onChangeMode?: (mode: EditorRunMode) => void;
   onSelectBlockId?: (blockId: string) => void;
   onChangeBlockVariable?: (variable: string) => void;
   onChangeBlockName?: (name: string) => void;
@@ -41,6 +44,8 @@ type MobilePlcWorkspaceProps = {
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onAddRung?: () => void;
+  onRemoveRung?: () => void;
   onRemoveBlock?: () => void;
   onAdvanceMission?: () => void;
 };
@@ -91,11 +96,13 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   plcState,
   evaluation,
   autoScan = false,
+  mode,
   mission,
   missionTitle = 'Bancada guiada',
   onSetValue = noop,
   onRunScan = noop,
   onToggleAutoScan = noop,
+  onChangeMode,
   onSelectBlockId,
   onChangeBlockVariable,
   onChangeBlockName,
@@ -116,9 +123,12 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onAddCoil,
   onAddTimer,
   onAddBranch,
+  onAddRung,
+  onRemoveRung,
   onRemoveBlock,
   onAdvanceMission,
 }: MobilePlcWorkspaceProps) {
+  const [localMode, setLocalMode] = useState<EditorRunMode>('simulate');
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -136,6 +146,19 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const missionPassed = Boolean(missionAttempt?.passed);
   const shouldShowMissionStory = Boolean(mission && !missionPassed && missionAttempt?.feedback && missionAttempt.feedback !== mission.story);
   const visibleMissionComponents = mission?.availableComponents.slice(0, 5) ?? [];
+  const activeMode = mode ?? localMode;
+  const editMode = activeMode === 'edit';
+  const simulationMode = activeMode === 'simulate';
+
+  function changeWorkspaceMode(nextMode: EditorRunMode) {
+    setLocalMode(nextMode);
+    onChangeMode?.(nextMode);
+    if (nextMode === 'simulate') setEditing(false);
+  }
+
+  function toggleWorkspaceMode() {
+    changeWorkspaceMode(editMode ? 'simulate' : 'edit');
+  }
 
   return (
     <View style={styles.workspace}>
@@ -146,7 +169,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         </View>
         <View style={styles.statusCluster}>
           <View style={[styles.statusPill, activeOutputs > 0 && styles.runPill]}>
-            <Text style={[styles.statusText, activeOutputs > 0 && styles.runText]}>{activeOutputs > 0 ? 'RUN' : 'STOP'}</Text>
+            <Text style={[styles.statusText, activeOutputs > 0 && styles.runText]}>{simulationMode ? activeOutputs > 0 ? 'RUN' : 'STOP' : 'EDIT'}</Text>
           </View>
           <View style={[styles.statusPill, autoScan && styles.autoPill]}>
             <Text style={[styles.statusText, autoScan && styles.autoText]}>{autoScan ? 'Auto' : 'Manual'}</Text>
@@ -220,9 +243,52 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         onSelectBlock={(block) => {
           setSelectedBlockId(block.id);
           onSelectBlockId?.(block.id);
-          setEditing(true);
+          if (editMode) {
+            setEditing(true);
+          } else {
+            setShowHint(true);
+          }
         }}
       />
+
+      {editMode ? (
+        <View style={styles.editorToolbox}>
+          <View style={styles.editorToolboxHeader}>
+            <View style={styles.sheetCopy}>
+              <Text style={styles.eyebrow}>Modo editor</Text>
+              <Text style={styles.editorToolboxTitle}>Monte uma rung por vez. Toque em um bloco para editar detalhes.</Text>
+            </View>
+            <Pressable onPress={() => setEditing(true)} style={({ pressed }) => [styles.inlineDetailsButton, pressed && styles.pressed]}>
+              <Text style={styles.inlineDetailsText}>{selectedBlock ? 'Editar bloco' : 'Novo bloco'}</Text>
+            </Pressable>
+          </View>
+          <View style={styles.paletteRow}>
+            {[
+              { label: '+ Contato', action: onAddContact },
+              { label: '+ Bobina', action: onAddCoil },
+              { label: '+ Timer', action: onAddTimer },
+              { label: '+ Branch', action: onAddBranch },
+            ].map((item) => (
+              <Pressable
+                key={item.label}
+                disabled={!item.action}
+                onPress={item.action}
+                style={({ pressed }) => [styles.paletteChip, item.action && styles.paletteChipAction, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
+              >
+                <Text style={[styles.paletteText, item.action && styles.paletteTextAction]}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <View style={styles.rungActionRow}>
+            <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.rungActionButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
+              <Text style={styles.rungActionText}>Adicionar rung abaixo</Text>
+            </Pressable>
+            <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.rungRemoveButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
+              <Text style={styles.rungRemoveText}>Remover rung</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
 
       {showHint && !mission ? (
         <View style={styles.hintBox}>
@@ -482,10 +548,11 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
 
       <MobileSimulationControls
         autoScan={autoScan}
-        editing={editing}
+        editing={editMode}
+        mode={activeMode}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}
-        onToggleEdit={() => setEditing((current) => !current)}
+        onToggleEdit={toggleWorkspaceMode}
         onToggleHint={() => setShowHint((current) => !current)}
       />
     </View>
@@ -724,6 +791,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '800',
+  },
+  editorToolbox: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 16,
+    backgroundColor: colors.cyanSoft,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  editorToolboxHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  editorToolboxTitle: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  rungActionRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  rungActionButton: {
+    flex: 1,
+    minHeight: 38,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  rungActionText: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  rungRemoveButton: {
+    flex: 1,
+    minHeight: 38,
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.redSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  rungRemoveText: {
+    color: colors.red,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    textAlign: 'center',
   },
   editorSheet: {
     borderColor: colors.borderStrong,

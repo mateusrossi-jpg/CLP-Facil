@@ -24,6 +24,7 @@ import { SmartphoneSimulationPanel as SmartphoneSimulationPanelFixed } from './S
 import { MobilePlcWorkspace } from './MobilePlcWorkspace';
 import { PlcMission } from '../lessons/missionTypes';
 import { EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorTimerMode } from '../engine/editorTypes';
+import { EditorRunMode } from './EditorModeToggle';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -34,9 +35,11 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   autoScan?: boolean;
   showAdvancedDiagnostics?: boolean;
   mission?: PlcMission | null;
+  mode?: EditorRunMode;
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
   onSetValue?: (variable: string, value: boolean | number) => void;
+  onChangeMode?: (mode: EditorRunMode) => void;
   onSelectBlockId?: (blockId: string) => void;
   onChangeBlockVariable?: (variable: string) => void;
   onChangeBlockName?: (name: string) => void;
@@ -57,6 +60,8 @@ type SmartphoneSimulationPanelEnhancedProps = Omit<FixedPanelProps, OptionalRunt
   onAddCoil?: () => void;
   onAddTimer?: () => void;
   onAddBranch?: () => void;
+  onAddRung?: () => void;
+  onRemoveRung?: () => void;
   onRemoveBlock?: () => void;
   onAdvanceMission?: () => void;
 };
@@ -88,11 +93,13 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         plcState={props.plcState}
         evaluation={props.evaluation}
         autoScan={autoScan}
+        mode={props.mode}
         mission={activeMission}
         missionTitle={activeMission?.title ?? 'Bancada Ladder'}
         onSetValue={onSetValue}
         onRunScan={onRunScan}
         onToggleAutoScan={onToggleAutoScan}
+        onChangeMode={props.onChangeMode}
         onSelectBlockId={props.onSelectBlockId}
         onChangeBlockVariable={props.onChangeBlockVariable}
         onChangeBlockName={props.onChangeBlockName}
@@ -113,6 +120,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
         onAddCoil={props.onAddCoil}
         onAddTimer={props.onAddTimer}
         onAddBranch={props.onAddBranch}
+        onAddRung={props.onAddRung}
+        onRemoveRung={props.onRemoveRung}
         onRemoveBlock={props.onRemoveBlock}
         onAdvanceMission={props.onAdvanceMission}
       />

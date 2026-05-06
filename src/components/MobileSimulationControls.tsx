@@ -6,6 +6,7 @@ import { spacing } from '../theme/spacing';
 type MobileSimulationControlsProps = {
   autoScan?: boolean;
   editing?: boolean;
+  mode?: 'edit' | 'simulate';
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
   onToggleEdit?: () => void;
@@ -17,21 +18,23 @@ const noop = () => undefined;
 export const MobileSimulationControls = memo(function MobileSimulationControls({
   autoScan = false,
   editing = false,
+  mode = editing ? 'edit' : 'simulate',
   onRunScan = noop,
   onToggleAutoScan = noop,
   onToggleEdit = noop,
   onToggleHint = noop,
 }: MobileSimulationControlsProps) {
+  const editMode = mode === 'edit';
   return (
     <View style={styles.bar}>
-      <Pressable onPress={onRunScan} style={({ pressed }) => [styles.button, styles.primaryButton, pressed && styles.pressed]}>
+      <Pressable disabled={editMode} onPress={onRunScan} style={({ pressed }) => [styles.button, styles.primaryButton, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
         <Text style={styles.primaryText}>Scan</Text>
       </Pressable>
-      <Pressable onPress={onToggleAutoScan} style={({ pressed }) => [styles.button, autoScan && styles.autoOn, pressed && styles.pressed]}>
+      <Pressable disabled={editMode} onPress={onToggleAutoScan} style={({ pressed }) => [styles.button, autoScan && styles.autoOn, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
         <Text style={[styles.buttonText, autoScan && styles.autoTextOn]}>{autoScan ? 'Auto ON' : 'Auto'}</Text>
       </Pressable>
-      <Pressable onPress={onToggleEdit} style={({ pressed }) => [styles.button, editing && styles.editOn, pressed && styles.pressed]}>
-        <Text style={[styles.buttonText, editing && styles.editTextOn]}>{editing ? 'Simular' : 'Editar'}</Text>
+      <Pressable onPress={onToggleEdit} style={({ pressed }) => [styles.button, editMode && styles.editOn, pressed && styles.pressed]}>
+        <Text style={[styles.buttonText, editMode && styles.editTextOn]}>{editMode ? 'Simular' : 'Editar'}</Text>
       </Pressable>
       <Pressable onPress={onToggleHint} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
         <Text style={styles.buttonText}>Dica</Text>
@@ -86,5 +89,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.72,
+  },
+  disabled: {
+    opacity: 0.48,
   },
 });

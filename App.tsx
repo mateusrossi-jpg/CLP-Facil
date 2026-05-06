@@ -1120,7 +1120,7 @@ export default function App() {
               </View>
 
               
-            {!(compactSimulator && editorMode === 'simulate') ? (
+            {!compactSimulator ? (
               <SimulatorDialectPanel
               editorProject={editorProject}
               selectedProfile={selectedPlcProfile}
@@ -1128,7 +1128,7 @@ export default function App() {
               compact={compactSimulator}
             />
             ) : null}
-            {compactSimulator && editorMode === 'simulate' ? (
+            {compactSimulator ? (
               <SmartphoneSimulationPanel
                 editorProject={editorProject}
                 plcState={editorEvaluation.state}
@@ -1136,10 +1136,12 @@ export default function App() {
                 selectedProfile={selectedPlcProfile}
                 onSelectProfile={setSelectedPlcProfile}
                 mission={activePlcMission}
+                mode={editorMode}
                 autoScan={autoScan}
                 onRunScan={runEditorScan}
                 onToggleAutoScan={() => setAutoScan((current) => !current)}
                 onSetValue={setEditorValue}
+                onChangeMode={changeEditorMode}
                 onSelectBlockId={(blockId) => selectEditorBlock(blockId, true)}
                 onChangeBlockVariable={(variable) => updateSelectedBlockVariable(variable, true)}
                 onChangeBlockName={(name) => updateSelectedBlockText('name', name, true)}
@@ -1160,11 +1162,13 @@ export default function App() {
                 onAddCoil={() => addComponentToEditor(findSimulatorComponent('coil-q'), 'coil', undefined, true)}
                 onAddTimer={() => addComponentToEditor(findSimulatorComponent('timer-ton'), 'coil', undefined, true)}
                 onAddBranch={() => addComponentToEditor(findSimulatorComponent('contact-no'), 'parallel', undefined, true)}
+                onAddRung={addNewRung}
+                onRemoveRung={removeSelectedRung}
                 onRemoveBlock={() => removeSelectedEditorBlock(true)}
                 onAdvanceMission={nextPlcMission(activePlcMission) ? openNextPlcMission : undefined}
               />
             ) : null}
-            {!(compactSimulator && editorMode === 'simulate') ? (
+            {!compactSimulator ? (
               <PlcWorkbench
                 editor={editorProject}
                 state={editorEvaluation.state}
@@ -1189,7 +1193,7 @@ export default function App() {
                 onRemoveVariable={removeEditorVariable}
               />
             ) : null}
-              {!editingLocked ? (
+              {!compactSimulator && !editingLocked ? (
                 <SelectedBlockEditor
                   block={selectedEditorBlock}
                   variables={editorVariableSuggestions}
