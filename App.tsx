@@ -1150,7 +1150,7 @@ export default function App() {
               compact={compactSimulator}
             />
             ) : null}
-            {compactSimulator ? (
+            {compactSimulator && editorMode === 'simulate' ? (
               <SmartphoneSimulationPanel
                 editorProject={editorProject}
                 plcState={editorEvaluation.state}
