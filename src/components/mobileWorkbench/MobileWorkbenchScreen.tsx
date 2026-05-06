@@ -2,6 +2,7 @@ import { ComponentProps, memo } from 'react';
 import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileHardwareExportPanel } from './MobileHardwareExportPanel';
 import { MobileRuntimeAnimationLayer } from './MobileRuntimeAnimationLayer';
+import { MobileScenarioLab } from './MobileScenarioLab';
 
 type Props = ComponentProps<typeof MobilePlcExperience>;
 
@@ -16,6 +17,7 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         hasLogic={hasLogic}
       />
       <MobilePlcExperience {...props} />
+      <MobileScenarioLab editorProject={props.editorProject} plcState={props.plcState} evaluation={props.evaluation} />
       <MobileHardwareExportPanel editorProject={props.editorProject} />
     </>
   );
