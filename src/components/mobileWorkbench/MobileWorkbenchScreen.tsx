@@ -4,6 +4,7 @@ import { MobileBlockQuickEditor } from '../MobileBlockQuickEditor';
 import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileAdvancedDetails } from './MobileAdvancedDetails';
 import { MobileEnergyFlow } from './MobileEnergyFlow';
+import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobileWorkbenchHeader } from './MobileWorkbenchHeader';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -67,6 +68,14 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
         plcState={props.plcState}
         evaluation={props.evaluation}
       />
+
+      {!showEmptyState ? (
+        <MobileLiveBlockStrip
+          editorProject={props.editorProject}
+          plcState={props.plcState}
+          evaluation={props.evaluation}
+        />
+      ) : null}
 
       {showEmptyState ? (
         <MobileEmptyLogicState
