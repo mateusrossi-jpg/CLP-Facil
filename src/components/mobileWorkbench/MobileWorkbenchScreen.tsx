@@ -4,6 +4,7 @@ import { MobileBlockQuickEditor } from '../MobileBlockQuickEditor';
 import { MobilePlcExperience } from '../MobilePlcExperience';
 import { MobileAdvancedDetails } from './MobileAdvancedDetails';
 import { MobileEnergyFlow } from './MobileEnergyFlow';
+import { MobileFactoryProcessPanel } from './MobileFactoryProcessPanel';
 import { MobileIdeToolDock } from './MobileIdeToolDock';
 import { MobileLiveBlockStrip } from './MobileLiveBlockStrip';
 import { MobileMiniHmiPanel } from './MobileMiniHmiPanel';
@@ -85,6 +86,13 @@ export const MobileWorkbenchScreen = memo(function MobileWorkbenchScreen(props: 
       />
 
       <MobileMiniScadaPanel
+        editorProject={props.editorProject}
+        plcState={props.plcState}
+        evaluation={props.evaluation}
+        mode={props.mode}
+      />
+
+      <MobileFactoryProcessPanel
         editorProject={props.editorProject}
         plcState={props.plcState}
         evaluation={props.evaluation}
