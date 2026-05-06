@@ -20,189 +20,126 @@ export const MobileWorkspaceModePanel = memo(function MobileWorkspaceModePanel({
   onChangeMode,
   onOpenMissions,
 }: MobileWorkspaceModePanelProps) {
+  const guided = mode === 'guided';
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerCopy}>
-          <Text style={styles.eyebrow}>Modo de uso</Text>
-          <Text style={styles.title}>{mode === 'guided' ? 'Aprendizado guiado' : 'Simulação livre'}</Text>
-        </View>
-        <View style={[styles.modeBadge, mode === 'guided' ? styles.modeBadgeGuided : styles.modeBadgeFree]}>
-          <Text style={[styles.modeBadgeText, mode === 'guided' ? styles.modeBadgeTextGuided : styles.modeBadgeTextFree]}>
-            {mode === 'guided' ? 'Missão' : 'Livre'}
+    <View style={styles.bar}>
+      <View style={styles.modeSwitch}>
+        <Pressable onPress={() => onChangeMode('guided')} style={[styles.modeButton, guided && styles.modeButtonGuidedOn]}>
+          <Text style={[styles.modeButtonText, guided && styles.modeButtonTextGuidedOn]}>Guiado</Text>
+        </Pressable>
+        <Pressable onPress={() => onChangeMode('free')} style={[styles.modeButton, !guided && styles.modeButtonFreeOn]}>
+          <Text style={[styles.modeButtonText, !guided && styles.modeButtonTextFreeOn]}>Livre</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.contextRow}>
+        <View style={styles.contextCopy}>
+          <Text style={styles.contextLabel}>{guided ? 'Missão' : 'Bancada livre'}</Text>
+          <Text style={styles.contextTitle} numberOfLines={1}>{missionTitle || (guided ? 'Escolha uma missão' : 'Editor + simulador')}</Text>
+          <Text style={styles.contextText} numberOfLines={2}>
+            {guided
+              ? missionProgress || 'Resolva o desafio direto na bancada Ladder.'
+              : 'Monte, clique nos blocos, mude variáveis e simule no mesmo local.'}
           </Text>
         </View>
+        {guided && onOpenMissions ? (
+          <Pressable onPress={onOpenMissions} style={({ pressed }) => [styles.missionButton, pressed && styles.pressed]}>
+            <Text style={styles.missionButtonText}>Trilha</Text>
+          </Pressable>
+        ) : null}
       </View>
-
-      <View style={styles.modeGrid}>
-        <Pressable
-          onPress={() => onChangeMode('guided')}
-          style={[styles.modeButton, mode === 'guided' && styles.modeButtonGuidedActive]}
-        >
-          <Text style={[styles.modeButtonTitle, mode === 'guided' && styles.modeButtonTitleGuided]}>Guiado</Text>
-          <Text style={styles.modeButtonText}>Missões curtas, objetivo claro, dica e validação automática.</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => onChangeMode('free')}
-          style={[styles.modeButton, mode === 'free' && styles.modeButtonFreeActive]}
-        >
-          <Text style={[styles.modeButtonTitle, mode === 'free' && styles.modeButtonTitleFree]}>Livre</Text>
-          <Text style={styles.modeButtonText}>Monte, toque, teste e edite sem seguir uma trilha obrigatória.</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.contextBox}>
-        <Text style={styles.contextLabel}>{mode === 'guided' ? 'Missão atual' : 'Workspace livre'}</Text>
-        <Text style={styles.contextTitle} numberOfLines={1}>{missionTitle || (mode === 'guided' ? 'Escolha uma missão para começar' : 'Mesa de simulação independente')}</Text>
-        <Text style={styles.contextText}>
-          {mode === 'guided'
-            ? missionProgress || 'O app orienta o aluno: acione entradas, observe a rung, valide saídas e avance.'
-            : 'Ideal para quem já conhece CLP: a tela fica simples, direta e sem bloquear experimentação.'}
-        </Text>
-      </View>
-
-      {mode === 'guided' && onOpenMissions ? (
-        <Pressable onPress={onOpenMissions} style={styles.missionButton}>
-          <Text style={styles.missionButtonText}>Ver trilha de missões</Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  card: {
-    borderColor: colors.cyan,
+  bar: {
+    borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 22,
-    padding: spacing.md,
-    backgroundColor: colors.cyanSoft,
+    borderRadius: 16,
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
     gap: spacing.sm,
   },
-  headerRow: {
+  modeSwitch: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  headerCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  eyebrow: {
-    color: colors.cyan,
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  modeBadge: {
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 5,
-    backgroundColor: colors.surface,
-  },
-  modeBadgeGuided: {
-    borderColor: colors.green,
-    backgroundColor: colors.greenSoft,
-  },
-  modeBadgeFree: {
-    borderColor: colors.amber,
-    backgroundColor: colors.amberSoft,
-  },
-  modeBadgeText: {
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  modeBadgeTextGuided: {
-    color: colors.green,
-  },
-  modeBadgeTextFree: {
-    color: colors.amber,
-  },
-  modeGrid: {
-    flexDirection: 'row',
-    gap: spacing.xs,
+    backgroundColor: colors.background,
+    padding: 3,
+    gap: 3,
   },
   modeButton: {
     flex: 1,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: spacing.sm,
-    backgroundColor: colors.surface,
-    gap: 4,
+    minHeight: 34,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
   },
-  modeButtonGuidedActive: {
-    borderColor: colors.green,
+  modeButtonGuidedOn: {
     backgroundColor: colors.greenSoft,
   },
-  modeButtonFreeActive: {
-    borderColor: colors.amber,
+  modeButtonFreeOn: {
     backgroundColor: colors.amberSoft,
-  },
-  modeButtonTitle: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  modeButtonTitleGuided: {
-    color: colors.green,
-  },
-  modeButtonTitleFree: {
-    color: colors.amber,
   },
   modeButtonText: {
     color: colors.textMuted,
-    fontSize: 10,
-    lineHeight: 15,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
-  contextBox: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: spacing.sm,
-    backgroundColor: colors.surface,
-    gap: 3,
+  modeButtonTextGuidedOn: {
+    color: colors.green,
+  },
+  modeButtonTextFreeOn: {
+    color: colors.amber,
+  },
+  contextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  contextCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   contextLabel: {
-    color: colors.textMuted,
+    color: colors.cyan,
     fontSize: 9,
     fontWeight: '900',
     textTransform: 'uppercase',
+    letterSpacing: 0.7,
   },
   contextTitle: {
     color: colors.text,
     fontSize: 13,
     fontWeight: '900',
+    marginTop: 2,
   },
   contextText: {
     color: colors.textMuted,
     fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '700',
+    lineHeight: 15,
+    fontWeight: '800',
+    marginTop: 2,
   },
   missionButton: {
-    borderColor: colors.green,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
+    minHeight: 38,
+    borderRadius: 999,
     backgroundColor: colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
   },
   missionButtonText: {
     color: colors.surface,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  pressed: {
+    opacity: 0.72,
   },
 });
