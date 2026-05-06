@@ -83,7 +83,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
   const onSetValue = props.onSetValue ?? noop;
   const activeMission = props.mission ?? undefined;
   const diagnosticsOnly = Boolean(props.embeddedDiagnosticsOnly);
-  const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics || advancedOpen);
+  const showAdvancedDiagnostics = Boolean(props.showAdvancedDiagnostics || advancedOpen || diagnosticsOnly);
   const pipWidth = Math.min(width - spacing.md * 2, pipExpanded ? 720 : 430);
   const pipMaxHeight = Math.max(360, Math.min(height * (pipExpanded ? 0.82 : 0.58), 720));
   const fixedPanelProps: FixedPanelProps = {
@@ -93,6 +93,102 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
     onToggleAutoScan,
     onSetValue,
   };
+
+  const advancedContent = (
+    <ScrollView style={styles.detailsScroll} contentContainerStyle={styles.detailsContent} showsVerticalScrollIndicator>
+      <PlcSimulationSection title="CPU" subtitle="Estado RUN/STOP, tempo de ciclo e resumo técnico" tone="green" defaultOpen>
+        <View style={styles.innerStack}>
+          <PlcSimulationOverviewCard
+            project={props.editorProject}
+            state={props.plcState}
+            evaluation={props.evaluation}
+            autoScan={autoScan}
+            onRunScan={onRunScan}
+            onToggleAutoScan={onToggleAutoScan}
+          />
+          <PlcCpuStatusCard
+            isRunning
+            isAutoScan={autoScan}
+            scanCount={scanNumber}
+            lastScanMs={lastScanMs}
+            runtime={props.evaluation.runtime}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Scan" subtitle="Ciclo, histórico e imagem de processo" tone="cyan">
+        <View style={styles.innerStack}>
+          <PlcScanHistoryCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+            scanNumber={scanNumber}
+            lastScanMs={lastScanMs}
+          />
+          <PlcScanCycleCard
+            project={props.editorProject}
+            state={props.plcState}
+            scanNumber={scanNumber}
+            runtime={props.evaluation.runtime}
+          />
+          <PlcProcessImageCard
+            project={props.editorProject}
+            state={props.plcState}
+            scanNumber={scanNumber}
+            runtime={props.evaluation.runtime}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Ladder" subtitle="Fluxo energizado, timers, contadores e bordas" tone="amber">
+        <View style={styles.innerStack}>
+          <PlcRungPowerFlowCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+            focusedRungId={props.editorProject.selectedRungId}
+          />
+          <PlcTimerCounterMonitorCard project={props.editorProject} runtime={props.evaluation.runtime} />
+          <PlcEdgePulseMonitorCard project={props.editorProject} state={props.plcState} runtime={props.evaluation.runtime} />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Memória" subtitle="Watch table, endereços e mapa de I/O" tone="purple">
+        <View style={styles.innerStack}>
+          <PlcWatchTableCard project={props.editorProject} state={props.plcState} runtime={props.evaluation.runtime} />
+          <PlcMemoryMapCard project={props.editorProject} />
+          <PlcIoWiringMapCard project={props.editorProject} state={props.plcState} />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Segurança" subtitle="Plano de teste, checklist, intertravamentos e force" tone="red">
+        <View style={styles.innerStack}>
+          <PlcBenchTestPlanCard project={props.editorProject} state={props.plcState} evaluation={props.evaluation} />
+          <PlcCommissioningChecklistCard project={props.editorProject} state={props.plcState} evaluation={props.evaluation} />
+          <PlcSafetyInterlockCard project={props.editorProject} state={props.plcState} runtime={props.evaluation.runtime} />
+          <PlcForceTableCard project={props.editorProject} state={props.plcState} onSetValue={onSetValue} />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Diagnóstico" subtitle="Coach, relatório, rubrica e trace textual" tone="neutral">
+        <View style={styles.innerStack}>
+          <PlcLearningCoachCard project={props.editorProject} state={props.plcState} evaluation={props.evaluation} />
+          <PlcSimulationTestReportCard project={props.editorProject} state={props.plcState} evaluation={props.evaluation} autoScan={autoScan} />
+          <PlcTeacherRubricCard project={props.editorProject} state={props.plcState} evaluation={props.evaluation} />
+          <ScanTraceDiagnosticCard
+            project={props.editorProject}
+            state={props.plcState}
+            runtime={props.evaluation.runtime}
+            focusedRungId={props.editorProject.selectedRungId}
+          />
+        </View>
+      </PlcSimulationSection>
+
+      <PlcSimulationSection title="Painel legado" subtitle="Controles compactos antigos para comparação" tone="green">
+        <SmartphoneSimulationPanelFixed {...fixedPanelProps} />
+      </PlcSimulationSection>
+    </ScrollView>
+  );
 
   return (
     <View style={styles.stack}>
@@ -149,14 +245,27 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
       ) : null}
 
       {showAdvancedDiagnostics ? (
-        <View style={[styles.analysisPip, { width: pipWidth, maxHeight: pipMaxHeight }]}>
-          <View style={styles.pipHeader}></View>
-          <ScrollView style={styles.pipScroll} contentContainerStyle={styles.pipContent} showsVerticalScrollIndicator>
-            <PlcSimulationSection title="Painel compacto" subtitle="Controles principais" tone="green" defaultOpen>
-              <SmartphoneSimulationPanelFixed {...fixedPanelProps} />
-            </PlcSimulationSection>
-          </ScrollView>
-        </View>
+        diagnosticsOnly ? (
+          <View style={styles.detailsInline}>{advancedContent}</View>
+        ) : (
+          <View style={[styles.analysisPip, { width: pipWidth, maxHeight: pipMaxHeight }]}>
+            <View style={styles.pipHeader}>
+              <View style={styles.analysisCopy}>
+                <Text style={styles.pipTitle}>Analises sob demanda</Text>
+                <Text style={styles.pipSubtitle}>Consulte detalhes sem trocar a bancada principal.</Text>
+              </View>
+              <View style={styles.pipActions}>
+                <Pressable onPress={() => setPipExpanded((current) => !current)} style={({ pressed }) => [styles.pipActionButton, pipExpanded && styles.pipActionButtonOn, pressed && styles.pressed]}>
+                  <Text style={[styles.pipActionText, pipExpanded && styles.pipActionTextOn]}>{pipExpanded ? 'Compacto' : 'Grande'}</Text>
+                </Pressable>
+                <Pressable onPress={() => setAdvancedOpen(false)} style={({ pressed }) => [styles.pipCloseButton, pressed && styles.pressed]}>
+                  <Text style={styles.pipCloseText}>Fechar</Text>
+                </Pressable>
+              </View>
+            </View>
+            {advancedContent}
+          </View>
+        )
       ) : null}
     </View>
   );
@@ -166,6 +275,9 @@ const styles = StyleSheet.create({
   stack: {
     gap: spacing.md,
     position: 'relative',
+  },
+  innerStack: {
+    gap: spacing.md,
   },
   analysisButton: {
     minHeight: 58,
@@ -217,6 +329,13 @@ const styles = StyleSheet.create({
     color: colors.background,
     backgroundColor: colors.cyan,
   },
+  detailsInline: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 18,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
   analysisPip: {
     position: 'absolute',
     right: spacing.sm,
@@ -226,15 +345,81 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 18,
     backgroundColor: colors.background,
+    shadowColor: colors.background,
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
     overflow: 'hidden',
   },
   pipHeader: {
-    minHeight: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    backgroundColor: colors.surfaceElevated,
+    padding: spacing.sm,
   },
-  pipScroll: {
+  pipTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  pipSubtitle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  pipActions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  pipActionButton: {
+    minHeight: 32,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  pipActionButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.cyanSoft,
+  },
+  pipActionText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  pipActionTextOn: {
+    color: colors.cyan,
+  },
+  pipCloseButton: {
+    minHeight: 32,
+    borderColor: colors.red,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.redSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  pipCloseText: {
+    color: colors.red,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  detailsScroll: {
     backgroundColor: colors.background,
   },
-  pipContent: {
+  detailsContent: {
     gap: spacing.sm,
     padding: spacing.sm,
     paddingBottom: spacing.md,
