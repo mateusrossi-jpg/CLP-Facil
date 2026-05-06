@@ -1164,6 +1164,7 @@ export default function App() {
                 onToggleAutoScan={() => setAutoScan((current) => !current)}
                 onSetValue={setEditorValue}
                 onChangeMode={changeEditorMode}
+                onSelectRungId={selectEditorRung}
                 onSelectBlockId={(blockId) => selectEditorBlock(blockId, true)}
                 onChangeBlockVariable={(variable) => updateSelectedBlockVariable(variable, true)}
                 onChangeBlockName={(name) => updateSelectedBlockText('name', name, true)}

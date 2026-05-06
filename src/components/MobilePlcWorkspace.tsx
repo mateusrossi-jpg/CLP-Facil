@@ -1,5 +1,5 @@
-import { memo, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { EditorBlock, EditorCoilMode, EditorCompareMode, EditorContactMode, EditorCounterMode, EditorMathMode, EditorProjectState, EditorTimerMode } from '../engine/editorTypes';
 import { PlcState } from '../engine/projectTypes';
@@ -25,6 +25,7 @@ type MobilePlcWorkspaceProps = {
   onRunScan?: () => void;
   onToggleAutoScan?: () => void;
   onChangeMode?: (mode: EditorRunMode) => void;
+  onSelectRungId?: (rungId: string) => void;
   onSelectBlockId?: (blockId: string) => void;
   onChangeBlockVariable?: (variable: string) => void;
   onChangeBlockName?: (name: string) => void;
@@ -54,7 +55,15 @@ type MobilePlcWorkspaceProps = {
 
 const noop = () => undefined;
 
-const editorCategories = ['Comando', 'Contatos', 'Saidas', 'Temporizadores', 'Contadores', 'Matematica'] as const;
+type EditorToolId = 'contact' | 'coil' | 'timer' | 'counter' | 'branch';
+
+const editorTools: { id: EditorToolId; label: string; symbol: string; hint: string }[] = [
+  { id: 'contact', label: 'Contato', symbol: '--| |--', hint: 'soltar na serie' },
+  { id: 'coil', label: 'Bobina', symbol: '--( )--', hint: 'soltar como saida' },
+  { id: 'timer', label: 'Timer', symbol: '[TON]', hint: 'soltar como saida' },
+  { id: 'counter', label: 'Contador', symbol: '[CTU]', hint: 'soltar como saida' },
+  { id: 'branch', label: 'Branch', symbol: 'BR', hint: 'soltar em paralelo' },
+];
 
 function cycleStatus(evaluation: EditorEvaluationResult): string {
   const diagnostics = evaluation.diagnostics?.length ?? 0;
@@ -81,6 +90,18 @@ function projectBlocks(project: EditorProjectState): EditorBlock[] {
     ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
     ...(rung.coilBlock ? [rung.coilBlock] : []),
   ]);
+}
+
+function findBlockRungIndex(project: EditorProjectState, blockId: string): number {
+  return project.rungs.findIndex((rung) => {
+    const blocks = [
+      ...rung.seriesBlocks,
+      ...rung.parallelBlocks,
+      ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
+      ...(rung.coilBlock ? [rung.coilBlock] : []),
+    ];
+    return blocks.some((block) => block.id === blockId);
+  });
 }
 
 function normalizeVariableInput(value: string): string {
@@ -184,6 +205,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onRunScan = noop,
   onToggleAutoScan = noop,
   onChangeMode,
+  onSelectRungId,
   onSelectBlockId,
   onChangeBlockVariable,
   onChangeBlockName,
@@ -210,12 +232,16 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   onRemoveBlock,
   onAdvanceMission,
 }: MobilePlcWorkspaceProps) {
+  const { width, height } = useWindowDimensions();
   const [localMode, setLocalMode] = useState<EditorRunMode>('simulate');
   const [rungIndex, setRungIndex] = useState(0);
   const [editing, setEditing] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [showFloatingIo, setShowFloatingIo] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [toolboxOpen, setToolboxOpen] = useState(false);
+  const [selectedToolId, setSelectedToolId] = useState<EditorToolId | null>(null);
+  const [editorDeskMode, setEditorDeskMode] = useState(false);
   const selectedBlock = useMemo(
     () => projectBlocks(editorProject).find((block) => block.id === selectedBlockId) ?? null,
     [editorProject, selectedBlockId],
@@ -235,7 +261,16 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
   const activeMode = mode ?? localMode;
   const editMode = activeMode === 'edit';
   const simulationMode = activeMode === 'simulate';
+  const deskLikeEditor = editMode && (editorDeskMode || width > height);
+  const selectedTool = editorTools.find((tool) => tool.id === selectedToolId) ?? null;
   const coachStep = missionCoachStep(mission, plcState, evaluation, missionPassed, editMode);
+
+  useEffect(() => {
+    const selectedRungIndex = editorProject.rungs.findIndex((rung) => rung.id === editorProject.selectedRungId);
+    if (selectedRungIndex >= 0 && selectedRungIndex !== rungIndex) {
+      setRungIndex(selectedRungIndex);
+    }
+  }, [editorProject.rungs, editorProject.selectedRungId, rungIndex]);
 
   function changeWorkspaceMode(nextMode: EditorRunMode) {
     setLocalMode(nextMode);
@@ -247,8 +282,29 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
     changeWorkspaceMode(editMode ? 'simulate' : 'edit');
   }
 
+  function selectVisibleRung(index: number) {
+    const safeIndex = Math.min(Math.max(index, 0), Math.max(editorProject.rungs.length - 1, 0));
+    const rungId = editorProject.rungs[safeIndex]?.id;
+    setRungIndex(safeIndex);
+    if (rungId) onSelectRungId?.(rungId);
+  }
+
+  function insertSelectedTool(toolId = selectedToolId) {
+    if (!toolId) return;
+    const actions: Record<EditorToolId, (() => void) | undefined> = {
+      contact: onAddContact,
+      coil: onAddCoil,
+      timer: onAddTimer,
+      counter: onAddCounter,
+      branch: onAddBranch,
+    };
+    actions[toolId]?.();
+    setSelectedToolId(null);
+    setToolboxOpen(false);
+  }
+
   return (
-    <View style={styles.workspace}>
+    <View style={[styles.workspace, deskLikeEditor && styles.workspaceDesk]}>
       <View style={styles.topBar}>
         <View style={styles.topCopy}>
           <Text style={styles.eyebrow}>Missao</Text>
@@ -269,7 +325,7 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         <Text style={[styles.scanText, diagnostics > 0 && styles.warningText]}>{cycleStatus(evaluation)}</Text>
       </View>
 
-      {mission ? (
+      {mission && !(editMode && deskLikeEditor) ? (
         <View style={[styles.missionBox, missionPassed && styles.missionBoxDone]}>
           <View style={styles.missionHeader}>
             <View style={styles.missionCopy}>
@@ -329,55 +385,53 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
       {simulationMode ? (
         <MobileIoDock editorProject={editorProject} plcState={plcState} onSetValue={onSetValue} />
       ) : (
-        <View style={styles.editorToolbox}>
-          <View style={styles.editorToolboxHeader}>
+        <View style={[styles.editorDock, deskLikeEditor && styles.editorDockDesk]}>
+          <View style={styles.editorDockHeader}>
             <View style={styles.sheetCopy}>
-              <Text style={styles.eyebrow}>Pinça de montagem</Text>
-              <Text style={styles.editorToolboxTitle}>Escolha uma peça, toque em um bloco para ajustar, e mantenha o Ladder como área principal.</Text>
+              <Text style={styles.eyebrow}>Modo editor</Text>
+              <Text style={styles.editorDockTitle}>{selectedTool ? `${selectedTool.label}: ${selectedTool.hint}` : 'A rung fica limpa. Abra Peças, escolha e solte na linha.'}</Text>
             </View>
-            <View style={styles.freePill}>
-              <Text style={styles.freePillText}>Livre</Text>
-            </View>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
-            {editorCategories.map((category, index) => (
-              <View key={category} style={[styles.categoryChip, index === 0 && styles.categoryChipOn]}>
-                <Text style={[styles.categoryText, index === 0 && styles.categoryTextOn]}>{category}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.assemblyGrid}>
-            {[
-              { label: 'Contato', symbol: '--| |--', action: onAddContact },
-              { label: 'Bobina', symbol: '--( )--', action: onAddCoil },
-              { label: 'Timer', symbol: '[TON]', action: onAddTimer },
-              { label: 'Contador', symbol: '[CTU]', action: onAddCounter },
-              { label: 'Branch', symbol: 'BR', action: onAddBranch },
-            ].map((item) => (
-              <Pressable
-                key={item.label}
-                disabled={!item.action}
-                onPress={() => {
-                  item.action?.();
-                  setEditing(false);
-                }}
-                style={({ pressed }) => [styles.assemblyTile, !item.action && styles.disabledChip, pressed && item.action && styles.pressed]}
-              >
-                <Text style={styles.assemblySymbol}>{item.symbol}</Text>
-                <Text style={styles.assemblyLabel}>{item.label}</Text>
+            <View style={styles.editorDockActions}>
+              <Pressable onPress={() => setToolboxOpen((current) => !current)} style={({ pressed }) => [styles.editorDockButton, toolboxOpen && styles.editorDockButtonOn, pressed && styles.pressed]}>
+                <Text style={[styles.editorDockButtonText, toolboxOpen && styles.editorDockButtonTextOn]}>Peças</Text>
               </Pressable>
-            ))}
+              <Pressable onPress={() => setEditorDeskMode((current) => !current)} style={({ pressed }) => [styles.editorDockButton, deskLikeEditor && styles.editorDockButtonOn, pressed && styles.pressed]}>
+                <Text style={[styles.editorDockButtonText, deskLikeEditor && styles.editorDockButtonTextOn]}>{deskLikeEditor ? 'Mesa' : 'Tela'}</Text>
+              </Pressable>
+            </View>
           </View>
 
-          <View style={styles.editorModeHint}>
-            <Text style={styles.editorModeHintText}>Toque direto no contato, bobina, timer ou contador para abrir detalhes e remover.</Text>
-          </View>
+          {toolboxOpen ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolRail}>
+              {editorTools.map((tool) => {
+                const disabled = !({
+                  contact: onAddContact,
+                  coil: onAddCoil,
+                  timer: onAddTimer,
+                  counter: onAddCounter,
+                  branch: onAddBranch,
+                }[tool.id]);
+                const selected = selectedToolId === tool.id;
+                return (
+                  <Pressable
+                    key={tool.id}
+                    disabled={disabled}
+                    onPress={() => setSelectedToolId(tool.id)}
+                    onLongPress={() => insertSelectedTool(tool.id)}
+                    style={({ pressed }) => [styles.toolTile, selected && styles.toolTileOn, disabled && styles.disabledChip, pressed && !disabled && styles.pressed]}
+                  >
+                    <Text style={[styles.toolSymbol, selected && styles.toolSymbolOn]}>{tool.symbol}</Text>
+                    <Text style={styles.toolLabel}>{tool.label}</Text>
+                    <Text style={styles.toolHint}>{tool.hint}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : null}
 
           <View style={styles.rungActionRow}>
             <Pressable disabled={!onAddRung} onPress={onAddRung} style={({ pressed }) => [styles.rungActionButton, !onAddRung && styles.disabledChip, pressed && onAddRung && styles.pressed]}>
-              <Text style={styles.rungActionText}>Adicionar rung abaixo</Text>
+              <Text style={styles.rungActionText}>+ Rung</Text>
             </Pressable>
             <Pressable disabled={!onRemoveRung || editorProject.rungs.length <= 1} onPress={onRemoveRung} style={({ pressed }) => [styles.rungRemoveButton, (!onRemoveRung || editorProject.rungs.length <= 1) && styles.disabledChip, pressed && onRemoveRung && editorProject.rungs.length > 1 && styles.pressed]}>
               <Text style={styles.rungRemoveText}>Remover rung</Text>
@@ -392,8 +446,10 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
         evaluation={evaluation}
         rungIndex={rungIndex}
         selectedBlockId={selectedBlockId}
-        onSelectRungIndex={setRungIndex}
+        onSelectRungIndex={selectVisibleRung}
         onSelectBlock={(block) => {
+          const blockRungIndex = findBlockRungIndex(editorProject, block.id);
+          if (blockRungIndex >= 0) selectVisibleRung(blockRungIndex);
           setSelectedBlockId(block.id);
           onSelectBlockId?.(block.id);
           if (editMode) {
@@ -403,6 +459,18 @@ export const MobilePlcWorkspace = memo(function MobilePlcWorkspace({
           }
         }}
       />
+
+      {editMode && selectedTool ? (
+        <Pressable onPress={() => insertSelectedTool()} style={({ pressed }) => [styles.dropZone, pressed && styles.pressed]}>
+          <View style={styles.dropZoneIcon}>
+            <Text style={styles.dropZoneIconText}>{selectedTool.symbol}</Text>
+          </View>
+          <View style={styles.dropZoneCopy}>
+            <Text style={styles.dropZoneTitle}>Soltar {selectedTool.label} na rung {rungIndex + 1}</Text>
+            <Text style={styles.dropZoneText}>Toque aqui para inserir. Depois toque no bloco criado para editar tag, tipo e estado.</Text>
+          </View>
+        </Pressable>
+      ) : null}
 
       <Pressable onPress={() => setShowFloatingIo((current) => !current)} style={({ pressed }) => [styles.floatingIoButton, showFloatingIo && styles.floatingIoButtonOn, pressed && styles.pressed]}>
         <Text style={[styles.floatingIoButtonText, showFloatingIo && styles.floatingIoButtonTextOn]}>I/O</Text>
@@ -724,6 +792,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
+  workspaceDesk: {
+    padding: spacing.sm,
+    gap: spacing.xs,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -980,6 +1052,141 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '800',
+  },
+  editorDock: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 16,
+    backgroundColor: colors.cyanSoft,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  editorDockDesk: {
+    backgroundColor: colors.surface,
+  },
+  editorDockHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  editorDockTitle: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  editorDockActions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  editorDockButton: {
+    minHeight: 32,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  editorDockButtonOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.background,
+  },
+  editorDockButtonText: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  editorDockButtonTextOn: {
+    color: colors.cyan,
+  },
+  toolRail: {
+    gap: spacing.xs,
+    paddingRight: spacing.sm,
+  },
+  toolTile: {
+    width: 112,
+    minHeight: 72,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.sm,
+  },
+  toolTileOn: {
+    borderColor: colors.cyan,
+    backgroundColor: colors.background,
+  },
+  toolSymbol: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  toolSymbolOn: {
+    color: colors.cyan,
+  },
+  toolLabel: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '900',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  toolHint: {
+    color: colors.textMuted,
+    fontSize: 9,
+    fontWeight: '800',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  dropZone: {
+    minHeight: 62,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.cyanSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+  },
+  dropZoneIcon: {
+    width: 58,
+    height: 42,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropZoneIconText: {
+    color: colors.cyan,
+    fontSize: 13,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  dropZoneCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  dropZoneTitle: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  dropZoneText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '800',
+    marginTop: 2,
   },
   editorToolbox: {
     borderColor: colors.cyan,

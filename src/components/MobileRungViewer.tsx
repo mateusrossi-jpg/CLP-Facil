@@ -20,8 +20,8 @@ type MobileRungViewerProps = {
   onSelectBlock?: (block: EditorBlock) => void;
 };
 
-const MIN_LADDER_ZOOM = 0.58;
-const MAX_LADDER_ZOOM = 1.22;
+const MIN_LADDER_ZOOM = 0.5;
+const MAX_LADDER_ZOOM = 1.16;
 
 function normalize(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
@@ -212,8 +212,8 @@ function MobileLadderDrawing({
         const branchEndX = branchStartX + Math.max(branch.blocks.length, 1) * geometry.stepX;
         return (
           <View key={branch.id}>
-            <View style={[styles.mobileNode, { left: branchStartX - 4, top: geometry.mainY - 4 }]} />
-            <View style={[styles.mobileNode, { left: branchEndX - 4, top: geometry.mainY - 4 }]} />
+            <View style={[styles.mobileNode, { left: branchStartX - 2, top: geometry.mainY - 2 }]} />
+            <View style={[styles.mobileNode, { left: branchEndX - 2, top: geometry.mainY - 2 }]} />
             <View style={[styles.mobileBranchDrop, lineColorStyle, { left: branchStartX, top: geometry.mainY, height: branchY - geometry.mainY }]} />
             <View style={[styles.mobileBranchDrop, lineColorStyle, { left: branchEndX, top: geometry.mainY, height: branchY - geometry.mainY }]} />
             <View style={[styles.mobileMainLine, lineColorStyle, { left: branchStartX, top: branchY, width: branchEndX - branchStartX }]} />
@@ -289,7 +289,7 @@ function MobileProgramSheet({
                   <Text style={styles.compiledRungTitle} numberOfLines={1}>{item.label.replace(/^Linha \d+\s+[—-]\s+/, '')}</Text>
                 </View>
                 <View style={styles.programRungStateBox}>
-                  <Text style={[styles.programRungState, itemOutputActive && styles.blockAddressOn]}>{itemOutput ? `${blockAddress(itemOutput)} ${itemOutputActive ? 'ON' : 'OFF'}` : itemActive ? 'TRUE' : 'FALSE'}</Text>
+                  <Text style={[styles.programRungState, itemOutputActive && styles.blockAddressOn]} numberOfLines={1}>{itemOutput ? `${blockAddress(itemOutput)} ${itemOutputActive ? 'ON' : 'OFF'}` : itemActive ? 'TRUE' : 'FALSE'}</Text>
                 </View>
               </Pressable>
               <MobileLadderDrawing
@@ -321,7 +321,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
 }: MobileRungViewerProps) {
   const [viewMode, setViewMode] = useState<MobileRungViewMode>('ladder');
   const [rungScope, setRungScope] = useState<MobileRungScope>('individual');
-  const [ladderZoom, setLadderZoom] = useState(0.92);
+  const [ladderZoom, setLadderZoom] = useState(0.76);
   const safeIndex = Math.min(Math.max(rungIndex, 0), Math.max(editorProject.rungs.length - 1, 0));
   const rung = editorProject.rungs[safeIndex];
   const rungActive = Boolean(rung && evaluation.rungResults?.[rung.id]);
@@ -360,7 +360,14 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         ] as [MobileRungScope, string][]).map(([scope, label]) => {
           const selected = rungScope === scope;
           return (
-            <Pressable key={scope} onPress={() => setRungScope(scope)} style={[styles.scopeButton, selected && styles.scopeButtonOn]}>
+            <Pressable
+              key={scope}
+              onPress={() => {
+                setRungScope(scope);
+                setLadderZoom(scope === 'compiled' ? 0.62 : 0.76);
+              }}
+              style={[styles.scopeButton, selected && styles.scopeButtonOn]}
+            >
               <Text style={[styles.scopeText, selected && styles.scopeTextOn]}>{label}</Text>
             </Pressable>
           );
@@ -410,7 +417,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current - 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>-</Text>
             </Pressable>
-            <Pressable onPress={() => setLadderZoom(compiledMode ? 0.68 : 0.84)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setLadderZoom(compiledMode ? 0.62 : 0.76)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
               <Text style={styles.zoomValueText}>{Math.round(ladderZoom * 100)}%</Text>
             </Pressable>
             <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current + 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
@@ -729,7 +736,7 @@ const styles = StyleSheet.create({
   mobileRail: {
     position: 'absolute',
     top: 12,
-    width: 2,
+    width: 1.5,
     borderRadius: 999,
     backgroundColor: colors.inactive,
   },
@@ -741,7 +748,7 @@ const styles = StyleSheet.create({
   },
   mobileMainLine: {
     position: 'absolute',
-    height: 2,
+    height: 1.5,
     borderRadius: 999,
   },
   mobileWire: {
@@ -752,13 +759,13 @@ const styles = StyleSheet.create({
   },
   mobileBranchDrop: {
     position: 'absolute',
-    width: 2,
+    width: 1.5,
     borderRadius: 999,
   },
   mobileNode: {
     position: 'absolute',
-    width: 5,
-    height: 5,
+    width: 4,
+    height: 4,
     borderRadius: 999,
     backgroundColor: colors.inactive,
   },
@@ -827,6 +834,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     paddingHorizontal: spacing.sm,
     paddingVertical: 5,
+    maxWidth: 96,
   },
   programRungState: {
     color: colors.textMuted,
