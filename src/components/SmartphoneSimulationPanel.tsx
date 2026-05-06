@@ -10,16 +10,24 @@ type SmartphoneSimulationPanelProps = ComponentProps<typeof SmartphoneSimulation
 export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel(props: SmartphoneSimulationPanelProps) {
   const [advancedOpen, setAdvancedOpen] = useState(Boolean(props.showAdvancedDiagnostics));
   const activeMission = props.mission ?? undefined;
+  const runtimeMode = props.mode === 'edit' ? 'EDITOR' : props.autoScan ? 'AUTO' : 'SCAN';
 
   return (
     <View style={styles.stack}>
       <View style={styles.workbenchHeader}>
         <View style={styles.workbenchCopy}>
-          <Text style={styles.workbenchEyebrow}>Bancada de trabalho</Text>
-          <Text style={styles.workbenchTitle}>Editor e simulador no mesmo lugar</Text>
-          <Text style={styles.workbenchText}>Monte a rung, toque nas entradas, rode Scan e ajuste os blocos sem trocar de aba.</Text>
+          <Text style={styles.workbenchEyebrow}>PLC Simulator</Text>
+          <Text style={styles.workbenchTitle}>Programa Ladder + I/O + Scan</Text>
+          <Text style={styles.workbenchText}>Use como simulador direto: toque nas entradas, clique nos blocos para editar tags e rode o scan na mesma bancada.</Text>
+          <View style={styles.flowRow}>
+            <Text style={styles.flowChip}>I/O</Text>
+            <Text style={styles.flowArrow}>→</Text>
+            <Text style={styles.flowChip}>Ladder</Text>
+            <Text style={styles.flowArrow}>→</Text>
+            <Text style={styles.flowChip}>Q</Text>
+          </View>
         </View>
-        <Text style={styles.workbenchMode}>{props.mode === 'edit' ? 'EDITAR' : 'SIMULAR'}</Text>
+        <Text style={[styles.workbenchMode, props.mode === 'edit' && styles.workbenchModeEdit]}>{runtimeMode}</Text>
       </View>
 
       <MobilePlcExperience
@@ -71,7 +79,7 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
           <Text style={[styles.advancedTitle, advancedOpen && styles.advancedTitleOpen]}>
             {advancedOpen ? 'Ocultar detalhes' : 'Detalhes avançados'}
           </Text>
-          <Text style={styles.advancedText}>CPU, scan, memória, force, relatório e diagnóstico ficam recolhidos fora da bancada principal.</Text>
+          <Text style={styles.advancedText}>CPU, memória, force, relatório e diagnóstico ficam recolhidos fora da bancada principal.</Text>
         </View>
         <Text style={[styles.advancedPill, advancedOpen && styles.advancedPillOpen]}>{advancedOpen ? 'Fechar' : 'Abrir'}</Text>
       </Pressable>
@@ -90,9 +98,9 @@ const styles = StyleSheet.create({
   workbenchHeader: {
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceElevated,
-    padding: spacing.md,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+    padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
@@ -111,20 +119,42 @@ const styles = StyleSheet.create({
   },
   workbenchTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
-    marginTop: 4,
+    marginTop: 3,
   },
   workbenchText: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: '800',
-    marginTop: 6,
+    marginTop: 5,
+  },
+  flowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  flowChip: {
+    color: colors.cyan,
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    fontSize: 9,
+    fontWeight: '900',
+    overflow: 'hidden',
+  },
+  flowArrow: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '900',
   },
   workbenchMode: {
     color: colors.background,
-    backgroundColor: colors.cyan,
+    backgroundColor: colors.green,
     borderRadius: 999,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
@@ -132,11 +162,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
   },
+  workbenchModeEdit: {
+    backgroundColor: colors.amber,
+  },
   advancedButton: {
-    minHeight: 58,
+    minHeight: 54,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: colors.surface,
     padding: spacing.sm,
     flexDirection: 'row',
