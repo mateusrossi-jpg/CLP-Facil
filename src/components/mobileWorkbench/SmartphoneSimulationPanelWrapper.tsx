@@ -25,15 +25,6 @@ type SmartphoneSimulationPanelProps = Partial<MobileExperienceProps> & {
   onSelectProfile?: (profile: PlcProfileId) => void;
 };
 
-function blocksForRung(rung: EditorProjectState['rungs'][number]): EditorBlock[] {
-  return [
-    ...rung.seriesBlocks,
-    ...rung.parallelBlocks,
-    ...(rung.parallelBranches ?? []).flatMap((branch) => branch.blocks),
-    ...(rung.coilBlock ? [rung.coilBlock] : []),
-  ];
-}
-
 function mapFallbackBlocks(
   project: EditorProjectState,
   mapper: (block: EditorBlock) => EditorBlock,
