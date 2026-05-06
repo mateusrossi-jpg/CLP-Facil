@@ -11,12 +11,12 @@ export function HomeHero() {
           <BrandLogo />
         </View>
         <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>Laboratório Ladder</Text>
+          <Text style={styles.heroBadgeText}>Simulador Mobile-First</Text>
         </View>
       </View>
       <View style={styles.textBox}>
-        <Text style={styles.headline}>Aprenda Ladder com uma bancada visual, clara e profissional.</Text>
-        <Text style={styles.description}>Lições guiadas, bancada de simulação e testes passo a passo para aprender lógica de CLP com clareza.</Text>
+        <Text style={styles.headline}>Simule Ladder no celular com foco em prática real.</Text>
+        <Text style={styles.description}>Crie, teste e ajuste lógicas de CLP com edição por toque, scan visível e fluxo direto para exportação.</Text>
         <View style={styles.metricRow}>
           <View style={styles.metric}>
             <Text style={styles.metricValue}>TON</Text>

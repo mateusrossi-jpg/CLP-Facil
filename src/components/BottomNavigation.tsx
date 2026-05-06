@@ -15,11 +15,11 @@ type BottomNavigationProps = {
 
 const items: { key: BottomNavKey; label: string; shortLabel: string }[] = [
   { key: 'home', label: 'Início', shortLabel: 'Início' },
-  { key: 'learn', label: 'Aprender', shortLabel: 'Aula' },
-  { key: 'simulate', label: 'Simular', shortLabel: 'Sim' },
+  { key: 'learn', label: 'Exemplos', shortLabel: 'Ex' },
+  { key: 'simulate', label: 'Simulador', shortLabel: 'SIM' },
   { key: 'projects', label: 'Projetos', shortLabel: 'Proj' },
-  { key: 'hardware', label: 'Hardware', shortLabel: 'HW' },
-  { key: 'pro', label: 'Mais', shortLabel: 'Mais' },
+  { key: 'hardware', label: 'Hardware/Exportar', shortLabel: 'HW' },
+  { key: 'pro', label: 'Licença/Compra', shortLabel: 'Lic' },
 ];
 
 export function BottomNavigation({ active, onChange, compact, renderContent = true }: BottomNavigationProps) {
