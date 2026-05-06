@@ -1,1 +1,1 @@
-export { SmartphoneSimulationPanel } from './SmartphoneSimulationPanelEnhanced';
+export { SmartphoneSimulationPanel } from './mobileWorkbench/SmartphoneSimulationPanelWrapper';

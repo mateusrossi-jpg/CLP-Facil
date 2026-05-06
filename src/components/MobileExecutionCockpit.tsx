@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
 import { createInitialEditorProject, EditorProjectState } from '../engine/editorTypes';
@@ -6,10 +6,13 @@ import { PlcState } from '../engine/projectTypes';
 import { createInitialRuntimeState } from '../engine/runtimeTypes';
 import { createPlcProfileProjectView, PlcProfileId, PlcProfileRungView } from '../plcProfiles/plcProfiles';
 import { createProfessionalTagRows, ProfessionalTagRow } from '../simulation/professionalClpView';
+import { activeCount, IoSection, IoTab, isActiveValue, splitIoSections, valueLabel } from '../simulation/mobileExecutionWorkspace';
+import { clearFocusedRungPreferences, loadFocusedRungPreferences, saveFocusedRungPreferences } from '../simulation/mobileFocusedRungStorage';
+import { clearProgramModePreferences, loadProgramModePreferences, saveProgramModePreferences } from '../simulation/mobileProgramModeStorage';
+import { compactText, outputText, rungTitle, visibleProgramLines } from '../simulation/mobileProgramWorkspace';
+import { clearMobileRungZoomState } from '../simulation/mobileRungZoomStorage';
+import { clampProgramMode, mobileSessionContextLabel, MobileFocusedRungPreferences, MobileProgramMode, MobileProgramModePreferences, persistFocusedRungForProject, persistProgramModeForProject, programModeLabel, recommendProgramMode, resolveFocusedRungId, restoreFocusedRungForProject, restoreProgramModeForProject, shouldShowProgramModeRecommendation } from '../simulation/mobileSimulationState';
 import { createSmartphoneProgramSummary } from '../simulation/smartphoneProgramView';
-
-type IoTab = 'overview' | 'inputs' | 'outputs' | 'memories' | 'timers' | 'counters';
-type ProgramMode = 'list' | 'flow' | 'compact_rung';
 
 type MobileExecutionCockpitProps = {
   editorProject?: EditorProjectState;
@@ -20,13 +23,6 @@ type MobileExecutionCockpitProps = {
   isAutoScan?: boolean;
   scanCount?: number;
   lastScanMs?: number;
-};
-
-type IoSection = {
-  key: IoTab;
-  label: string;
-  shortLabel: string;
-  rows: ProfessionalTagRow[];
 };
 
 const ui = {
@@ -78,52 +74,8 @@ function fallbackEvaluation(project: EditorProjectState, state: PlcState): Edito
   };
 }
 
-function isActive(value: boolean | number): boolean {
-  return typeof value === 'number' ? value !== 0 : value;
-}
-
-function splitIoSections(rows: ProfessionalTagRow[]): IoSection[] {
-  const inputs = rows.filter((row) => row.scope === 'input');
-  const outputs = rows.filter((row) => row.scope === 'output');
-  return [
-    { key: 'overview', label: 'I/O', shortLabel: 'I/O', rows: [...inputs, ...outputs] },
-    { key: 'inputs', label: 'Entradas', shortLabel: 'IN', rows: inputs },
-    { key: 'outputs', label: 'Saídas', shortLabel: 'OUT', rows: outputs },
-    { key: 'memories', label: 'Memórias', shortLabel: 'MEM', rows: rows.filter((row) => row.scope === 'memory' && row.type === 'boolean') },
-    { key: 'timers', label: 'Timers', shortLabel: 'TIM', rows: rows.filter((row) => row.type === 'timer') },
-    { key: 'counters', label: 'Contadores', shortLabel: 'CNT', rows: rows.filter((row) => row.type === 'counter') },
-  ];
-}
-
-function activeCount(rows: ProfessionalTagRow[]): number {
-  return rows.filter((row) => isActive(row.value)).length;
-}
-
-function valueLabel(row: ProfessionalTagRow): string {
-  if (typeof row.value === 'number') return String(row.value);
-  return row.value ? 'ON' : 'OFF';
-}
-
-function compactText(text: string): string {
-  return text
-    .replace(/\s*→\s*/g, '  •  ')
-    .replace(/\s+/g, ' ')
-    .replace(/Linha \d+\s+[—-]\s+/, '')
-    .trim();
-}
-
-function rungTitle(rung?: PlcProfileRungView): string {
-  if (!rung) return 'Partida com selo do motor';
-  return rung.label.replace(/^Linha \d+\s+[—-]\s+/, '') || 'Linha Ladder';
-}
-
-function outputText(rung?: PlcProfileRungView): string {
-  if (!rung?.output) return 'Q0.0';
-  return `${rung.output.instruction} ${rung.output.operand}`;
-}
-
 function UnifiedSignalRow({ row, tone }: { row: ProfessionalTagRow; tone: 'input' | 'output' }): JSX.Element {
-  const active = isActive(row.value);
+  const active = isActiveValue(row.value);
   const isOutput = tone === 'output';
   return (
     <View style={[styles.unifiedSignalRow, active && (isOutput ? styles.unifiedOutputActive : styles.unifiedInputActive)]}>
@@ -152,8 +104,11 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
   const state = plcState ?? makeFallbackState(project);
   const result = evaluation ?? fallbackEvaluation(project, state);
   const [activeIoTab, setActiveIoTab] = useState<IoTab>('overview');
-  const [programMode, setProgramMode] = useState<ProgramMode>('compact_rung');
+  const [programMode, setProgramMode] = useState<MobileProgramMode>('compact_rung');
+  const [modeByProject, setModeByProject] = useState<MobileProgramModePreferences>(() => loadProgramModePreferences());
   const [focusedRungId, setFocusedRungId] = useState<string | null>(null);
+  const [focusedRungByProject, setFocusedRungByProject] = useState<MobileFocusedRungPreferences>(() => loadFocusedRungPreferences());
+  const [recommendationDismissed, setRecommendationDismissed] = useState(false);
 
   const profileView = useMemo(() => createPlcProfileProjectView(project, selectedProfile), [project, selectedProfile]);
   const tagRows = useMemo(() => createProfessionalTagRows(project, state), [project, state]);
@@ -164,15 +119,47 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
   const memoryRows = ioSections.find((section) => section.key === 'memories')?.rows ?? [];
   const timerRows = ioSections.find((section) => section.key === 'timers')?.rows ?? [];
   const counterRows = ioSections.find((section) => section.key === 'counters')?.rows ?? [];
-  const selectedRungId = focusedRungId ?? project.selectedRungId ?? project.rungs[0]?.id ?? null;
+  const selectedRungId = resolveFocusedRungId(project, focusedRungId);
   const selectedRung = profileView.rungs.find((rung) => rung.rungId === selectedRungId) ?? profileView.rungs[0];
+  const recommendedMode = recommendProgramMode(project.rungs.length);
+  const showModeRecommendation = shouldShowProgramModeRecommendation(programMode, recommendedMode, recommendationDismissed);
+
+  useEffect(() => {
+    setRecommendationDismissed(false);
+  }, [recommendedMode, project.rungs.length]);
+
+  useEffect(() => {
+    setProgramMode(restoreProgramModeForProject(modeByProject, project, recommendedMode));
+  }, [modeByProject, project, recommendedMode]);
+
+  useEffect(() => {
+    setFocusedRungId(restoreFocusedRungForProject(focusedRungByProject, project));
+  }, [focusedRungByProject, project]);
+
+  useEffect(() => {
+    saveProgramModePreferences(modeByProject);
+  }, [modeByProject]);
+
+  useEffect(() => {
+    saveFocusedRungPreferences(focusedRungByProject);
+  }, [focusedRungByProject]);
+
+  function setAndPersistProgramMode(mode: MobileProgramMode) {
+    setProgramMode(mode);
+    setModeByProject((current) => persistProgramModeForProject(current, project, mode));
+  }
+
+  function setAndPersistFocusedRung(rungId: string) {
+    setFocusedRungId(rungId);
+    setFocusedRungByProject((current) => persistFocusedRungForProject(current, project, rungId));
+  }
   const summary = useMemo(
     () => createSmartphoneProgramSummary(profileView, result.rungResults, project.selectedRungId ?? project.rungs[0]?.id, focusedRungId, programMode === 'flow' ? 'flow' : 'list'),
     [focusedRungId, profileView, programMode, project.rungs, project.selectedRungId, result.rungResults],
   );
   const activeLine = summary.lines.find((line) => line.active) ?? summary.lines[0];
-  const activeOutput = tagRows.find((row) => row.scope === 'output' && isActive(row.value));
-  const rowsToShow = selectedSection.rows.length > 0 ? selectedSection.rows : tagRows;
+  const activeOutput = tagRows.find((row) => row.scope === 'output' && isActiveValue(row.value));
+  const rowsToShow = selectedSection?.rows?.length ? selectedSection.rows : tagRows;
   const selectedActive = selectedRung ? Boolean(result.rungResults[selectedRung.rungId]) : false;
 
   return (
@@ -216,12 +203,17 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
         <View style={styles.cardTitleLine}>
           <View>
             <Text style={styles.kicker}>Monitor de I/O</Text>
-            <Text style={styles.cardTitle}>{activeIoTab === 'overview' ? 'Entradas + Saídas' : selectedSection.label}</Text>
+            <Text style={styles.cardTitle}>{activeIoTab === 'overview' ? 'Entradas + Saídas' : selectedSection?.label ?? 'I/O'}</Text>
           </View>
-          <Text style={styles.liveBadge}>{activeCount(selectedSection.rows)} ativas</Text>
+          <Text style={styles.liveBadge}>{activeCount(selectedSection?.rows ?? [])} ativas</Text>
         </View>
 
-        {activeIoTab === 'overview' ? (
+        {tagRows.length === 0 ? (
+          <View style={styles.emptyStateCard}>
+            <Text style={styles.emptyStateTitle}>Sem sinais de I/O ainda</Text>
+            <Text style={styles.emptyStateText}>Adicione TAGs de entrada e saída para visualizar scan e diagnóstico.</Text>
+          </View>
+        ) : activeIoTab === 'overview' ? (
           <View style={styles.unifiedIoStack}>
             <View style={styles.unifiedSummaryGrid}>
               <View style={styles.unifiedSummaryTile}>
@@ -266,7 +258,7 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
         ) : (
           <View style={styles.signalGrid}>
             {rowsToShow.slice(0, 6).map((row) => {
-              const active = isActive(row.value);
+              const active = isActiveValue(row.value);
               return (
                 <View key={`${activeIoTab}-${row.tag}`} style={[styles.signalTile, active && styles.signalTileActive]}>
                   <View style={styles.signalHead}>
@@ -287,17 +279,47 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
           ['list', 'Lista'],
           ['flow', 'Fluxo'],
           ['compact_rung', 'Rung compacto'],
-        ] as [ProgramMode, string][]).map(([mode, label]) => {
+        ] as [MobileProgramMode, string][]).map(([mode, label]) => {
           const selected = programMode === mode;
           return (
-            <Pressable key={mode} onPress={() => setProgramMode(mode)} style={[styles.modeButton, selected && styles.modeButtonActive]}>
+            <Pressable key={mode} onPress={() => setAndPersistProgramMode(clampProgramMode(mode))} style={[styles.modeButton, selected && styles.modeButtonActive]}>
               <Text style={[styles.modeText, selected && styles.modeTextActive]}>{label}</Text>
             </Pressable>
           );
         })}
       </View>
+      {showModeRecommendation ? (
+        <View style={styles.modeRecommendation}>
+          <Pressable onPress={() => setAndPersistProgramMode(recommendedMode)}>
+            <Text style={styles.modeRecommendationText}>Projeto com {project.rungs.length} rungs: usar "{programModeLabel(recommendedMode)}" melhora leitura mobile.</Text>
+          </Pressable>
+          <Pressable onPress={() => setRecommendationDismissed(true)} style={styles.modeRecommendationDismiss}>
+            <Text style={styles.modeRecommendationDismissText}>Agora não</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      <Pressable
+        onPress={() => {
+          setModeByProject({});
+          setFocusedRungByProject({});
+          setRecommendationDismissed(false);
+          clearProgramModePreferences();
+          clearFocusedRungPreferences();
+          clearMobileRungZoomState();
+        }}
+        style={styles.resetPrefsButton}
+      >
+        <Text style={styles.resetPrefsText}>Limpar modo, foco e zoom</Text>
+      </Pressable>
+      <Text style={styles.sessionContextText}>Contexto salvo: {mobileSessionContextLabel(programMode, focusedRungId)}</Text>
 
       <View style={styles.programCard}>
+        {project.rungs.length === 0 ? (
+          <View style={styles.emptyStateCard}>
+            <Text style={styles.emptyStateTitle}>Programa vazio</Text>
+            <Text style={styles.emptyStateText}>Adicione a primeira rung para iniciar a lógica Ladder no simulador.</Text>
+          </View>
+        ) : null}
         <View style={styles.cardTitleLine}>
           <View style={styles.programTitleBox}>
             <Text style={styles.kicker}>Programa</Text>
@@ -323,9 +345,9 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
             </View>
           </View>
         ) : programMode === 'list' ? (
-          <View style={styles.listStack}>
-            {summary.lines.slice(0, 4).map((line, index) => (
-              <Pressable key={line.rungId} onPress={() => setFocusedRungId(line.rungId)} style={[styles.listRow, line.active && styles.listRowActive]}>
+          <ScrollView style={styles.listScroll} contentContainerStyle={styles.listStack} showsVerticalScrollIndicator>
+            {visibleProgramLines(summary.lines).map((line, index) => (
+              <Pressable key={line.rungId} onPress={() => setAndPersistFocusedRung(line.rungId)} style={[styles.listRow, line.active && styles.listRowActive]}>
                 <Text style={styles.listIndex}>{index + 1}</Text>
                 <View style={styles.listTextBox}>
                   <Text style={[styles.listCode, line.active && styles.listCodeActive]} numberOfLines={1}>{compactText(line.text)}</Text>
@@ -333,13 +355,13 @@ export const MobileExecutionCockpit = memo(function MobileExecutionCockpit({
                 </View>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.flowTrack}>
             {profileView.rungs.map((rung, index) => {
               const active = Boolean(result.rungResults[rung.rungId]);
               return (
-                <Pressable key={rung.rungId} onPress={() => setFocusedRungId(rung.rungId)} style={[styles.flowCard, active && styles.flowCardActive]}>
+                <Pressable key={rung.rungId} onPress={() => setAndPersistFocusedRung(rung.rungId)} style={[styles.flowCard, active && styles.flowCardActive]}>
                   <Text style={styles.flowIndex}>Linha {index + 1}</Text>
                   <Text style={[styles.flowCode, active && styles.flowCodeActive]} numberOfLines={3}>{compactText(rung.textLine)}</Text>
                 </Pressable>
@@ -437,6 +459,16 @@ const styles = StyleSheet.create({
   modeButtonActive: { backgroundColor: ui.cyanSoft, borderColor: ui.cyan, borderWidth: 1 },
   modeText: { color: ui.muted, fontSize: 11, fontWeight: '900' },
   modeTextActive: { color: ui.cyan },
+  modeRecommendation: { borderColor: ui.cyanLine, borderWidth: 1, borderRadius: 14, backgroundColor: ui.cyanSoft, paddingHorizontal: 10, paddingVertical: 8, gap: 8 },
+  modeRecommendationText: { color: ui.text, fontSize: 11, fontWeight: '700', lineHeight: 15 },
+  modeRecommendationDismiss: { alignSelf: 'flex-end', borderColor: ui.cyanLine, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: ui.card2 },
+  modeRecommendationDismissText: { color: ui.muted, fontSize: 10, fontWeight: '800' },
+  resetPrefsButton: { alignSelf: 'flex-end', borderColor: ui.line, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: ui.card2 },
+  resetPrefsText: { color: ui.dim, fontSize: 10, fontWeight: '800' },
+  sessionContextText: { color: ui.dim, fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  emptyStateCard: { borderColor: ui.lineStrong, borderWidth: 1, borderRadius: 14, padding: 12, backgroundColor: ui.card2, gap: 4 },
+  emptyStateTitle: { color: ui.text, fontSize: 12, fontWeight: '900' },
+  emptyStateText: { color: ui.muted, fontSize: 11, lineHeight: 16, fontWeight: '700' },
   programCard: { backgroundColor: ui.card, borderColor: ui.line, borderWidth: 1, borderRadius: 23, padding: 13, gap: 12 },
   programTitleBox: { flex: 1, minWidth: 0 },
   programTitle: { color: ui.text, fontSize: 15, fontWeight: '900', marginTop: 2 },
@@ -457,7 +489,8 @@ const styles = StyleSheet.create({
   outputMainOn: { color: ui.green },
   outputState: { color: ui.amber, fontSize: 15, fontWeight: '900' },
   outputStateOn: { color: ui.green },
-  listStack: { gap: 8 },
+  listScroll: { maxHeight: 258 },
+  listStack: { gap: 8, paddingRight: 2 },
   listRow: { flexDirection: 'row', gap: 10, backgroundColor: ui.card2, borderColor: ui.line, borderWidth: 1, borderRadius: 14, padding: 10 },
   listRowActive: { backgroundColor: ui.greenSoft, borderColor: ui.green },
   listIndex: { width: 24, color: ui.cyan, fontSize: 12, fontWeight: '900' },

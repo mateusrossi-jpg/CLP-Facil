@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EditorProjectState } from '../engine/editorTypes';
 import { createPlcProfileProjectView, PlcProfileBlockView, PlcProfileId, plcProfiles } from '../plcProfiles/plcProfiles';
 import { colors } from '../theme/colors';
+import { codeContrast } from '../theme/codeContrast';
 import { spacing } from '../theme/spacing';
 
 type SimulatorDialectPanelProps = {
@@ -220,8 +221,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logicLine: {
-    color: '#F8FAFC',
-    backgroundColor: '#020817',
+    color: codeContrast.text,
+    backgroundColor: codeContrast.background,
     borderColor: colors.cyan,
     borderWidth: 1,
     borderRadius: 10,

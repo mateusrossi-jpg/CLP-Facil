@@ -14,6 +14,13 @@ const { runSmartphoneProgramViewRegressionSuite } = require('/tmp/easy-clp-sim-t
 const { runSmartphoneIoViewRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/smartphoneIoViewRegression.js');
 const { runMobileIoPointsRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileIoPointsRegression.js');
 const { runMobileScanTraceSummaryRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileScanTraceSummaryRegression.js');
+const { runMobileRungViewerModelRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileRungViewerModelRegression.js');
+const { runMobileExecutionWorkspaceRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileExecutionWorkspaceRegression.js');
+const { runMobileProgramWorkspaceRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileProgramWorkspaceRegression.js');
+const { runMobileSimulationStateRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileSimulationStateRegression.js');
+const { runMobileProgramModeStorageRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileProgramModeStorageRegression.js');
+const { runMobileRungZoomStorageRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileRungZoomStorageRegression.js');
+const { runMobileFocusedRungStorageRegressionSuite } = require('/tmp/easy-clp-sim-test/simulation/mobileFocusedRungStorageRegression.js');
 const { runProtocolRegressionSuite } = require('/tmp/easy-clp-sim-test/communication/protocolRegression.js');
 const { runExampleLibraryRegressionSuite } = require('/tmp/easy-clp-sim-test/data/exampleLibraryRegression.js');
 const { runQuickStartRegressionSuite } = require('/tmp/easy-clp-sim-test/data/quickStartRegression.js');
@@ -56,6 +63,13 @@ const results = [
   ...runSmartphoneIoViewRegressionSuite(),
   ...runMobileIoPointsRegressionSuite(),
   ...runMobileScanTraceSummaryRegressionSuite(),
+  ...runMobileRungViewerModelRegressionSuite(),
+  ...runMobileExecutionWorkspaceRegressionSuite(),
+  ...runMobileProgramWorkspaceRegressionSuite(),
+  ...runMobileSimulationStateRegressionSuite(),
+  ...runMobileProgramModeStorageRegressionSuite(),
+  ...runMobileRungZoomStorageRegressionSuite(),
+  ...runMobileFocusedRungStorageRegressionSuite(),
   ...runProtocolRegressionSuite(),
   ...runExampleLibraryRegressionSuite(),
   ...runQuickStartRegressionSuite(),

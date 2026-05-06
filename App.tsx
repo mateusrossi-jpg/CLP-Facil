@@ -1157,7 +1157,7 @@ export default function App() {
                 evaluation={editorEvaluation}
                 selectedProfile={selectedPlcProfile}
                 onSelectProfile={setSelectedPlcProfile}
-                mission={activePlcMission}
+                mission={activePlcMission ?? undefined}
                 mode={editorMode}
                 autoScan={autoScan}
                 onRunScan={runEditorScan}

@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EditorBlock, EditorProjectState, EditorRung } from '../engine/editorTypes';
 import { EditorEvaluationResult } from '../engine/editorEvaluator';
@@ -6,10 +6,11 @@ import { EditorRungTrace, traceEditorRung } from '../engine/editorScanTrace';
 import { PlcState } from '../engine/projectTypes';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { blockActive, createInitialZoomState, defaultZoomForScope, resolveVisibleOutputSummary, type MobileRungScope, updateScopeZoomState } from './mobileRungViewerModel';
+import { resolveRungIndex } from '../simulation/mobileSimulationState';
+import { loadMobileRungZoomState, saveMobileRungZoomState } from '../simulation/mobileRungZoomStorage';
 
 type MobileRungViewMode = 'ladder' | 'flow' | 'list';
-type MobileRungScope = 'individual' | 'compiled';
-
 type MobileRungViewerProps = {
   editorProject: EditorProjectState;
   plcState: PlcState;
@@ -48,12 +49,6 @@ function coilSymbol(block: EditorBlock): string {
 
 function blockAddress(block: EditorBlock): string {
   return normalize(block.variable || block.destination || block.sourceA) || 'TAG';
-}
-
-function blockActive(block: EditorBlock, state: PlcState, rungActive: boolean): boolean {
-  if (block.role === 'coil' || block.role === 'timer' || block.role === 'counter') return rungActive || Boolean(state[normalize(block.variable)]);
-  const raw = Boolean(state[normalize(block.variable)]);
-  return block.contactMode === 'NC' ? !raw : raw;
 }
 
 function traceContactClosed(block: EditorBlock, trace: EditorRungTrace | null): boolean {
@@ -323,19 +318,25 @@ export const MobileRungViewer = memo(function MobileRungViewer({
 }: MobileRungViewerProps) {
   const [viewMode, setViewMode] = useState<MobileRungViewMode>('ladder');
   const [rungScope, setRungScope] = useState<MobileRungScope>('individual');
-  const [ladderZoom, setLadderZoom] = useState(0.76);
-  const safeIndex = Math.min(Math.max(rungIndex, 0), Math.max(editorProject.rungs.length - 1, 0));
+  const [zoomState, setZoomState] = useState(() => loadMobileRungZoomState());
+  const ladderZoom = zoomState[rungScope];
+  const safeIndex = resolveRungIndex(editorProject, rungIndex);
   const rung = editorProject.rungs[safeIndex];
   const rungActive = Boolean(rung && evaluation.rungResults?.[rung.id]);
   const rungTrace = useMemo(() => rung ? traceEditorRung(rung, plcState, evaluation.runtime) : null, [evaluation.runtime, plcState, rung]);
   const conductingBlocks = useMemo(() => rung ? conductiveBlockIds(rung, rungTrace) : new Set<string>(), [rung, rungTrace]);
   const blocks = useMemo(() => rung ? flattenRung(rung) : [], [rung]);
-  const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
-  const outputActive = outputBlock ? blockActive(outputBlock, plcState, rungActive) : false;
   const compiledMode = rungScope === 'compiled';
   const diagramCompiledMode = canvasMode ? false : compiledMode;
   const diagramViewMode: MobileRungViewMode = canvasMode ? 'ladder' : viewMode;
   const energizedCount = editorProject.rungs.filter((item) => evaluation.rungResults?.[item.id]).length;
+  const visibleOutput = resolveVisibleOutputSummary(editorProject, evaluation, plcState, diagramCompiledMode ? 'compiled' : 'individual', rung);
+  const visibleOutputBlock = visibleOutput.block;
+  const visibleOutputActive = visibleOutput.active;
+
+  useEffect(() => {
+    saveMobileRungZoomState(zoomState);
+  }, [zoomState]);
 
   if (!rung) {
     return (
@@ -368,7 +369,6 @@ export const MobileRungViewer = memo(function MobileRungViewer({
               key={scope}
               onPress={() => {
                 setRungScope(scope);
-                setLadderZoom(scope === 'compiled' ? 0.62 : 0.76);
               }}
               style={[styles.scopeButton, selected && styles.scopeButtonOn]}
             >
@@ -401,30 +401,33 @@ export const MobileRungViewer = memo(function MobileRungViewer({
         ) : null}
       </View> : null}
 
-      {!diagramCompiledMode && !canvasMode ? (
-        <View style={[styles.outputSummary, outputActive && styles.outputSummaryOn]}>
+      {!canvasMode ? (
+        <View style={[styles.outputSummary, visibleOutputActive && styles.outputSummaryOn]}>
         <View style={styles.outputSummaryCopy}>
           <Text style={styles.outputSummaryLabel}>Carga / saida</Text>
-          <Text style={[styles.outputSummaryTitle, outputActive && styles.blockAddressOn]} numberOfLines={1}>
-            {outputBlock ? `${blockAddress(outputBlock)} • ${outputBlock.name}` : 'Sem saida nesta rung'}
+          <Text style={[styles.outputSummaryTitle, visibleOutputActive && styles.blockAddressOn]} numberOfLines={1}>
+            {visibleOutputBlock ? `${blockAddress(visibleOutputBlock)} • ${visibleOutputBlock.name}` : 'Sem saida nesta rung'}
           </Text>
         </View>
-        <Text style={[styles.outputSummaryState, outputActive && styles.blockAddressOn]}>{outputActive ? 'ON' : 'OFF'}</Text>
+        <Text style={[styles.outputSummaryState, visibleOutputActive && styles.blockAddressOn]}>{visibleOutputActive ? 'ON' : 'OFF'}</Text>
       </View>
       ) : null}
 
       {diagramViewMode === 'ladder' ? (
         <>
         {!canvasMode ? <View style={styles.zoomRow}>
-          <Text style={styles.zoomHint}>Arraste para o lado</Text>
+          <Text style={styles.zoomHint}>Arraste para o lado e ajuste zoom</Text>
           <View style={styles.zoomControls}>
-            <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current - 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setZoomState((current) => updateScopeZoomState(current, rungScope, defaultZoomForScope(rungScope)))} style={({ pressed }) => [styles.zoomFitButton, pressed && styles.pressed]}>
+              <Text style={styles.zoomFitText}>Ajustar</Text>
+            </Pressable>
+            <Pressable onPress={() => setZoomState((current) => updateScopeZoomState(current, rungScope, clampLadderZoom(Number((current[rungScope] - 0.08).toFixed(2)))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>-</Text>
             </Pressable>
-            <Pressable onPress={() => setLadderZoom(diagramCompiledMode ? 0.62 : 0.76)} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setZoomState((current) => updateScopeZoomState(current, rungScope, defaultZoomForScope(diagramCompiledMode ? 'compiled' : 'individual')))} style={({ pressed }) => [styles.zoomValueButton, pressed && styles.pressed]}>
               <Text style={styles.zoomValueText}>{Math.round(ladderZoom * 100)}%</Text>
             </Pressable>
-            <Pressable onPress={() => setLadderZoom((current) => clampLadderZoom(Number((current + 0.08).toFixed(2))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
+            <Pressable onPress={() => setZoomState((current) => updateScopeZoomState(current, rungScope, clampLadderZoom(Number((current[rungScope] + 0.08).toFixed(2)))))} style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed]}>
               <Text style={styles.zoomButtonText}>+</Text>
             </Pressable>
           </View>
@@ -716,11 +719,21 @@ const styles = StyleSheet.create({
   zoomControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.xs,
+  },
+  zoomFitButton: {
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.background,
-    overflow: 'hidden',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 7,
+    backgroundColor: colors.surfaceElevated,
+  },
+  zoomFitText: {
+    color: colors.cyan,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
   zoomButton: {
     width: 30,
