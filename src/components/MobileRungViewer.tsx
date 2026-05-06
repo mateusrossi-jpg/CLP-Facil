@@ -104,6 +104,16 @@ function flattenRung(rung: EditorRung): EditorBlock[] {
   ];
 }
 
+function branchesForRung(rung: EditorRung) {
+  if (rung.parallelBranches && rung.parallelBranches.length > 0) return rung.parallelBranches;
+  if (rung.parallelBlocks.length === 0) return [];
+  return [{
+    id: `${rung.id}-legacy-mobile-branch`,
+    seriesIndex: 0,
+    blocks: rung.parallelBlocks,
+  }];
+}
+
 function BlockChip({ block, active, mode, zoom = 1, onPress }: { block: EditorBlock; active: boolean; mode: MobileRungViewMode; zoom?: number; onPress?: () => void }) {
   const outputLike = block.role === 'coil' || block.role === 'timer' || block.role === 'counter';
   const symbol = outputLike ? coilSymbol(block) : contactSymbol(block);
@@ -129,6 +139,82 @@ function BlockChip({ block, active, mode, zoom = 1, onPress }: { block: EditorBl
   );
 }
 
+function MobileLadderCanvas({
+  rung,
+  rungActive,
+  plcState,
+  conductingBlocks,
+  zoom,
+  onSelectBlock,
+}: {
+  rung: EditorRung;
+  rungActive: boolean;
+  plcState: PlcState;
+  conductingBlocks: Set<string>;
+  zoom: number;
+  onSelectBlock?: (block: EditorBlock) => void;
+}) {
+  const branches = branchesForRung(rung);
+  const blockWidth = Math.round(106 * zoom);
+  const outputWidth = Math.round(132 * zoom);
+  const blockHeight = Math.round(72 * zoom);
+  const startX = Math.round(58 * zoom);
+  const stepX = Math.round(138 * zoom);
+  const mainY = Math.round(92 * zoom);
+  const blockTop = Math.round(56 * zoom);
+  const branchStartY = Math.round(174 * zoom);
+  const branchGapY = Math.round(88 * zoom);
+  const railHeight = Math.max(Math.round(180 * zoom), branchStartY + Math.max(branches.length - 1, 0) * branchGapY + blockHeight + Math.round(40 * zoom));
+  const coilLeft = startX + Math.max(rung.seriesBlocks.length, 1) * stepX + Math.round(120 * zoom);
+  const canvasWidth = Math.max(Math.round(650 * zoom), coilLeft + outputWidth + Math.round(82 * zoom));
+  const mainLineLeft = Math.round(18 * zoom);
+  const mainLineRight = canvasWidth - Math.round(18 * zoom);
+  const lineColorStyle = rungActive ? styles.mobileWireOn : styles.mobileWire;
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.mobileCanvasScroller}>
+      <View style={[styles.mobileCircuitCanvas, { width: canvasWidth, height: railHeight }]}>
+        <View style={[styles.mobileRail, styles.mobileLeftRail, { height: railHeight - Math.round(28 * zoom) }]} />
+        <View style={[styles.mobileRail, styles.mobileRightRail, { left: mainLineRight, height: railHeight - Math.round(28 * zoom) }]} />
+        <View style={[styles.mobileMainLine, lineColorStyle, { left: mainLineLeft, top: mainY, width: mainLineRight - mainLineLeft }]} />
+
+        {branches.map((branch, branchIndex) => {
+          const segmentIndex = Math.min(Math.max(branch.seriesIndex, 0), Math.max(rung.seriesBlocks.length - 1, 0));
+          const branchStartX = startX + segmentIndex * stepX + Math.round(blockWidth * 0.48);
+          const branchY = branchStartY + branchIndex * branchGapY;
+          const branchEndX = branchStartX + Math.max(branch.blocks.length, 1) * stepX;
+          return (
+            <View key={branch.id}>
+              <View style={[styles.mobileNode, { left: branchStartX - 4, top: mainY - 4 }]} />
+              <View style={[styles.mobileNode, { left: branchEndX - 4, top: mainY - 4 }]} />
+              <View style={[styles.mobileBranchDrop, lineColorStyle, { left: branchStartX, top: mainY, height: branchY - mainY }]} />
+              <View style={[styles.mobileBranchDrop, lineColorStyle, { left: branchEndX, top: mainY, height: branchY - mainY }]} />
+              <View style={[styles.mobileMainLine, lineColorStyle, { left: branchStartX, top: branchY, width: branchEndX - branchStartX }]} />
+              {branch.blocks.map((block, blockIndex) => (
+                <View key={block.id} style={[styles.mobileAbsoluteBlock, { left: branchStartX + blockIndex * stepX - Math.round(blockWidth * 0.42), top: branchY - Math.round(blockHeight * 0.52) }]}>
+                  <BlockChip block={block} active={conductingBlocks.has(block.id)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
+                </View>
+              ))}
+            </View>
+          );
+        })}
+
+        {rung.seriesBlocks.map((block, index) => (
+          <View key={block.id} style={[styles.mobileAbsoluteBlock, { left: startX + index * stepX, top: blockTop }]}>
+            <BlockChip block={block} active={conductingBlocks.has(block.id)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(block)} />
+          </View>
+        ))}
+
+        {rung.coilBlock ? (
+          <View style={[styles.mobileAbsoluteBlock, { left: coilLeft, top: blockTop }]}>
+            <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} mode="ladder" zoom={zoom} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} />
+          </View>
+        ) : null}
+      </View>
+    </ScrollView>
+  );
+}
+
 export const MobileRungViewer = memo(function MobileRungViewer({
   editorProject,
   plcState,
@@ -145,7 +231,7 @@ export const MobileRungViewer = memo(function MobileRungViewer({
   const rungTrace = useMemo(() => rung ? traceEditorRung(rung, plcState, evaluation.runtime) : null, [evaluation.runtime, plcState, rung]);
   const conductingBlocks = useMemo(() => rung ? conductiveBlockIds(rung, rungTrace) : new Set<string>(), [rung, rungTrace]);
   const blocks = useMemo(() => rung ? flattenRung(rung) : [], [rung]);
-  const branches = rung?.parallelBranches ?? [];
+  const branches = rung ? branchesForRung(rung) : [];
   const outputBlock = rung?.coilBlock ?? blocks.find((block) => block.role === 'coil' || block.role === 'timer' || block.role === 'counter') ?? null;
   const outputActive = outputBlock ? blockActive(outputBlock, plcState, rungActive) : false;
 
@@ -214,26 +300,14 @@ export const MobileRungViewer = memo(function MobileRungViewer({
             </Pressable>
           </View>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.ladderRail}>
-          <Text style={[styles.railText, { fontSize: Math.round(34 * ladderZoom) }, rungActive && styles.railTextOn]}>|</Text>
-          {rung.seriesBlocks.map((block) => (
-            <BlockChip key={block.id} block={block} active={conductingBlocks.has(block.id)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
-          ))}
-          {branches.length > 0 ? (
-            <View style={styles.branchBox}>
-              <Text style={styles.branchLabel}>Branch</Text>
-              {branches.map((branch) => (
-                <View key={branch.id} style={styles.branchRow}>
-                  {branch.blocks.map((block) => (
-                    <BlockChip key={block.id} block={block} active={conductingBlocks.has(block.id)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(block)} />
-                  ))}
-                </View>
-              ))}
-            </View>
-          ) : null}
-          {rung.coilBlock ? <BlockChip block={rung.coilBlock} active={blockActive(rung.coilBlock, plcState, rungActive)} mode={viewMode} zoom={ladderZoom} onPress={() => onSelectBlock?.(rung.coilBlock as EditorBlock)} /> : null}
-          <Text style={[styles.railText, { fontSize: Math.round(34 * ladderZoom) }, rungActive && styles.railTextOn]}>|</Text>
-        </ScrollView>
+        <MobileLadderCanvas
+          rung={rung}
+          rungActive={rungActive}
+          plcState={plcState}
+          conductingBlocks={conductingBlocks}
+          zoom={ladderZoom}
+          onSelectBlock={onSelectBlock}
+        />
         </>
       ) : null}
 
@@ -460,18 +534,56 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
   },
-  ladderRail: {
-    alignItems: 'center',
-    gap: spacing.xs,
+  mobileCanvasScroller: {
     paddingVertical: spacing.xs,
+    paddingRight: spacing.sm,
   },
-  railText: {
-    color: colors.textDim,
-    fontSize: 34,
-    fontWeight: '900',
+  mobileCircuitCanvas: {
+    position: 'relative',
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
   },
-  railTextOn: {
-    color: colors.green,
+  mobileRail: {
+    position: 'absolute',
+    top: 14,
+    width: 4,
+    borderRadius: 999,
+    backgroundColor: colors.inactive,
+  },
+  mobileLeftRail: {
+    left: 16,
+  },
+  mobileRightRail: {
+    left: 620,
+  },
+  mobileMainLine: {
+    position: 'absolute',
+    height: 3,
+    borderRadius: 999,
+  },
+  mobileWire: {
+    backgroundColor: colors.inactive,
+  },
+  mobileWireOn: {
+    backgroundColor: colors.green,
+  },
+  mobileBranchDrop: {
+    position: 'absolute',
+    width: 3,
+    borderRadius: 999,
+  },
+  mobileNode: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: colors.inactive,
+  },
+  mobileAbsoluteBlock: {
+    position: 'absolute',
   },
   blockChip: {
     minWidth: 96,
@@ -490,7 +602,7 @@ const styles = StyleSheet.create({
   },
   blockChipOn: {
     borderColor: colors.green,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
   },
   blockAddress: {
     color: colors.text,
@@ -513,25 +625,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 3,
     textAlign: 'center',
-  },
-  branchBox: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 14,
-    backgroundColor: colors.background,
-    padding: spacing.xs,
-    gap: spacing.xs,
-  },
-  branchLabel: {
-    color: colors.textMuted,
-    fontSize: 9,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  branchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
   },
   flowStack: {
     gap: spacing.xs,
