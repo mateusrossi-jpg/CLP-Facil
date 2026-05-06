@@ -113,11 +113,15 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
 
   return (
     <View style={styles.card}>
+      <View style={styles.selectedStrip}>
+        <Text style={styles.selectedStripText}>TOQUE NO BLOCO → EDITE A TAG AQUI</Text>
+      </View>
+
       <View style={styles.headerRow}>
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>Bloco selecionado</Text>
           <Text style={styles.title}>{blockKind(block)} • {currentAddress(block)}</Text>
-          <Text style={styles.subtitle}>Edite a variável diretamente como no simulador, sem trocar de tela.</Text>
+          <Text style={styles.subtitle}>Altere variável, modo e preset sem trocar de tela.</Text>
         </View>
         <Pressable onPress={save} style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}>
           <Text style={styles.saveText}>Aplicar</Text>
@@ -126,17 +130,17 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
 
       <View style={styles.primaryField}>
         <Text style={styles.label}>Variável / Tag</Text>
-        <TextInput value={variable} onChangeText={setVariable} autoCapitalize="characters" autoCorrect={false} style={styles.tagInput} />
+        <TextInput value={variable} onChangeText={setVariable} onSubmitEditing={save} autoCapitalize="characters" autoCorrect={false} style={styles.tagInput} />
       </View>
 
       <View style={styles.fieldRow}>
         <View style={styles.fieldBox}>
           <Text style={styles.label}>Nome</Text>
-          <TextInput value={name} onChangeText={setName} style={styles.input} />
+          <TextInput value={name} onChangeText={setName} onSubmitEditing={save} style={styles.input} />
         </View>
         <View style={styles.fieldBox}>
           <Text style={styles.label}>Descrição</Text>
-          <TextInput value={description} onChangeText={setDescription} style={styles.input} />
+          <TextInput value={description} onChangeText={setDescription} onSubmitEditing={save} style={styles.input} />
         </View>
       </View>
 
@@ -167,7 +171,7 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
           </View>
           <View style={styles.fieldBox}>
             <Text style={styles.label}>Preset ms</Text>
-            <TextInput value={presetMs} onChangeText={setPresetMs} keyboardType="numeric" style={styles.input} />
+            <TextInput value={presetMs} onChangeText={setPresetMs} onSubmitEditing={save} keyboardType="numeric" style={styles.input} />
           </View>
         </View>
       ) : null}
@@ -181,7 +185,7 @@ export const MobileBlockQuickEditor = memo(function MobileBlockQuickEditor({
           </View>
           <View style={styles.fieldBox}>
             <Text style={styles.label}>Preset</Text>
-            <TextInput value={preset} onChangeText={setPreset} keyboardType="numeric" style={styles.input} />
+            <TextInput value={preset} onChangeText={setPreset} onSubmitEditing={save} keyboardType="numeric" style={styles.input} />
           </View>
         </View>
       ) : null}
@@ -205,6 +209,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     backgroundColor: colors.surface,
     gap: 3,
+  },
+  selectedStrip: {
+    borderColor: colors.cyan,
+    borderWidth: 1,
+    borderRadius: 999,
+    backgroundColor: colors.cyanSoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+    alignSelf: 'flex-start',
+  },
+  selectedStripText: {
+    color: colors.cyan,
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.4,
   },
   headerRow: {
     flexDirection: 'row',
