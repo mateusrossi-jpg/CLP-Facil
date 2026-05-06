@@ -28,28 +28,31 @@ export const MobileSimulationControls = memo(function MobileSimulationControls({
   return (
     <View style={styles.stack}>
       <View style={styles.statusRow}>
-        <Text style={styles.statusLabel}>Bancada</Text>
+        <View style={styles.statusLeft}>
+          <View style={[styles.runtimeLed, editMode ? styles.runtimeLedEdit : styles.runtimeLedRun]} />
+          <Text style={styles.statusLabel}>Bancada</Text>
+        </View>
         <Text style={[styles.statusValue, editMode ? styles.statusEdit : styles.statusSimulate]}>
-          {editMode ? 'Montando lógica' : 'Testando lógica'}
+          {editMode ? 'Montando lógica' : autoScan ? 'Testando em ciclo' : 'Testando por scan'}
         </Text>
       </View>
 
       <View style={styles.bar}>
         <Pressable disabled={editMode} onPress={onRunScan} style={({ pressed }) => [styles.button, styles.primaryButton, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
-          <Text style={styles.primaryText}>Scan</Text>
-          <Text style={styles.buttonHint}>executar</Text>
+          <Text style={styles.primaryText}>SCAN</Text>
+          <Text style={styles.primaryHint}>1 ciclo</Text>
         </Pressable>
         <Pressable disabled={editMode} onPress={onToggleAutoScan} style={({ pressed }) => [styles.button, autoScan && styles.autoOn, editMode && styles.disabled, pressed && !editMode && styles.pressed]}>
-          <Text style={[styles.buttonText, autoScan && styles.autoTextOn]}>{autoScan ? 'Auto ON' : 'Auto'}</Text>
-          <Text style={styles.buttonHint}>ciclo</Text>
+          <Text style={[styles.buttonText, autoScan && styles.autoTextOn]}>{autoScan ? 'AUTO' : 'AUTO'}</Text>
+          <Text style={[styles.buttonHint, autoScan && styles.autoTextOn]}>{autoScan ? 'rodando' : 'parado'}</Text>
         </Pressable>
         <Pressable onPress={onToggleEdit} style={({ pressed }) => [styles.button, editMode && styles.editOn, pressed && styles.pressed]}>
-          <Text style={[styles.buttonText, editMode && styles.editTextOn]}>{editMode ? 'Testar' : 'Editar'}</Text>
-          <Text style={styles.buttonHint}>{editMode ? 'simular' : 'montar'}</Text>
+          <Text style={[styles.buttonText, editMode && styles.editTextOn]}>{editMode ? 'TESTAR' : 'EDITAR'}</Text>
+          <Text style={styles.buttonHint}>{editMode ? 'simular' : 'blocos'}</Text>
         </Pressable>
         <Pressable onPress={onToggleHint} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-          <Text style={styles.buttonText}>Dica</Text>
-          <Text style={styles.buttonHint}>ajuda</Text>
+          <Text style={styles.buttonText}>DICA</Text>
+          <Text style={styles.buttonHint}>missão</Text>
         </Pressable>
       </View>
     </View>
@@ -61,16 +64,35 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   statusRow: {
-    minHeight: 30,
+    minHeight: 32,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  runtimeLed: {
+    width: 9,
+    height: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  runtimeLedRun: {
+    borderColor: colors.green,
+    backgroundColor: colors.green,
+  },
+  runtimeLedEdit: {
+    borderColor: colors.amber,
+    backgroundColor: colors.amber,
   },
   statusLabel: {
     color: colors.textMuted,
@@ -94,10 +116,10 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    minHeight: 48,
+    minHeight: 50,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surface,
@@ -111,11 +133,21 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 12,
     fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  primaryHint: {
+    color: colors.background,
+    fontSize: 9,
+    fontWeight: '900',
+    marginTop: 2,
+    opacity: 0.82,
+    textTransform: 'uppercase',
   },
   buttonText: {
     color: colors.text,
     fontSize: 12,
     fontWeight: '900',
+    letterSpacing: 0.3,
   },
   buttonHint: {
     color: colors.textMuted,
