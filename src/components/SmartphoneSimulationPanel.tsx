@@ -19,16 +19,8 @@ export const SmartphoneSimulationPanel = memo(function SmartphoneSimulationPanel
     <View style={styles.stack}>
       <View style={styles.workbenchHeader}>
         <View style={styles.workbenchCopy}>
-          <Text style={styles.workbenchEyebrow}>PLC Simulator</Text>
-          <Text style={styles.workbenchTitle}>Programa Ladder + I/O + Scan</Text>
-          <Text style={styles.workbenchText}>Use como simulador direto: toque nas entradas, clique nos blocos para editar tags e rode o scan na mesma bancada.</Text>
-          <View style={styles.flowRow}>
-            <Text style={styles.flowChip}>I/O</Text>
-            <Text style={styles.flowArrow}>→</Text>
-            <Text style={styles.flowChip}>Ladder</Text>
-            <Text style={styles.flowArrow}>→</Text>
-            <Text style={styles.flowChip}>Q</Text>
-          </View>
+          <Text style={styles.workbenchEyebrow}>Simulador Ladder</Text>
+          <Text style={styles.workbenchTitle}>I/O + Programa + Scan</Text>
         </View>
         <Text style={[styles.workbenchMode, props.mode === 'edit' && styles.workbenchModeEdit]}>{runtimeMode}</Text>
       </View>
@@ -112,10 +104,10 @@ function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
     gap: spacing.md,
   },
   workbenchHeader: {
-    borderColor: c.border,
+    borderColor: '#CBD5E1',
     borderWidth: 1,
-    borderRadius: 16,
-    backgroundColor: c.surface,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     padding: spacing.sm,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -127,50 +119,21 @@ function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
     minWidth: 0,
   },
   workbenchEyebrow: {
-    color: c.cyan,
-    fontSize: 10,
+    color: '#334155',
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   workbenchTitle: {
-    color: c.text,
-    fontSize: 16,
+    color: '#0F172A',
+    fontSize: 18,
     fontWeight: '900',
     marginTop: 3,
   },
-  workbenchText: {
-    color: c.textMuted,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '800',
-    marginTop: 5,
-  },
-  flowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  flowChip: {
-    color: c.cyan,
-    borderColor: c.cyan,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    fontSize: 9,
-    fontWeight: '900',
-    overflow: 'hidden',
-  },
-  flowArrow: {
-    color: c.textDim,
-    fontSize: 10,
-    fontWeight: '900',
-  },
   workbenchMode: {
-    color: c.background,
-    backgroundColor: c.green,
+    color: '#FFFFFF',
+    backgroundColor: '#16A34A',
     borderRadius: 999,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
@@ -179,7 +142,7 @@ function createStyles(c: ReturnType<typeof useAppTheme>['colors']) {
     fontWeight: '900',
   },
   workbenchModeEdit: {
-    backgroundColor: c.amber,
+    backgroundColor: '#2563EB',
   },
   advancedButton: {
     minHeight: 54,
