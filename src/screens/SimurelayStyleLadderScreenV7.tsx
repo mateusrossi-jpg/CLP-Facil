@@ -138,7 +138,7 @@ export function SimurelayStyleLadderScreenV7() {
     setRungs((current) => {
       const next = cloneRungs(current);
       const coil = nextBlock('COIL', next);
-      next.push({ id: uid('rung'), series: [nextBlock('NO', next)], coil });
+      next.push({ id: uid('rung'), series: [nextBlock('NO', next)], parallel: undefined, coil });
       return next;
     });
   }
