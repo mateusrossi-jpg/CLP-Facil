@@ -24,6 +24,8 @@ type LadderBlock = {
 
 type LadderBranch = {
   id: string;
+  fromIndex: number;
+  toIndex: number;
   blocks: LadderBlock[];
 };
 
@@ -40,13 +42,16 @@ type LadderProject = {
 };
 
 type SelectedTarget =
-  | { type: 'series'; rungId: string; blockId?: string }
+  | { type: 'series'; rungId: string; blockId: string }
   | { type: 'branch'; rungId: string; branchId: string; blockId?: string }
-  | { type: 'coil'; rungId: string; blockId?: string }
+  | { type: 'coil'; rungId: string; blockId: string }
   | { type: 'rung'; rungId: string };
 
-type PlcState = Record<string, boolean>;
+type InsertTarget =
+  | { type: 'series'; rungId: string; index: number }
+  | { type: 'branch'; rungId: string; branchId: string; index: number };
 
+type PlcState = Record<string, boolean>;
 type EnergizedMap = Record<string, boolean>;
 
 const INPUTS = ['I0.0', 'I0.1', 'I0.2'];
@@ -95,6 +100,7 @@ function evaluateBranch(branch: LadderBranch, state: PlcState) {
 function evaluateProject(project: LadderProject, currentState: PlcState) {
   const nextState: PlcState = { ...currentState };
   const energized: EnergizedMap = {};
+  const rungPower: Record<string, boolean> = {};
 
   for (const rung of project.rungs) {
     const seriesClosed = rung.series.every((block) => {
@@ -109,14 +115,15 @@ function evaluateProject(project: LadderProject, currentState: PlcState) {
       return closed;
     });
 
-    const rungPower = seriesClosed || branchClosed;
+    const powered = seriesClosed || branchClosed;
+    rungPower[rung.id] = powered;
     if (rung.coil) {
-      nextState[rung.coil.address] = rungPower;
-      energized[rung.coil.id] = rungPower;
+      nextState[rung.coil.address] = powered;
+      energized[rung.coil.id] = powered;
     }
   }
 
-  return { state: nextState, energized };
+  return { state: nextState, energized, rungPower };
 }
 
 function nextAddress(kind: BlockKind, project: LadderProject) {
@@ -135,10 +142,17 @@ function cloneProject(project: LadderProject): LadderProject {
   return {
     rungs: project.rungs.map((rung) => ({
       ...rung,
-      series: [...rung.series],
-      branches: rung.branches.map((branch) => ({ ...branch, blocks: [...branch.blocks] })),
+      series: rung.series.map((block) => ({ ...block })),
+      branches: rung.branches.map((branch) => ({ ...branch, blocks: branch.blocks.map((block) => ({ ...block })) })),
       coil: rung.coil ? { ...rung.coil } : null,
     })),
+  };
+}
+
+function renumberRungs(project: LadderProject): LadderProject {
+  return {
+    ...project,
+    rungs: project.rungs.map((rung, index) => ({ ...rung, label: `Linha ${index + 1}` })),
   };
 }
 
@@ -148,10 +162,11 @@ export function LadderSimulatorScreen() {
   const [project, setProject] = useState<LadderProject>(() => initialProject());
   const [state, setState] = useState<PlcState>(() => initialState());
   const [selected, setSelected] = useState<SelectedTarget>({ type: 'rung', rungId: 'rung-1' });
+  const [insertTarget, setInsertTarget] = useState<InsertTarget>({ type: 'series', rungId: 'rung-1', index: 2 });
   const [running, setRunning] = useState(false);
   const [autoScan, setAutoScan] = useState(false);
   const [scan, setScan] = useState(0);
-  const [message, setMessage] = useState('Toque em uma linha ou bloco, adicione contatos e pressione Play para simular.');
+  const [message, setMessage] = useState('Toque nos pontos + para escolher onde inserir. Use Play para simular.');
 
   const evaluation = useMemo(() => evaluateProject(project, state), [project, state]);
 
@@ -162,11 +177,16 @@ export function LadderSimulatorScreen() {
   }, [running, autoScan, project, state]);
 
   function replaceProject(nextProject: LadderProject) {
-    setProject(nextProject);
+    const normalized = renumberRungs(nextProject);
+    setProject(normalized);
     if (running) {
-      const result = evaluateProject(nextProject, state);
+      const result = evaluateProject(normalized, state);
       setState(result.state);
     }
+  }
+
+  function activeRungId() {
+    return selected.rungId;
   }
 
   function runScan() {
@@ -180,10 +200,11 @@ export function LadderSimulatorScreen() {
     setProject(initialProject());
     setState(initialState());
     setSelected({ type: 'rung', rungId: 'rung-1' });
+    setInsertTarget({ type: 'series', rungId: 'rung-1', index: 2 });
     setRunning(false);
     setAutoScan(false);
     setScan(0);
-    setMessage('Projeto reiniciado com um circuito simples de Start, Stop e bobina Q0.0.');
+    setMessage('Projeto reiniciado com Start, Stop e bobina Q0.0.');
   }
 
   function toggleRun() {
@@ -191,26 +212,26 @@ export function LadderSimulatorScreen() {
     setRunning(nextRunning);
     setAutoScan(nextRunning);
     if (nextRunning) runScan();
-    setMessage(nextRunning ? 'Modo RUN ativo. Toque nas entradas para simular.' : 'Modo EDIT ativo. Agora você pode alterar a lógica.');
+    setMessage(nextRunning ? 'Modo RUN ativo. Toque nas entradas para simular.' : 'Modo EDIT ativo. Continue editando a rung.');
   }
 
-  function addRung() {
+  function addRung(position: 'above' | 'below' = 'below') {
     if (running) return;
+    const next = cloneProject(project);
+    const referenceIndex = Math.max(0, next.rungs.findIndex((rung) => rung.id === activeRungId()));
+    const insertAt = position === 'above' ? referenceIndex : referenceIndex + 1;
     const rungId = makeId('rung');
-    replaceProject({
-      rungs: [
-        ...project.rungs,
-        {
-          id: rungId,
-          label: `Linha ${project.rungs.length + 1}`,
-          series: [],
-          branches: [],
-          coil: null,
-        },
-      ],
+    next.rungs.splice(insertAt, 0, {
+      id: rungId,
+      label: 'Linha',
+      series: [],
+      branches: [],
+      coil: null,
     });
+    replaceProject(next);
     setSelected({ type: 'rung', rungId });
-    setMessage('Nova linha adicionada. Insira contatos e uma bobina.');
+    setInsertTarget({ type: 'series', rungId, index: 0 });
+    setMessage(position === 'above' ? 'Nova linha adicionada acima.' : 'Nova linha adicionada abaixo.');
   }
 
   function removeSelected() {
@@ -225,6 +246,7 @@ export function LadderSimulatorScreen() {
       const filtered = next.rungs.filter((rung) => rung.id !== selected.rungId);
       replaceProject({ rungs: filtered });
       setSelected({ type: 'rung', rungId: filtered[0].id });
+      setInsertTarget({ type: 'series', rungId: filtered[0].id, index: filtered[0].series.length });
       setMessage('Linha removida.');
       return;
     }
@@ -232,58 +254,77 @@ export function LadderSimulatorScreen() {
     const rung = next.rungs.find((item) => item.id === selected.rungId);
     if (!rung) return;
 
-    if (selected.type === 'series' && selected.blockId) {
+    if (selected.type === 'series') {
+      const removedIndex = rung.series.findIndex((block) => block.id === selected.blockId);
       rung.series = rung.series.filter((block) => block.id !== selected.blockId);
+      setInsertTarget({ type: 'series', rungId: rung.id, index: Math.max(0, removedIndex) });
     }
 
     if (selected.type === 'branch') {
       if (selected.blockId) {
+        const branch = rung.branches.find((item) => item.id === selected.branchId);
+        const removedIndex = branch?.blocks.findIndex((block) => block.id === selected.blockId) ?? 0;
         rung.branches = rung.branches
-          .map((branch) => branch.id === selected.branchId
-            ? { ...branch, blocks: branch.blocks.filter((block) => block.id !== selected.blockId) }
-            : branch)
-          .filter((branch) => branch.blocks.length > 0);
+          .map((branchItem) => branchItem.id === selected.branchId
+            ? { ...branchItem, blocks: branchItem.blocks.filter((block) => block.id !== selected.blockId) }
+            : branchItem)
+          .filter((branchItem) => branchItem.blocks.length > 0);
+        setInsertTarget({ type: 'branch', rungId: rung.id, branchId: selected.branchId, index: Math.max(0, removedIndex) });
       } else {
         rung.branches = rung.branches.filter((branch) => branch.id !== selected.branchId);
+        setInsertTarget({ type: 'series', rungId: rung.id, index: rung.series.length });
       }
     }
 
-    if (selected.type === 'coil') rung.coil = null;
+    if (selected.type === 'coil') {
+      rung.coil = null;
+      setInsertTarget({ type: 'series', rungId: rung.id, index: rung.series.length });
+    }
 
     replaceProject(next);
     setSelected({ type: 'rung', rungId: rung.id });
     setMessage('Item removido.');
   }
 
-  function addContact(mode: ContactMode) {
-    if (running) return;
-    const next = cloneProject(project);
-    const rung = next.rungs.find((item) => item.id === selected.rungId) ?? next.rungs[0];
-    const block: LadderBlock = {
+  function makeContact(mode: ContactMode, next: LadderProject): LadderBlock {
+    return {
       id: makeId('contact'),
       kind: 'contact',
       address: nextAddress('contact', next),
       mode,
     };
+  }
 
-    if (selected.type === 'branch') {
-      const branch = rung.branches.find((item) => item.id === selected.branchId);
-      if (branch) branch.blocks.push(block);
-      else rung.branches.push({ id: makeId('branch'), blocks: [block] });
-      setSelected({ type: 'branch', rungId: rung.id, branchId: rung.branches[rung.branches.length - 1].id, blockId: block.id });
+  function addContact(mode: ContactMode) {
+    if (running) return;
+    const next = cloneProject(project);
+    const target = insertTarget ?? { type: 'series', rungId: activeRungId(), index: 999 };
+    const rung = next.rungs.find((item) => item.id === target.rungId) ?? next.rungs[0];
+    const block = makeContact(mode, next);
+
+    if (target.type === 'branch') {
+      const branch = rung.branches.find((item) => item.id === target.branchId);
+      if (branch) {
+        const insertAt = Math.min(Math.max(target.index, 0), branch.blocks.length);
+        branch.blocks.splice(insertAt, 0, block);
+        setSelected({ type: 'branch', rungId: rung.id, branchId: branch.id, blockId: block.id });
+        setInsertTarget({ type: 'branch', rungId: rung.id, branchId: branch.id, index: insertAt + 1 });
+      }
     } else {
-      rung.series.push(block);
+      const insertAt = Math.min(Math.max(target.index, 0), rung.series.length);
+      rung.series.splice(insertAt, 0, block);
       setSelected({ type: 'series', rungId: rung.id, blockId: block.id });
+      setInsertTarget({ type: 'series', rungId: rung.id, index: insertAt + 1 });
     }
 
     replaceProject(next);
-    setMessage(`${mode === 'NO' ? 'Contato NA' : 'Contato NF'} inserido.`);
+    setMessage(`${mode === 'NO' ? 'Contato NA' : 'Contato NF'} inserido na posição selecionada.`);
   }
 
   function addCoil() {
     if (running) return;
     const next = cloneProject(project);
-    const rung = next.rungs.find((item) => item.id === selected.rungId) ?? next.rungs[0];
+    const rung = next.rungs.find((item) => item.id === activeRungId()) ?? next.rungs[0];
     rung.coil = { id: makeId('coil'), kind: 'coil', address: nextAddress('coil', next) };
     replaceProject(next);
     setSelected({ type: 'coil', rungId: rung.id, blockId: rung.coil.id });
@@ -293,15 +334,77 @@ export function LadderSimulatorScreen() {
   function addParallelBranch() {
     if (running) return;
     const next = cloneProject(project);
-    const rung = next.rungs.find((item) => item.id === selected.rungId) ?? next.rungs[0];
+    const rung = next.rungs.find((item) => item.id === activeRungId()) ?? next.rungs[0];
+    const selectedSeriesIndex = selected.type === 'series'
+      ? Math.max(0, rung.series.findIndex((block) => block.id === selected.blockId))
+      : Math.max(0, Math.min(insertTarget.type === 'series' ? insertTarget.index : 0, rung.series.length));
     const branch: LadderBranch = {
       id: makeId('branch'),
-      blocks: [{ id: makeId('contact'), kind: 'contact', address: nextAddress('contact', next), mode: 'NO' }],
+      fromIndex: selectedSeriesIndex,
+      toIndex: Math.min(selectedSeriesIndex + 1, Math.max(rung.series.length, 1)),
+      blocks: [makeContact('NO', next)],
     };
     rung.branches.push(branch);
     replaceProject(next);
     setSelected({ type: 'branch', rungId: rung.id, branchId: branch.id, blockId: branch.blocks[0].id });
-    setMessage('Ramo paralelo simples inserido.');
+    setInsertTarget({ type: 'branch', rungId: rung.id, branchId: branch.id, index: 1 });
+    setMessage('Ramo paralelo criado no trecho selecionado.');
+  }
+
+  function moveSelectedBlock(direction: -1 | 1) {
+    if (running) return;
+    const next = cloneProject(project);
+    const rung = next.rungs.find((item) => item.id === selected.rungId);
+    if (!rung) return;
+
+    if (selected.type === 'series') {
+      const index = rung.series.findIndex((block) => block.id === selected.blockId);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= rung.series.length) return;
+      const [block] = rung.series.splice(index, 1);
+      rung.series.splice(nextIndex, 0, block);
+      setInsertTarget({ type: 'series', rungId: rung.id, index: nextIndex + 1 });
+      replaceProject(next);
+      setMessage(direction < 0 ? 'Bloco movido para a esquerda.' : 'Bloco movido para a direita.');
+      return;
+    }
+
+    if (selected.type === 'branch' && selected.blockId) {
+      const branch = rung.branches.find((item) => item.id === selected.branchId);
+      if (!branch) return;
+      const index = branch.blocks.findIndex((block) => block.id === selected.blockId);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= branch.blocks.length) return;
+      const [block] = branch.blocks.splice(index, 1);
+      branch.blocks.splice(nextIndex, 0, block);
+      setInsertTarget({ type: 'branch', rungId: rung.id, branchId: branch.id, index: nextIndex + 1 });
+      replaceProject(next);
+      setMessage(direction < 0 ? 'Bloco do ramo movido para a esquerda.' : 'Bloco do ramo movido para a direita.');
+    }
+  }
+
+  function duplicateSelectedBlock() {
+    if (running) return;
+    const active = selectedBlock();
+    if (!active || active.kind === 'coil') return;
+    addContact(active.mode ?? 'NO');
+  }
+
+  function invertSelectedContact() {
+    if (running) return;
+    const next = cloneProject(project);
+    const rung = next.rungs.find((item) => item.id === selected.rungId);
+    if (!rung) return;
+    let block: LadderBlock | undefined;
+    if (selected.type === 'series') block = rung.series.find((item) => item.id === selected.blockId);
+    if (selected.type === 'branch' && selected.blockId) {
+      const branch = rung.branches.find((item) => item.id === selected.branchId);
+      block = branch?.blocks.find((item) => item.id === selected.blockId);
+    }
+    if (!block || block.kind !== 'contact') return;
+    block.mode = block.mode === 'NC' ? 'NO' : 'NC';
+    replaceProject(next);
+    setMessage(block.mode === 'NC' ? 'Contato alterado para NF.' : 'Contato alterado para NA.');
   }
 
   function updateSelectedAddress(address: string) {
@@ -316,7 +419,7 @@ export function LadderSimulatorScreen() {
       if (block) block.address = normalized;
     }
 
-    if (selected.type === 'branch') {
+    if (selected.type === 'branch' && selected.blockId) {
       const branch = rung.branches.find((item) => item.id === selected.branchId);
       const block = branch?.blocks.find((item) => item.id === selected.blockId);
       if (block) block.address = normalized;
@@ -333,7 +436,7 @@ export function LadderSimulatorScreen() {
     if (selected.type === 'series') return rung.series.find((block) => block.id === selected.blockId) ?? null;
     if (selected.type === 'branch') {
       const branch = rung.branches.find((item) => item.id === selected.branchId);
-      return branch?.blocks.find((block) => block.id === selected.blockId) ?? null;
+      return selected.blockId ? branch?.blocks.find((block) => block.id === selected.blockId) ?? null : null;
     }
     if (selected.type === 'coil') return rung.coil;
     return null;
@@ -344,6 +447,24 @@ export function LadderSimulatorScreen() {
     const result = running ? evaluateProject(project, nextState) : { state: nextState };
     setState(result.state);
     if (running) setScan((current) => current + 1);
+  }
+
+  function selectRung(rungId: string, index: number) {
+    if (running) return;
+    setSelected({ type: 'rung', rungId });
+    setInsertTarget({ type: 'series', rungId, index });
+  }
+
+  function selectSeriesBlock(rungId: string, blockId: string, index: number) {
+    if (running) return;
+    setSelected({ type: 'series', rungId, blockId });
+    setInsertTarget({ type: 'series', rungId, index: index + 1 });
+  }
+
+  function selectBranchBlock(rungId: string, branchId: string, blockId: string, index: number) {
+    if (running) return;
+    setSelected({ type: 'branch', rungId, branchId, blockId });
+    setInsertTarget({ type: 'branch', rungId, branchId, index: index + 1 });
   }
 
   const activeBlock = selectedBlock();
@@ -381,29 +502,32 @@ export function LadderSimulatorScreen() {
                   {project.rungs.map((rung) => (
                     <Pressable
                       key={rung.id}
-                      style={[styles.rung, selected.rungId === rung.id && styles.rungSelected]}
-                      onPress={() => !running && setSelected({ type: 'rung', rungId: rung.id })}
+                      style={[styles.rung, selected.rungId === rung.id && styles.rungSelected, evaluation.rungPower[rung.id] && styles.rungPowered]}
+                      onPress={() => selectRung(rung.id, rung.series.length)}
                     >
                       <Text style={styles.rungLabel}>{rung.label}</Text>
-                      <View style={styles.rungWire} />
+                      <View style={[styles.rungWire, evaluation.rungPower[rung.id] && styles.rungWirePowered]} />
                       <View style={styles.rungBody}>
                         <View style={styles.blockRow}>
-                          {rung.series.map((block) => (
-                            <LadderBlockView
-                              key={block.id}
-                              block={block}
-                              selected={selected.type === 'series' && selected.blockId === block.id}
-                              energized={Boolean(evaluation.energized[block.id])}
-                              onPress={() => !running && setSelected({ type: 'series', rungId: rung.id, blockId: block.id })}
-                            />
+                          <InsertPoint active={insertTarget.type === 'series' && insertTarget.rungId === rung.id && insertTarget.index === 0} onPress={() => !running && setInsertTarget({ type: 'series', rungId: rung.id, index: 0 })} />
+                          {rung.series.map((block, index) => (
+                            <View key={block.id} style={styles.blockWithInsert}>
+                              <LadderBlockView
+                                block={block}
+                                selected={selected.type === 'series' && selected.blockId === block.id}
+                                energized={Boolean(evaluation.energized[block.id])}
+                                onPress={() => selectSeriesBlock(rung.id, block.id, index)}
+                              />
+                              <InsertPoint active={insertTarget.type === 'series' && insertTarget.rungId === rung.id && insertTarget.index === index + 1} onPress={() => !running && setInsertTarget({ type: 'series', rungId: rung.id, index: index + 1 })} />
+                            </View>
                           ))}
-                          <View style={styles.flexWire} />
+                          <View style={[styles.flexWire, evaluation.rungPower[rung.id] && styles.rungWirePowered]} />
                           {rung.coil ? (
                             <LadderBlockView
                               block={rung.coil}
                               selected={selected.type === 'coil' && selected.blockId === rung.coil.id}
                               energized={Boolean(evaluation.energized[rung.coil.id])}
-                              onPress={() => !running && setSelected({ type: 'coil', rungId: rung.id, blockId: rung.coil?.id })}
+                              onPress={() => !running && setSelected({ type: 'coil', rungId: rung.id, blockId: rung.coil?.id ?? '' })}
                             />
                           ) : (
                             <Pressable style={styles.emptyCoil} onPress={addCoil}>
@@ -419,14 +543,17 @@ export function LadderSimulatorScreen() {
                             onPress={() => !running && setSelected({ type: 'branch', rungId: rung.id, branchId: branch.id })}
                           >
                             <Text style={styles.branchLabel}>paralelo</Text>
-                            {branch.blocks.map((block) => (
-                              <LadderBlockView
-                                key={block.id}
-                                block={block}
-                                selected={selected.type === 'branch' && selected.blockId === block.id}
-                                energized={Boolean(evaluation.energized[block.id])}
-                                onPress={() => !running && setSelected({ type: 'branch', rungId: rung.id, branchId: branch.id, blockId: block.id })}
-                              />
+                            <InsertPoint active={insertTarget.type === 'branch' && insertTarget.branchId === branch.id && insertTarget.index === 0} onPress={() => !running && setInsertTarget({ type: 'branch', rungId: rung.id, branchId: branch.id, index: 0 })} />
+                            {branch.blocks.map((block, index) => (
+                              <View key={block.id} style={styles.blockWithInsert}>
+                                <LadderBlockView
+                                  block={block}
+                                  selected={selected.type === 'branch' && selected.blockId === block.id}
+                                  energized={Boolean(evaluation.energized[block.id])}
+                                  onPress={() => selectBranchBlock(rung.id, branch.id, block.id, index)}
+                                />
+                                <InsertPoint active={insertTarget.type === 'branch' && insertTarget.branchId === branch.id && insertTarget.index === index + 1} onPress={() => !running && setInsertTarget({ type: 'branch', rungId: rung.id, branchId: branch.id, index: index + 1 })} />
+                              </View>
                             ))}
                           </Pressable>
                         ))}
@@ -474,7 +601,12 @@ export function LadderSimulatorScreen() {
           <ToolbarButton label="NF" onPress={() => addContact('NC')} disabled={running} />
           <ToolbarButton label="Bobina" onPress={addCoil} disabled={running} />
           <ToolbarButton label="Paralelo" onPress={addParallelBranch} disabled={running} />
-          <ToolbarButton label="Rung" onPress={addRung} disabled={running} />
+          <ToolbarButton label="Rung +" onPress={() => addRung('below')} disabled={running} />
+          <ToolbarButton label="↑ Rung" onPress={() => addRung('above')} disabled={running} />
+          <ToolbarButton label="←" onPress={() => moveSelectedBlock(-1)} disabled={running} />
+          <ToolbarButton label="→" onPress={() => moveSelectedBlock(1)} disabled={running} />
+          <ToolbarButton label="NA/NF" onPress={invertSelectedContact} disabled={running} />
+          <ToolbarButton label="Duplicar" onPress={duplicateSelectedBlock} disabled={running} />
           <ToolbarButton label="Excluir" onPress={removeSelected} disabled={running} danger />
         </View>
 
@@ -484,7 +616,7 @@ export function LadderSimulatorScreen() {
           </View>
           {activeBlock ? (
             <View style={styles.addressEditor}>
-              <Text style={styles.addressLabel}>Endereço selecionado</Text>
+              <Text style={styles.addressLabel}>Endereço</Text>
               <TextInput
                 style={styles.addressInput}
                 value={activeBlock.address}
@@ -494,11 +626,19 @@ export function LadderSimulatorScreen() {
               />
             </View>
           ) : (
-            <Text style={styles.noSelection}>Selecione um bloco para alterar o endereço.</Text>
+            <Text style={styles.noSelection}>Selecione um bloco ou um ponto +.</Text>
           )}
         </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+function InsertPoint({ active, onPress }: { active: boolean; onPress: () => void }) {
+  return (
+    <Pressable style={[styles.insertPoint, active && styles.insertPointActive]} onPress={onPress}>
+      <Text style={[styles.insertPointText, active && styles.insertPointTextActive]}>+</Text>
+    </Pressable>
   );
 }
 
@@ -546,29 +686,36 @@ const styles = StyleSheet.create({
   content: { flex: 1, flexDirection: 'row', gap: 10, padding: 10 },
   contentCompact: { flexDirection: 'column' },
   ladderPanel: { flex: 1, backgroundColor: '#ffffff', borderRadius: 18, borderWidth: 1, borderColor: '#d7e0e7', overflow: 'hidden' },
-  ladderScrollX: { minWidth: 680 },
+  ladderScrollX: { minWidth: 720 },
   ladderScrollY: { padding: 16 },
-  ladderCanvas: { minHeight: 420, minWidth: 650, paddingVertical: 18, paddingHorizontal: 42, position: 'relative' },
+  ladderCanvas: { minHeight: 420, minWidth: 700, paddingVertical: 18, paddingHorizontal: 42, position: 'relative' },
   leftRail: { position: 'absolute', left: 26, top: 16, bottom: 16, width: 5, borderRadius: 4, backgroundColor: '#1b2d3a' },
   rightRail: { position: 'absolute', right: 26, top: 16, bottom: 16, width: 5, borderRadius: 4, backgroundColor: '#1b2d3a' },
-  rung: { minHeight: 104, justifyContent: 'center', marginBottom: 18, borderRadius: 14, borderWidth: 2, borderColor: 'transparent' },
+  rung: { minHeight: 112, justifyContent: 'center', marginBottom: 18, borderRadius: 14, borderWidth: 2, borderColor: 'transparent' },
   rungSelected: { borderColor: '#3b82f6', backgroundColor: '#f5f9ff' },
+  rungPowered: { backgroundColor: '#f0fdf4' },
   rungLabel: { position: 'absolute', left: 4, top: 0, fontSize: 11, fontWeight: '900', color: '#627584' },
-  rungWire: { position: 'absolute', left: -16, right: -16, top: 48, height: 4, borderRadius: 4, backgroundColor: '#293b48' },
+  rungWire: { position: 'absolute', left: -16, right: -16, top: 52, height: 4, borderRadius: 4, backgroundColor: '#293b48' },
+  rungWirePowered: { backgroundColor: '#0a9f5a' },
   rungBody: { paddingHorizontal: 12, paddingTop: 8, gap: 8 },
-  blockRow: { minHeight: 74, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  blockRow: { minHeight: 78, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  blockWithInsert: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flexWire: { flex: 1, minWidth: 40, height: 4, backgroundColor: '#293b48', borderRadius: 4 },
+  insertPoint: { width: 32, height: 38, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: '#8aa0af', backgroundColor: '#f6fafc', alignItems: 'center', justifyContent: 'center' },
+  insertPointActive: { backgroundColor: '#dbeafe', borderColor: '#2563eb', borderStyle: 'solid' },
+  insertPointText: { fontSize: 18, fontWeight: '900', color: '#607381' },
+  insertPointTextActive: { color: '#1d4ed8' },
   branchRow: {
-    marginLeft: 26,
-    marginRight: 104,
-    minHeight: 60,
+    marginLeft: 38,
+    marginRight: 112,
+    minHeight: 64,
     borderLeftWidth: 4,
     borderRightWidth: 4,
     borderColor: '#293b48',
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     padding: 8,
     backgroundColor: '#eef5f8',
   },
@@ -613,8 +760,8 @@ const styles = StyleSheet.create({
   autoButtonText: { color: '#172b3a', fontWeight: '900' },
   autoButtonTextActive: { color: '#1d4ed8' },
   toolbar: { paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#d7e0e7', flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
-  toolButton: { minHeight: 48, minWidth: 82, borderRadius: 14, backgroundColor: '#eaf1f5', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  toolButtonText: { fontSize: 14, color: '#172b3a', fontWeight: '900' },
+  toolButton: { minHeight: 46, minWidth: 70, borderRadius: 14, backgroundColor: '#eaf1f5', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  toolButtonText: { fontSize: 13, color: '#172b3a', fontWeight: '900' },
   dangerButton: { backgroundColor: '#fee2e2' },
   dangerButtonText: { color: '#b91c1c' },
   disabledButton: { opacity: 0.45 },
