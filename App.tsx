@@ -1,5 +1,5 @@
-import { SimurelayStyleLadderScreenV10 } from './src/screens/SimurelayStyleLadderScreenV10';
+import { LadderSimulatorScreen } from './src/screens/LadderSimulatorScreen';
 
 export default function App() {
-  return <SimurelayStyleLadderScreenV10 />;
+  return <LadderSimulatorScreen />;
 }
