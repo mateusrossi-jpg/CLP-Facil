@@ -1,8 +1,9 @@
 import { StyleSheet, Text, View, Animated } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { LadderProject, PlcState } from '../engine/projectTypes';
-import { colors } from '../theme/colors';
+import { PremiumColorTokens } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/theme';
 
 type LadderDiagramProps = {
   project: LadderProject;
@@ -14,26 +15,37 @@ function stateLabel(value: boolean): string {
   return value ? '1' : '0';
 }
 
-export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramProps) {
-
-  const glowAnim = useRef(new Animated.Value(0)).current;
+function LadderContact({ label, isOn, colors }: { label: string; isOn: boolean; colors: PremiumColorTokens }) {
+  const activeAnim = useRef(new Animated.Value(isOn ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 600, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 600, useNativeDriver: false })
-      ])
-    ).start();
-  }, []);
+    Animated.timing(activeAnim, {
+      toValue: isOn ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [activeAnim, isOn]);
+
+  const animatedStyle = {
+    borderColor: activeAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.border, colors.primary] }),
+    backgroundColor: activeAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.background, colors.primarySoft] }),
+  };
+
+  return (
+    <Animated.View style={[contactStyles.contact, animatedStyle]}>
+      <Text style={[contactStyles.contactText, { color: colors.text }]}>{label}</Text>
+      <Text style={[contactStyles.contactState, { color: colors.textMuted }]}>{stateLabel(isOn)}</Text>
+    </Animated.View>
+  );
+}
+
+export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   function getValue(variableId: string): boolean {
     return Boolean(state[variableId]);
   }
-
-  const glowStyle = {
-    shadowOpacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.9] })
-  };
 
   return (
     <View style={styles.container}>
@@ -54,19 +66,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
                   const isOn = getValue(contact.variableId);
 
                   return (
-                    <Animated.View
-                      key={contact.id}
-                      style={[
-                        styles.contact,
-                        isOn && styles.contactActive,
-                        isOn && glowStyle
-                      ]}
-                    >
-                      <Text style={styles.contactText}>{contact.label}</Text>
-                      <Text style={styles.contactState}>
-                        {stateLabel(isOn)}
-                      </Text>
-                    </Animated.View>
+                    <LadderContact key={contact.id} label={contact.label ?? contact.variableId} isOn={isOn} colors={colors} />
                   );
                 })}
               </View>
@@ -80,19 +80,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
                       const isOn = getValue(contact.variableId);
 
                       return (
-                        <Animated.View
-                          key={contact.id}
-                          style={[
-                            styles.contact,
-                            isOn && styles.contactActive,
-                            isOn && glowStyle
-                          ]}
-                        >
-                          <Text style={styles.contactText}>{contact.label}</Text>
-                          <Text style={styles.contactState}>
-                            {stateLabel(isOn)}
-                          </Text>
-                        </Animated.View>
+                        <LadderContact key={contact.id} label={contact.label ?? contact.variableId} isOn={isOn} colors={colors} />
                       );
                     })}
                   </View>
@@ -102,8 +90,7 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
               <Animated.View
                 style={[
                   styles.coil,
-                  getValue(rung.coilVariableId) && styles.coilActive,
-                  getValue(rung.coilVariableId) && glowStyle
+                  getValue(rung.coilVariableId) && styles.coilActive
                 ]}
               >
                 <Text style={styles.coilText}>
@@ -120,7 +107,26 @@ export function LadderDiagram({ project, state, energizedRungs }: LadderDiagramP
   );
 }
 
-const styles = StyleSheet.create({
+const contactStyles = StyleSheet.create({
+  contact: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minWidth: 96,
+    marginRight: spacing.sm,
+  },
+  contactText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  contactState: {
+    fontSize: 11,
+    marginTop: spacing.xs,
+  },
+});
+
+const createStyles = (colors: PremiumColorTokens) => StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -140,16 +146,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 16,
-    padding: spacing.md,
+    padding: spacing.lg,
     marginBottom: spacing.md,
   },
   railBoxActive: {
-    borderColor: colors.cyan,
+    borderColor: colors.primary,
   },
   rail: {
     width: 4,
     borderRadius: 2,
-    backgroundColor: colors.inactive,
+    backgroundColor: colors.cyanLine,
   },
   rungContent: {
     flex: 1,
@@ -180,30 +186,6 @@ const styles = StyleSheet.create({
   },
   branchRow: {
     flexDirection: 'row',
-  },
-  contact: {
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minWidth: 96,
-    marginRight: spacing.sm,
-    backgroundColor: colors.background,
-  },
-  contactActive: {
-    borderColor: colors.cyan,
-    backgroundColor: colors.cyanSoft,
-  },
-  contactText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  contactState: {
-    color: colors.textMuted,
-    fontSize: 11,
-    marginTop: spacing.xs,
   },
   coil: {
     alignSelf: 'flex-start',
