@@ -55,6 +55,18 @@ function id(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.round(Math.random() * 99999)}`;
 }
 
+function insertEmptyRungInLogic(logic: LadderRung[]): LadderRung[] {
+  return [
+    ...logic,
+    {
+      id: id('rung'),
+      series: [],
+      branches: [],
+      coil: undefined,
+    },
+  ];
+}
+
 function createBlock(type: Exclude<BlockType, 'PARALLEL'>, project: LadderRung[]): LadderBlock {
   const used = new Set<string>();
   project.forEach((rung) => {
@@ -245,9 +257,8 @@ export function DragDropLadderSimulatorScreen() {
 
   function addRung() {
     if (mode === 'RUN') return;
-    const rung: LadderRung = { id: id('rung'), series: [], branches: [], coil: undefined };
-    setRungs((current) => [...current, rung]);
-    setMessage('Nova rung adicionada. Arraste blocos para montar a lógica.');
+    setRungs((current) => insertEmptyRungInLogic(current));
+    setMessage('Nova linha adicionada. Arraste blocos para montar a lógica.');
   }
 
   function removeSelectedBlock() {
@@ -344,7 +355,7 @@ export function DragDropLadderSimulatorScreen() {
                     </View>
                   ))}
                   <Pressable style={styles.addRungZone} onPress={addRung}>
-                    <Text style={styles.addRungText}>＋ Adicionar Rung Abaixo</Text>
+                    <Text style={styles.addRungText}>＋ Adicionar Linha</Text>
                   </Pressable>
                 </View>
               </ScrollView>
