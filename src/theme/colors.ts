@@ -100,6 +100,7 @@ export const premiumDarkColors = {
   white: '#F8FAFC',
 } as const;
 
+<<<<<<< HEAD
 export type PremiumColorTokens = {
   readonly [Key in keyof typeof premiumLightColors]: string;
 };
@@ -128,6 +129,34 @@ export const premiumDarkTheme = {
   dim: premiumDarkColors.textDim,
 };
 
+=======
+export type PremiumColorTokens = typeof premiumLightColors;
+
+export const colors = premiumLightColors;
+
+export const premiumDarkTheme = {
+  background: premiumDarkColors.background,
+  surface: premiumDarkColors.surface,
+  surfaceElevated: premiumDarkColors.surfaceElevated,
+  card: premiumDarkColors.card,
+  border: premiumDarkColors.border,
+  borderStrong: premiumDarkColors.borderStrong,
+  primary: premiumDarkColors.cyan,
+  primarySoft: premiumDarkColors.cyanSoft,
+  success: premiumDarkColors.green,
+  successSoft: premiumDarkColors.greenSoft,
+  warning: premiumDarkColors.amber,
+  warningSoft: premiumDarkColors.amberSoft,
+  advanced: premiumDarkColors.purple,
+  advancedSoft: premiumDarkColors.purpleSoft,
+  danger: premiumDarkColors.red,
+  dangerSoft: premiumDarkColors.redSoft,
+  text: premiumDarkColors.text,
+  muted: premiumDarkColors.textMuted,
+  dim: premiumDarkColors.textDim,
+};
+
+>>>>>>> f1df55b (refactor: simplify CLP Facil as focused ladder simulator)
 export const premiumLightTheme = {
   background: premiumLightColors.background,
   surface: premiumLightColors.surface,
